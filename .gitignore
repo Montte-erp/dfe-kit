@@ -8,3 +8,6 @@ bun.lockb
 .env.*
 !.env.example
 .DS_Store
+
+**/.cache/
+**/src/*.d.ts
