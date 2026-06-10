@@ -1,5 +1,6 @@
 import type { FiscalEnvironment, FiscalProvider, FiscalProviderManifest } from "@dfe-kit/fiscal";
 import {
+  configureSaatriManifest,
   configureSaatriProviderPackage,
   SAATRI_ABRASF_VERSION as ADAPTER_SAATRI_ABRASF_VERSION,
   type GerarNfseSigner,
@@ -36,20 +37,21 @@ export interface CreateJacobinaSaatriProviderOptions {
   readonly eventSink?: JacobinaSaatriEventSink;
 }
 
-const configuredJacobinaSaatriPackage = configureSaatriProviderPackage({
+export const jacobinaSaatriManifest: FiscalProviderManifest = configureSaatriManifest({
   providerId: "jacobina-saatri",
   providerName: "SAATRI Jacobina-BA (NFS-e ABRASF 2.03)",
-  cityCode: JACOBINA_CITY_CODE,
-  endpoints: {
-    homologation: SAATRI_JACOBINA_HOMOLOGATION_ENDPOINT,
-    production: SAATRI_JACOBINA_PRODUCTION_ENDPOINT,
-  },
 });
-
-export const jacobinaSaatriManifest: FiscalProviderManifest =
-  configuredJacobinaSaatriPackage.manifest;
 
 export const createJacobinaSaatriProvider = (
   credentials: JacobinaSaatriCredentials,
   options: CreateJacobinaSaatriProviderOptions,
-): FiscalProvider => configuredJacobinaSaatriPackage.createProvider(credentials, options);
+): FiscalProvider =>
+  configureSaatriProviderPackage({
+    providerId: "jacobina-saatri",
+    providerName: "SAATRI Jacobina-BA (NFS-e ABRASF 2.03)",
+    cityCode: JACOBINA_CITY_CODE,
+    endpoints: {
+      homologation: SAATRI_JACOBINA_HOMOLOGATION_ENDPOINT,
+      production: SAATRI_JACOBINA_PRODUCTION_ENDPOINT,
+    },
+  }).createProvider(credentials, options);

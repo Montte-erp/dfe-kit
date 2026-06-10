@@ -30,21 +30,15 @@ const parser = new XMLParser({
   removeNSPrefix: true,
 });
 
-const parseFailure = (reason: string): FiscalProviderError => ({
-  code: saatriErrorCatalog.PARSE_ERROR.code,
-  message: saatriErrorCatalog.PARSE_ERROR({ reason }).message,
-  retryable: false,
-});
-
-const responseShapeFailure = (): FiscalProviderError => ({
-  code: saatriErrorCatalog.RESPONSE_SHAPE_ERROR.code,
-  message: saatriErrorCatalog.RESPONSE_SHAPE_ERROR().message,
-  retryable: false,
-});
-
 const extractOutputXml = (soapResponseXml: string): Result<string, FiscalProviderError> => {
   const parsedSoap = generateNfseSoapDocumentSchema.safeParse(parser.parse(soapResponseXml));
-  if (!parsedSoap.success) return Result.err(responseShapeFailure());
+  if (!parsedSoap.success) {
+    return Result.err({
+      code: saatriErrorCatalog.RESPONSE_SHAPE_ERROR.code,
+      message: saatriErrorCatalog.RESPONSE_SHAPE_ERROR().message,
+      retryable: false,
+    });
+  }
   return Result.ok(parsedSoap.data.Envelope.Body.GerarNfseResponse.outputXML);
 };
 
@@ -52,7 +46,14 @@ const decodeGenerateNfseOutput = (
   outputXml: string,
 ): Result<GenerateNfseResponse, FiscalProviderError> => {
   const parsedOutput = generateNfseOutputDocumentSchema.safeParse(parser.parse(outputXml));
-  if (!parsedOutput.success) return Result.err(parseFailure(z.prettifyError(parsedOutput.error)));
+  if (!parsedOutput.success) {
+    const reason = z.prettifyError(parsedOutput.error);
+    return Result.err({
+      code: saatriErrorCatalog.PARSE_ERROR.code,
+      message: saatriErrorCatalog.PARSE_ERROR({ reason }).message,
+      retryable: false,
+    });
+  }
 
   if ("GerarNfseResposta" in parsedOutput.data) {
     return Result.ok(parsedOutput.data.GerarNfseResposta);
