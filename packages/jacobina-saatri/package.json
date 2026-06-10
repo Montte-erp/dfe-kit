@@ -16,15 +16,16 @@
     }
   },
   "publishConfig": {
-    "access": "public"
+    "access": "public",
+    "registry": "https://npm.pkg.github.com"
   },
   "scripts": {
     "build": "bunup",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "bun test ./__tests__",
     "publint": "publint --strict",
-    "publish:npm": "bun run build && bun run publint && npm publish --access public --provenance",
-    "publish:npm:dry": "bun run build && bun run publint && npm publish --access public --provenance --dry-run"
+    "publish:github": "bun run build && bun run publint && npm publish --registry=https://npm.pkg.github.com --access public",
+    "publish:github:dry": "bun run build && bun run publint && npm publish --registry=https://npm.pkg.github.com --access public --dry-run"
   },
   "dependencies": {
     "better-result": "^2.9.2"

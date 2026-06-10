@@ -20,7 +20,8 @@ export const SAATRI_JACOBINA_PRODUCTION_ENDPOINT =
 
 export const JACOBINA_CITY_CODE = "2917706";
 
-export const SAATRI_ABRASF_VERSION = ADAPTER_SAATRI_ABRASF_VERSION;
+export const SAATRI_ABRASF_VERSION: typeof ADAPTER_SAATRI_ABRASF_VERSION =
+  ADAPTER_SAATRI_ABRASF_VERSION;
 
 export type JacobinaSaatriCredentials = SaatriCredentials;
 export type JacobinaSaatriEnvironmentConfig = SaatriEnvironmentConfig;
