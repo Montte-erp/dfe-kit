@@ -1,4 +1,4 @@
-# @dfe-kit/jacobina-saatri
+# @montte-erp/jacobina-saatri
 
 Provider NFS-e para **Jacobina/BA** via **SAATRI / ABRASF 2.03**.
 
@@ -51,13 +51,13 @@ Veja o arquivo [`LICENSE`](./LICENSE).
 ## Instalação
 
 ```bash
-bun add @dfe-kit/jacobina-saatri better-result
+bun add @montte-erp/jacobina-saatri better-result
 ```
 
 Ou com npm:
 
 ```bash
-npm install @dfe-kit/jacobina-saatri better-result
+npm install @montte-erp/jacobina-saatri better-result
 ```
 
 > `better-result` faz parte do contrato público: APIs fiscais retornam `Result<T, FiscalProviderError>`.
@@ -65,7 +65,7 @@ npm install @dfe-kit/jacobina-saatri better-result
 ## Uso mínimo
 
 ```ts
-import { createJacobinaSaatriProvider } from "@dfe-kit/jacobina-saatri";
+import { createJacobinaSaatriProvider } from "@montte-erp/jacobina-saatri";
 
 const provider = createJacobinaSaatriProvider(
   {
@@ -203,7 +203,10 @@ Consumidores devem persistir esses artefatos junto com protocolo, número, códi
 Assinatura XML é opcional e injetável:
 
 ```ts
-import { createJacobinaSaatriProvider, type JacobinaSaatriSigner } from "@dfe-kit/jacobina-saatri";
+import {
+  createJacobinaSaatriProvider,
+  type JacobinaSaatriSigner,
+} from "@montte-erp/jacobina-saatri";
 
 const signer: JacobinaSaatriSigner = async (xmlToSign) => {
   // Assine o XML fora do DFeKit usando seu provedor de certificado/HSM/KMS.
