@@ -3,22 +3,37 @@ import {
   configureSaatriProviderPackage,
   type GerarNfseSigner,
   type SaatriCredentials,
+  type SaatriEnvironmentConfig,
+  type SaatriEvent,
+  type SaatriEventName,
   type SaatriEventSink,
+  type SaatriSoapHeader,
 } from "@dfekit/adapter-saatri";
-import {
-  JACOBINA_CITY_CODE,
-  SAATRI_JACOBINA_HOMOLOGATION_ENDPOINT,
-  SAATRI_JACOBINA_PRODUCTION_ENDPOINT,
-} from "./manifest";
+
+export const SAATRI_JACOBINA_HOMOLOGATION_ENDPOINT =
+  "https://homologa-homologa-jacobina.saatri.com.br/servicos/nfse.svc";
+
+export const SAATRI_JACOBINA_PRODUCTION_ENDPOINT =
+  "https://homologa-jacobina.saatri.com.br/servicos/nfse.svc";
+
+export const JACOBINA_CITY_CODE = "2917706";
+
+export type JacobinaSaatriCredentials = SaatriCredentials;
+export type JacobinaSaatriEnvironmentConfig = SaatriEnvironmentConfig;
+export type JacobinaSaatriEvent = SaatriEvent;
+export type JacobinaSaatriEventName = SaatriEventName;
+export type JacobinaSaatriEventSink = SaatriEventSink;
+export type JacobinaSaatriSigner = GerarNfseSigner;
+export type JacobinaSaatriSoapHeader = SaatriSoapHeader;
 
 export interface CreateJacobinaSaatriProviderOptions {
   readonly environment: FiscalEnvironment;
-  readonly signer?: GerarNfseSigner;
+  readonly signer?: JacobinaSaatriSigner;
   readonly timeoutMs?: number;
-  readonly eventSink?: SaatriEventSink;
+  readonly eventSink?: JacobinaSaatriEventSink;
 }
 
-export const jacobinaSaatriPackage = configureSaatriProviderPackage({
+const configuredJacobinaSaatriPackage = configureSaatriProviderPackage({
   providerId: "jacobina-saatri",
   providerName: "SAATRI Jacobina-BA (NFS-e ABRASF 2.03)",
   cityCode: JACOBINA_CITY_CODE,
@@ -28,24 +43,10 @@ export const jacobinaSaatriPackage = configureSaatriProviderPackage({
   },
 });
 
-export const jacobinaSaatriManifest: FiscalProviderManifest = jacobinaSaatriPackage.manifest;
+export const jacobinaSaatriManifest: FiscalProviderManifest =
+  configuredJacobinaSaatriPackage.manifest;
 
 export const createJacobinaSaatriProvider = (
-  credentials: SaatriCredentials,
+  credentials: JacobinaSaatriCredentials,
   options: CreateJacobinaSaatriProviderOptions,
-): FiscalProvider => jacobinaSaatriPackage.createProvider(credentials, options);
-
-export {
-  JACOBINA_CITY_CODE,
-  SAATRI_JACOBINA_HOMOLOGATION_ENDPOINT,
-  SAATRI_JACOBINA_PRODUCTION_ENDPOINT,
-} from "./manifest";
-export type {
-  GerarNfseSigner,
-  SaatriCredentials,
-  SaatriEnvironmentConfig,
-  SaatriEvent,
-  SaatriEventName,
-  SaatriEventSink,
-  SaatriSoapHeader,
-} from "@dfekit/adapter-saatri";
+): FiscalProvider => configuredJacobinaSaatriPackage.createProvider(credentials, options);

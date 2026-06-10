@@ -1,9 +1,9 @@
 import { describe, expect, test } from "bun:test";
-import { jacobinaSaatriManifest } from "../src/index";
 import {
+  jacobinaSaatriManifest,
   SAATRI_JACOBINA_HOMOLOGATION_ENDPOINT,
   SAATRI_JACOBINA_PRODUCTION_ENDPOINT,
-} from "../src/manifest";
+} from "../src/index";
 
 describe("jacobinaSaatriManifest", () => {
   test("usa endpoints Jacobina informados pelo manual SAATRI", () => {
