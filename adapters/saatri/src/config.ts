@@ -6,7 +6,7 @@ import type {
 import { defineAuditCatalog, defineErrorCatalog } from "evlog";
 import { z } from "zod";
 
-export const saatriAuditCatalog = defineAuditCatalog("saatri", {
+const saatriAuditCatalog = defineAuditCatalog("saatri", {
   ISSUE_STARTED: { target: "nfse" },
   ENVELOPE_BUILD_STARTED: { target: "nfse" },
   ENVELOPE_BUILD_SUCCEEDED: { target: "nfse" },
@@ -26,7 +26,7 @@ export const saatriAuditCatalog = defineAuditCatalog("saatri", {
   OPTIONAL_SIGNER_NOT_CONFIGURED: { target: "nfse" },
 });
 
-export const saatriErrorCatalog = defineErrorCatalog("saatri", {
+const saatriErrorCatalog = defineErrorCatalog("saatri", {
   NETWORK_ERROR: {
     message: "Falha de rede ao comunicar com o servidor SAATRI.",
     tags: ["saatri", "transport"],
@@ -65,7 +65,7 @@ declare module "evlog" {
   }
 }
 
-export const saatriCredentialsSchema = z.object({
+const saatriCredentialsSchema = z.object({
   username: z.string().min(1),
   password: z.string().min(1),
   issuerCnpj: z.string().regex(/^\d{14}$/),
@@ -74,7 +74,7 @@ export const saatriCredentialsSchema = z.object({
 
 export type SaatriCredentials = z.infer<typeof saatriCredentialsSchema>;
 
-export const saatriEnvironmentConfigSchema = z.object({
+const saatriEnvironmentConfigSchema = z.object({
   environment: z.enum(["homologation", "production"]),
   endpoint: z.url(),
   cityCode: z.string().regex(/^\d{7}$/),
@@ -82,7 +82,7 @@ export const saatriEnvironmentConfigSchema = z.object({
 
 export type SaatriEnvironmentConfig = z.infer<typeof saatriEnvironmentConfigSchema>;
 
-export const saatriProviderPackageConfigSchema = z.object({
+const saatriProviderPackageConfigSchema = z.object({
   providerId: z.string().min(1),
   providerName: z.string().min(1),
   cityCode: z.string().regex(/^\d{7}$/),
@@ -95,19 +95,19 @@ export const saatriProviderPackageConfigSchema = z.object({
     .optional(),
 });
 
-export const createSaatriProviderOptionsSchema = z.object({
+const createSaatriProviderOptionsSchema = z.object({
   environment: z.enum(["homologation", "production"]),
   timeoutMs: z.number().int().positive().optional(),
   signer: z.custom<unknown>().optional(),
   eventSink: z.custom<unknown>().optional(),
 });
 
-export const saatriIssueRuntimeConfigSchema = z.object({
+const saatriIssueRuntimeConfigSchema = z.object({
   credentials: saatriCredentialsSchema,
   config: saatriEnvironmentConfigSchema,
 });
 
-export const saatriSoapHeaderSchema = z.object({
+const saatriSoapHeaderSchema = z.object({
   cabecalhoVersion: z.literal("2.01"),
   dataVersion: z.literal("2.03"),
   usernameToken: z.object({
@@ -118,7 +118,7 @@ export const saatriSoapHeaderSchema = z.object({
 
 export type SaatriSoapHeader = z.infer<typeof saatriSoapHeaderSchema>;
 
-export const returnMessageSchema = z.object({
+const returnMessageSchema = z.object({
   Codigo: z.coerce.string(),
   Mensagem: z.coerce.string(),
   Correcao: z.coerce.string().optional(),
@@ -126,7 +126,7 @@ export const returnMessageSchema = z.object({
 
 export type ReturnMessage = z.infer<typeof returnMessageSchema>;
 
-export const generateNfseSuccessResponseSchema = z.object({
+const generateNfseSuccessResponseSchema = z.object({
   ListaNfse: z.object({
     CompNfse: z.object({
       Nfse: z.object({
@@ -142,7 +142,7 @@ export const generateNfseSuccessResponseSchema = z.object({
 
 export type GenerateNfseSuccessResponse = z.infer<typeof generateNfseSuccessResponseSchema>;
 
-export const generateNfseErrorResponseSchema = z.object({
+const generateNfseErrorResponseSchema = z.object({
   ListaMensagemRetorno: z.object({
     MensagemRetorno: z
       .union([returnMessageSchema, z.array(returnMessageSchema)])
@@ -152,14 +152,14 @@ export const generateNfseErrorResponseSchema = z.object({
 
 export type GenerateNfseErrorResponse = z.infer<typeof generateNfseErrorResponseSchema>;
 
-export const generateNfseResponseSchema = z.union([
+const generateNfseResponseSchema = z.union([
   generateNfseSuccessResponseSchema,
   generateNfseErrorResponseSchema,
 ]);
 
 export type GenerateNfseResponse = z.infer<typeof generateNfseResponseSchema>;
 
-export const generateNfseSoapDocumentSchema = z.object({
+const generateNfseSoapDocumentSchema = z.object({
   Envelope: z.object({
     Body: z.object({
       GerarNfseResponse: z.object({
@@ -171,7 +171,7 @@ export const generateNfseSoapDocumentSchema = z.object({
 
 export type GenerateNfseSoapDocument = z.infer<typeof generateNfseSoapDocumentSchema>;
 
-export const generateNfseOutputDocumentSchema = z.union([
+const generateNfseOutputDocumentSchema = z.union([
   z.object({ GerarNfseResposta: generateNfseResponseSchema }),
   generateNfseResponseSchema,
 ]);
@@ -210,13 +210,13 @@ export interface SaatriEvent {
 
 export type SaatriEventSink = (event: SaatriEvent) => void;
 
-export const SAATRI_ABRASF_VERSION = "2.03";
+const SAATRI_ABRASF_VERSION = "2.03";
 
-export const SAATRI_ABRASF_203_CAPABILITIES = [
+const SAATRI_ABRASF_203_CAPABILITIES = [
   "issue_nfse",
 ] as const satisfies readonly FiscalProviderCapability[];
 
-export const SAATRI_ABRASF_203_CAPABILITY_METADATA = [
+const SAATRI_ABRASF_203_CAPABILITY_METADATA = [
   {
     capability: "issue_nfse",
     status: "supported",
@@ -301,9 +301,7 @@ export interface ConfigureSaatriManifestInput {
   readonly extraCapabilityMetadata?: readonly FiscalProviderCapabilityMetadata[];
 }
 
-export const configureSaatriManifest = (
-  input: ConfigureSaatriManifestInput,
-): FiscalProviderManifest => ({
+const configureSaatriManifest = (input: ConfigureSaatriManifestInput): FiscalProviderManifest => ({
   id: input.providerId,
   name: input.providerName,
   documentKinds: ["nfse"],
@@ -314,3 +312,23 @@ export const configureSaatriManifest = (
     ...(input.extraCapabilityMetadata ?? []),
   ],
 });
+export {
+  saatriAuditCatalog,
+  saatriErrorCatalog,
+  saatriCredentialsSchema,
+  saatriEnvironmentConfigSchema,
+  saatriProviderPackageConfigSchema,
+  createSaatriProviderOptionsSchema,
+  saatriIssueRuntimeConfigSchema,
+  saatriSoapHeaderSchema,
+  returnMessageSchema,
+  generateNfseSuccessResponseSchema,
+  generateNfseErrorResponseSchema,
+  generateNfseResponseSchema,
+  generateNfseSoapDocumentSchema,
+  generateNfseOutputDocumentSchema,
+  SAATRI_ABRASF_VERSION,
+  SAATRI_ABRASF_203_CAPABILITIES,
+  SAATRI_ABRASF_203_CAPABILITY_METADATA,
+  configureSaatriManifest,
+};
