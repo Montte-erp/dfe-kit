@@ -3,8 +3,8 @@ import type {
   FiscalProviderError,
   FiscalRejection,
   ProviderResponse,
-} from "@dfekit/fiscal";
-import { encodeUtf8, XML_MEDIA_TYPE } from "@dfekit/xml";
+} from "@dfe-kit/fiscal";
+import { encodeUtf8, XML_MEDIA_TYPE } from "@dfe-kit/xml";
 import { panic, Result } from "better-result";
 import { XMLParser } from "fast-xml-parser";
 import { z } from "zod";

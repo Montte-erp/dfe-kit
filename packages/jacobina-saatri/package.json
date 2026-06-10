@@ -1,5 +1,5 @@
 {
-  "name": "@dfekit/jacobina-saatri",
+  "name": "@dfe-kit/jacobina-saatri",
   "version": "0.0.0",
   "license": "BUSL-1.1",
   "files": [
@@ -21,19 +21,23 @@
     "build": "bunup",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "bun test ./__tests__",
-    "publint": "publint --strict"
+    "publint": "publint --strict",
+    "publish:npm": "bun run build && bun run publint && npm publish --access public --provenance",
+    "publish:npm:dry": "bun run build && bun run publint && npm publish --access public --provenance --dry-run"
   },
   "dependencies": {
-    "@dfekit/adapter-saatri": "workspace:*",
     "better-result": "^2.9.2"
+  },
+  "devDependencies": {
+    "@dfe-kit/adapter-saatri": "workspace:*"
   },
   "nx": {
     "tags": [
       "scope:provider"
     ],
     "implicitDependencies": [
-      "@dfekit/fiscal",
-      "@dfekit/adapter-saatri"
+      "@dfe-kit/fiscal",
+      "@dfe-kit/adapter-saatri"
     ]
   }
 }

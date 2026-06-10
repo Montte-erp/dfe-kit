@@ -15,11 +15,11 @@
       },
     },
     "adapters/saatri": {
-      "name": "@dfekit/adapter-saatri",
+      "name": "@dfe-kit/adapter-saatri",
       "version": "0.0.0",
       "dependencies": {
-        "@dfekit/fiscal": "workspace:*",
-        "@dfekit/xml": "workspace:*",
+        "@dfe-kit/fiscal": "workspace:*",
+        "@dfe-kit/xml": "workspace:*",
         "better-result": "^2.9.2",
         "dayjs": "^1.11.19",
         "evlog": "^2.18.1",
@@ -29,28 +29,30 @@
       },
     },
     "core/fiscal": {
-      "name": "@dfekit/fiscal",
+      "name": "@dfe-kit/fiscal",
       "version": "0.0.0",
       "dependencies": {
-        "@dfekit/utils": "workspace:*",
+        "@dfe-kit/utils": "workspace:*",
         "better-result": "^2.9.2",
         "zod": "^4.4.3",
       },
     },
     "core/utils": {
-      "name": "@dfekit/utils",
+      "name": "@dfe-kit/utils",
       "version": "0.0.0",
     },
     "core/xml": {
-      "name": "@dfekit/xml",
+      "name": "@dfe-kit/xml",
       "version": "0.0.0",
     },
     "packages/jacobina-saatri": {
-      "name": "@dfekit/jacobina-saatri",
+      "name": "@dfe-kit/jacobina-saatri",
       "version": "0.0.0",
       "dependencies": {
-        "@dfekit/adapter-saatri": "workspace:*",
         "better-result": "^2.9.2",
+      },
+      "devDependencies": {
+        "@dfe-kit/adapter-saatri": "workspace:*",
       },
     },
     "tooling/bunup": {
@@ -86,15 +88,15 @@
 
     "@bunup/shared": ["@bunup/shared@0.16.31", "", { "peerDependencies": { "typescript": ">=4.5.0" }, "optionalPeers": ["typescript"] }, "sha512-h1dw669Uk68NCt1WvgqNfQoCcaK1RxLVAs3yQRCRaFxJiI9cqhU0EquVoGFM1g1BxzujGa7+bA9gt5JR0ZVLxA=="],
 
-    "@dfekit/adapter-saatri": ["@dfekit/adapter-saatri@workspace:adapters/saatri"],
+    "@dfe-kit/adapter-saatri": ["@dfe-kit/adapter-saatri@workspace:adapters/saatri"],
 
-    "@dfekit/fiscal": ["@dfekit/fiscal@workspace:core/fiscal"],
+    "@dfe-kit/fiscal": ["@dfe-kit/fiscal@workspace:core/fiscal"],
 
-    "@dfekit/jacobina-saatri": ["@dfekit/jacobina-saatri@workspace:packages/jacobina-saatri"],
+    "@dfe-kit/jacobina-saatri": ["@dfe-kit/jacobina-saatri@workspace:packages/jacobina-saatri"],
 
-    "@dfekit/utils": ["@dfekit/utils@workspace:core/utils"],
+    "@dfe-kit/utils": ["@dfe-kit/utils@workspace:core/utils"],
 
-    "@dfekit/xml": ["@dfekit/xml@workspace:core/xml"],
+    "@dfe-kit/xml": ["@dfe-kit/xml@workspace:core/xml"],
 
     "@emnapi/core": ["@emnapi/core@1.4.5", "", { "dependencies": { "@emnapi/wasi-threads": "1.0.4", "tslib": "^2.4.0" } }, "sha512-XsLw1dEOpkSX/WucdqUhPWP7hDxSvZiY+fsUC14h+FtQ2Ifni4znbBt8punRX+Uj2JG/uDb8nEHVKvrVlvdZ5Q=="],
 

@@ -13,19 +13,19 @@ See [`LICENSE`](./LICENSE) and [`docs/licensing.md`](./docs/licensing.md).
 ## Packages
 
 ```text
-@dfekit/fiscal            fiscal adapter contract, domain types, zod schemas
-@dfekit/utils             generic validation primitives (CPF/CNPJ)
-@dfekit/xml               XML escaping/encoding primitives
-@dfekit/adapter-saatri    reusable SAATRI/ABRASF 2.03 adapter engine
-@dfekit/jacobina-saatri   SAATRI Jacobina-BA NFS-e provider (ABRASF 2.03)
+@dfe-kit/fiscal            fiscal adapter contract, domain types, zod schemas
+@dfe-kit/utils             generic validation primitives (CPF/CNPJ)
+@dfe-kit/xml               XML escaping/encoding primitives
+@dfe-kit/adapter-saatri    reusable SAATRI/ABRASF 2.03 adapter engine
+@dfe-kit/jacobina-saatri   SAATRI Jacobina-BA NFS-e provider (ABRASF 2.03)
 ```
 
 Planned packages:
 
 ```text
-@dfekit/provider-sefaz    NF-e/NFC-e SEFAZ adapter
-@dfekit/provider-nfse     NFS-e Nacional adapter
-@dfekit/cli               local validation and homologation runner
+@dfe-kit/provider-sefaz    NF-e/NFC-e SEFAZ adapter
+@dfe-kit/provider-nfse     NFS-e Nacional adapter
+@dfe-kit/cli               local validation and homologation runner
 ```
 
 ## Boundaries

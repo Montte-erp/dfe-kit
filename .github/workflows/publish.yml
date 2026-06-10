@@ -1,0 +1,47 @@
+name: Publish
+
+on:
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Run publish without uploading to npm"
+        required: true
+        default: "true"
+        type: choice
+        options:
+          - "true"
+          - "false"
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    environment: npm
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          filter: tree:0
+
+      - name: Bun & Nx Setup
+        uses: ./.github/actions/setup-bun-nx
+
+      - name: Run checks
+        run: bun run check
+
+      - name: Run publint
+        run: bun run publint
+
+      - name: Publish dry run
+        if: github.event_name == 'workflow_dispatch' && inputs.dry_run == 'true'
+        run: bun run publish:npm:dry
+
+      - name: Publish to npm
+        if: github.event_name == 'release' || (github.event_name == 'workflow_dispatch' && inputs.dry_run == 'false')
+        run: bun run publish:npm

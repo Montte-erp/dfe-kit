@@ -1,4 +1,4 @@
-import { isValidBrazilianTaxId, isValidCnpj, isValidCpf } from "@dfekit/utils";
+import { isValidBrazilianTaxId, isValidCnpj, isValidCpf } from "@dfe-kit/utils";
 import { z } from "zod";
 
 export const fiscalDocumentKindSchema = z.enum(["nfe", "nfce", "nfse"]);

@@ -1,4 +1,4 @@
-# @dfekit/jacobina-saatri
+# @dfe-kit/jacobina-saatri
 
 Provider NFS-e para **Jacobina/BA** via **SAATRI / ABRASF 2.03**.
 
@@ -51,13 +51,13 @@ Veja o arquivo [`LICENSE`](./LICENSE).
 ## Instalação
 
 ```bash
-bun add @dfekit/jacobina-saatri better-result
+bun add @dfe-kit/jacobina-saatri better-result
 ```
 
 Ou com npm:
 
 ```bash
-npm install @dfekit/jacobina-saatri better-result
+npm install @dfe-kit/jacobina-saatri better-result
 ```
 
 > `better-result` faz parte do contrato público: APIs fiscais retornam `Result<T, FiscalProviderError>`.
@@ -65,7 +65,7 @@ npm install @dfekit/jacobina-saatri better-result
 ## Uso mínimo
 
 ```ts
-import { createJacobinaSaatriProvider } from "@dfekit/jacobina-saatri";
+import { createJacobinaSaatriProvider } from "@dfe-kit/jacobina-saatri";
 
 const provider = createJacobinaSaatriProvider(
   {
@@ -203,9 +203,9 @@ Consumidores devem persistir esses artefatos junto com protocolo, número, códi
 Assinatura XML é opcional e injetável:
 
 ```ts
-import { createJacobinaSaatriProvider, type GerarNfseSigner } from "@dfekit/jacobina-saatri";
+import { createJacobinaSaatriProvider, type JacobinaSaatriSigner } from "@dfe-kit/jacobina-saatri";
 
-const signer: GerarNfseSigner = async (xmlToSign) => {
+const signer: JacobinaSaatriSigner = async (xmlToSign) => {
   // Assine o XML fora do DFeKit usando seu provedor de certificado/HSM/KMS.
   // Retorne Result.ok(xmlAssinado) ou Result.err(FiscalProviderError).
 };
@@ -236,15 +236,15 @@ Cria um provider fiscal para Jacobina/BA.
 
 ```ts
 createJacobinaSaatriProvider(
-  credentials: SaatriCredentials,
-  opts?: CreateJacobinaSaatriProviderOptions,
+  credentials: JacobinaSaatriCredentials,
+  opts: CreateJacobinaSaatriProviderOptions,
 ): FiscalProvider
 ```
 
 Credenciais:
 
 ```ts
-interface SaatriCredentials {
+interface JacobinaSaatriCredentials {
   readonly username: string;
   readonly password: string;
   readonly issuerCnpj: string;
@@ -256,9 +256,10 @@ Opções:
 
 ```ts
 interface CreateJacobinaSaatriProviderOptions {
-  readonly environment?: "homologation" | "production";
-  readonly signer?: GerarNfseSigner;
+  readonly environment: "homologation" | "production";
+  readonly signer?: JacobinaSaatriSigner;
   readonly timeoutMs?: number;
+  readonly eventSink?: JacobinaSaatriEventSink;
 }
 ```
 
@@ -287,8 +288,8 @@ bun run publint
 Antes de publicar pacote:
 
 ```bash
-cd packages/jacobina-saatri
-bun pm pack --destination /tmp/dfekit-pack
+bun run publish:npm:dry
+bun run publish:npm
 ```
 
 O tarball deve incluir apenas:
@@ -298,11 +299,3 @@ O tarball deve incluir apenas:
 - `README.md`;
 - `dist/index.js`;
 - `dist/index.d.ts`.
-
-## Referências internas
-
-- `docs/architecture.md`
-- `docs/licensing.md`
-- `docs/jacobina-saatri/README.md`
-- `docs/jacobina-saatri/deepresearch-nfse-jacobina-saatri.md`
-- `docs/jacobina-saatri/reference-materials/`

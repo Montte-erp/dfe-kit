@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import type { FiscalProviderManifest, IssueFiscalDocumentInput } from "@dfekit/fiscal";
+import type { FiscalProviderManifest, IssueFiscalDocumentInput } from "@dfe-kit/fiscal";
 import { Result } from "better-result";
 import { createSaatriProvider } from "../src/provider";
 import type { SaatriCredentials, SaatriEnvironmentConfig } from "../src/config";

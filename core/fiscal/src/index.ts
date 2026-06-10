@@ -1,12 +1,12 @@
 import type { Result } from "better-result";
 
 /**
- * Adapter fiscal do dfekit.
+ * Adapter fiscal do dfe-kit.
  *
  * Este modulo e o contrato unico que TODO package de provider implementa
  * (`FiscalProvider`), mais os tipos de dominio fiscal que ele carrega. Nao ha
  * runtime aqui: apenas tipos. Os schemas zod correspondentes vivem em
- * `@dfekit/fiscal/schemas`.
+ * `@dfe-kit/fiscal/schemas`.
  *
  * Invariante central: rejeicao fiscal NAO e excecao tecnica. Ela chega como
  * `Result.ok` com `ProviderResponse.status === "rejected"` e `rejections[]`

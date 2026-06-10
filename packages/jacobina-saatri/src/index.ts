@@ -1,6 +1,7 @@
-import type { FiscalEnvironment, FiscalProvider, FiscalProviderManifest } from "@dfekit/fiscal";
+import type { FiscalEnvironment, FiscalProvider, FiscalProviderManifest } from "@dfe-kit/fiscal";
 import {
   configureSaatriProviderPackage,
+  SAATRI_ABRASF_VERSION as ADAPTER_SAATRI_ABRASF_VERSION,
   type GerarNfseSigner,
   type SaatriCredentials,
   type SaatriEnvironmentConfig,
@@ -8,7 +9,7 @@ import {
   type SaatriEventName,
   type SaatriEventSink,
   type SaatriSoapHeader,
-} from "@dfekit/adapter-saatri";
+} from "@dfe-kit/adapter-saatri";
 
 export const SAATRI_JACOBINA_HOMOLOGATION_ENDPOINT =
   "https://homologa-homologa-jacobina.saatri.com.br/servicos/nfse.svc";
@@ -17,6 +18,8 @@ export const SAATRI_JACOBINA_PRODUCTION_ENDPOINT =
   "https://homologa-jacobina.saatri.com.br/servicos/nfse.svc";
 
 export const JACOBINA_CITY_CODE = "2917706";
+
+export const SAATRI_ABRASF_VERSION = ADAPTER_SAATRI_ABRASF_VERSION;
 
 export type JacobinaSaatriCredentials = SaatriCredentials;
 export type JacobinaSaatriEnvironmentConfig = SaatriEnvironmentConfig;

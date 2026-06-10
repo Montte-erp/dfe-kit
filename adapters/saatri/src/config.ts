@@ -2,7 +2,7 @@ import type {
   FiscalProviderCapability,
   FiscalProviderCapabilityMetadata,
   FiscalProviderManifest,
-} from "@dfekit/fiscal";
+} from "@dfe-kit/fiscal";
 import { defineAuditCatalog, defineErrorCatalog } from "evlog";
 import { z } from "zod";
 

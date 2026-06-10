@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import type { IssueFiscalDocumentInput } from "@dfekit/fiscal";
+import type { IssueFiscalDocumentInput } from "@dfe-kit/fiscal";
 import { Result } from "better-result";
 import { buildGerarNfseEnvelope, type GerarNfseSigner } from "../src/envelope";
 import type { SaatriCredentials, SaatriEnvironmentConfig } from "../src/config";

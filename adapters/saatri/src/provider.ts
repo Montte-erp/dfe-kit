@@ -7,8 +7,8 @@ import type {
   IssueFiscalDocumentInput,
   IssueFiscalDocumentResponse,
   ProviderResponse,
-} from "@dfekit/fiscal";
-import { encodeUtf8, getUtf8ByteLength, XML_MEDIA_TYPE } from "@dfekit/xml";
+} from "@dfe-kit/fiscal";
+import { encodeUtf8, getUtf8ByteLength, XML_MEDIA_TYPE } from "@dfe-kit/xml";
 import { Result } from "better-result";
 import { buildGerarNfseEnvelope, type GerarNfseSigner, SOAP_ACTION_GERAR_NFSE } from "./envelope";
 import type { SaatriHttpClient } from "./http";

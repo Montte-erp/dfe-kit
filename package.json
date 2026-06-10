@@ -1,5 +1,5 @@
 {
-  "name": "dfekit",
+  "name": "dfe-kit",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -20,7 +20,12 @@
     "format:check": "oxfmt -c tooling/oxc/oxfmt.json --check core adapters packages tooling '!**/.cache/**' '!**/dist/**' '!**/*.d.ts' '!**/*.tsbuildinfo'",
     "check:declarative-errors": "bun tooling/static-checks/check-declarative-errors.ts",
     "check:static": "bun run check:declarative-errors && bun run lint && bun run format:check",
-    "check": "bun run check:static && nx run-many -t typecheck test build"
+    "check": "bun run check:static && nx run-many -t typecheck test build",
+    "release:dry": "nx release --dry-run",
+    "release:version": "nx release version",
+    "release:publish": "nx release publish",
+    "publish:npm": "bun run check && bun run publint && nx run @dfe-kit/jacobina-saatri:publish:npm",
+    "publish:npm:dry": "bun run check && bun run publint && nx run @dfe-kit/jacobina-saatri:publish:npm:dry"
   },
   "devDependencies": {
     "@types/bun": "latest",

@@ -27,12 +27,12 @@
     "ignoreDeprecations": "6.0",
     "baseUrl": "../..",
     "paths": {
-      "@dfekit/fiscal": ["core/fiscal/src/index.ts"],
-      "@dfekit/fiscal/schemas": ["core/fiscal/src/schemas.ts"],
-      "@dfekit/utils": ["core/utils/src/index.ts"],
-      "@dfekit/xml": ["core/xml/src/index.ts"],
-      "@dfekit/adapter-saatri": ["adapters/saatri/src/index.ts"],
-      "@dfekit/adapter-saatri/config": ["adapters/saatri/src/config.ts"]
+      "@dfe-kit/fiscal": ["core/fiscal/src/index.ts"],
+      "@dfe-kit/fiscal/schemas": ["core/fiscal/src/schemas.ts"],
+      "@dfe-kit/utils": ["core/utils/src/index.ts"],
+      "@dfe-kit/xml": ["core/xml/src/index.ts"],
+      "@dfe-kit/adapter-saatri": ["adapters/saatri/src/index.ts"],
+      "@dfe-kit/adapter-saatri/config": ["adapters/saatri/src/config.ts"]
     }
   },
   "display": "Default"

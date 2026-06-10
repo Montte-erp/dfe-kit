@@ -2,10 +2,11 @@ import type {
   FiscalEnvironment,
   FiscalProvider,
   FiscalProviderCapabilityMetadata,
-} from "@dfekit/fiscal";
+} from "@dfe-kit/fiscal";
 import { panic } from "better-result";
 import {
   configureSaatriManifest,
+  SAATRI_ABRASF_VERSION,
   type SaatriCredentials,
   type SaatriEnvironmentConfig,
   type SaatriEventSink,
@@ -87,6 +88,7 @@ export {
   createSaatriHttpClient,
   createSaatriProvider,
   parseGerarNfseResponse,
+  SAATRI_ABRASF_VERSION,
   SOAP_ACTION_GERAR_NFSE,
 };
 export type { CreateSaatriHttpOptions, GerarNfseSigner, SaatriHttpClient };

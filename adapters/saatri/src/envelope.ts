@@ -1,5 +1,5 @@
-import type { FiscalProviderError, IssueFiscalDocumentInput } from "@dfekit/fiscal";
-import { escapeXmlText } from "@dfekit/xml";
+import type { FiscalProviderError, IssueFiscalDocumentInput } from "@dfe-kit/fiscal";
+import { escapeXmlText } from "@dfe-kit/xml";
 import { panic, Result } from "better-result";
 import dayjs from "dayjs";
 import type { SaatriCredentials, SaatriEnvironmentConfig } from "./config";

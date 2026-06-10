@@ -1,5 +1,5 @@
 {
-  "name": "@dfekit/fiscal",
+  "name": "@dfe-kit/fiscal",
   "version": "0.0.0",
   "private": true,
   "license": "BUSL-1.1",
@@ -22,7 +22,7 @@
     "test": "bun test ./__tests__"
   },
   "dependencies": {
-    "@dfekit/utils": "workspace:*",
+    "@dfe-kit/utils": "workspace:*",
     "better-result": "^2.9.2",
     "zod": "^4.4.3"
   },
@@ -31,7 +31,7 @@
       "scope:core"
     ],
     "implicitDependencies": [
-      "@dfekit/utils"
+      "@dfe-kit/utils"
     ]
   }
 }

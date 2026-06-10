@@ -37,11 +37,11 @@ DFeKit is source-available fiscal infrastructure for Brazilian electronic invoic
 ## Packages
 
 ```text
-core/fiscal               @dfekit/fiscal            fiscal adapter contract + zod schemas
-core/utils                @dfekit/utils             generic CPF/CNPJ and validation primitives
-core/xml                  @dfekit/xml               generic XML escaping/encoding primitives
-adapters/saatri           @dfekit/adapter-saatri    reusable SAATRI/ABRASF 2.03 adapter engine
-packages/jacobina-saatri  @dfekit/jacobina-saatri   Jacobina-BA provider package
+core/fiscal               @dfe-kit/fiscal            fiscal adapter contract + zod schemas
+core/utils                @dfe-kit/utils             generic CPF/CNPJ and validation primitives
+core/xml                  @dfe-kit/xml               generic XML escaping/encoding primitives
+adapters/saatri           @dfe-kit/adapter-saatri    reusable SAATRI/ABRASF 2.03 adapter engine
+packages/jacobina-saatri  @dfe-kit/jacobina-saatri   Jacobina-BA provider package
 ```
 
 Provider packages live in `packages/*` and are the only intended published artifacts. Core and adapter packages are private and inlined into published provider bundles.

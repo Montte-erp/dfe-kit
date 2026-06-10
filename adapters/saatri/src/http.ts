@@ -1,4 +1,4 @@
-import type { FiscalProviderError } from "@dfekit/fiscal";
+import type { FiscalProviderError } from "@dfe-kit/fiscal";
 import { Result } from "better-result";
 import ky, { type KyInstance } from "ky";
 import { saatriErrorCatalog } from "./config";

@@ -1,5 +1,5 @@
 {
-  "name": "@dfekit/adapter-saatri",
+  "name": "@dfe-kit/adapter-saatri",
   "version": "0.0.0",
   "private": true,
   "license": "BUSL-1.1",
@@ -18,8 +18,8 @@
     "test": "bun test ./__tests__"
   },
   "dependencies": {
-    "@dfekit/fiscal": "workspace:*",
-    "@dfekit/xml": "workspace:*",
+    "@dfe-kit/fiscal": "workspace:*",
+    "@dfe-kit/xml": "workspace:*",
     "better-result": "^2.9.2",
     "dayjs": "^1.11.19",
     "evlog": "^2.18.1",
@@ -32,8 +32,8 @@
       "scope:adapter"
     ],
     "implicitDependencies": [
-      "@dfekit/fiscal",
-      "@dfekit/xml"
+      "@dfe-kit/fiscal",
+      "@dfe-kit/xml"
     ]
   }
 }
