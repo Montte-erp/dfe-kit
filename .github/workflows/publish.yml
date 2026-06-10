@@ -16,11 +16,12 @@ on:
 
 permissions:
   contents: read
-  packages: write
+  id-token: write
 
 jobs:
   publish:
     runs-on: ubuntu-latest
+    environment: npm
     env:
       CI: "false"
       GITHUB_ACTIONS: "false"
@@ -34,12 +35,6 @@ jobs:
       - name: Bun & Nx Setup
         uses: ./.github/actions/setup-bun-nx
 
-      - name: Configure GitHub Packages npm registry
-        uses: actions/setup-node@v4
-        with:
-          registry-url: https://npm.pkg.github.com
-          scope: "@montte-erp"
-
       - name: Run checks
         run: bun run check
 
@@ -48,12 +43,12 @@ jobs:
 
       - name: Publish dry run
         if: github.event_name == 'workflow_dispatch' && inputs.dry_run == 'true'
-        run: bun run publish:github:dry
+        run: bun run publish:npm:dry
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Publish to npm
         if: github.event_name == 'release' || (github.event_name == 'workflow_dispatch' && inputs.dry_run == 'false')
-        run: bun run publish:github
+        run: bun run publish:npm
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

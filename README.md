@@ -17,7 +17,7 @@ See [`LICENSE`](./LICENSE) and [`docs/licensing.md`](./docs/licensing.md).
 @dfe-kit/utils             generic validation primitives (CPF/CNPJ)
 @dfe-kit/xml               XML escaping/encoding primitives
 @dfe-kit/adapter-saatri    reusable SAATRI/ABRASF 2.03 adapter engine
-@montte-erp/jacobina-saatri   SAATRI Jacobina-BA NFS-e provider (ABRASF 2.03)
+@dfe-kit/jacobina-saatri   SAATRI Jacobina-BA NFS-e provider (ABRASF 2.03)
 ```
 
 Planned packages:

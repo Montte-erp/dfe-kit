@@ -24,8 +24,8 @@
     "release:dry": "nx release --dry-run",
     "release:version": "nx release version",
     "release:publish": "nx release publish",
-    "publish:github": "bun run check && bun run publint && nx run @montte-erp/jacobina-saatri:publish:github",
-    "publish:github:dry": "bun run check && bun run publint && nx run @montte-erp/jacobina-saatri:publish:github:dry"
+    "publish:npm": "bun run check && bun run publint && nx run @dfe-kit/jacobina-saatri:publish:npm",
+    "publish:npm:dry": "bun run check && bun run publint && nx run @dfe-kit/jacobina-saatri:publish:npm:dry"
   },
   "devDependencies": {
     "@types/bun": "latest",
