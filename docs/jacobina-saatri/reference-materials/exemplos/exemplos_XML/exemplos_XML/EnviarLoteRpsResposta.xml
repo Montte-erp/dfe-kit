@@ -1,5 +1,0 @@
-<EnviarLoteRpsResposta xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="http://www.abrasf.org.br/nfse.xsd">
-	<NumeroLote>16</NumeroLote>
-	<DataRecebimento>2012-10-03T17:43:24</DataRecebimento>
-	<Protocolo>37EAE23E71</Protocolo>
-</EnviarLoteRpsResposta>
