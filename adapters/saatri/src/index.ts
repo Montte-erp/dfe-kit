@@ -4,8 +4,13 @@ import type {
   FiscalProviderCapabilityMetadata,
 } from "@dfe-kit/fiscal";
 import { panic } from "better-result";
+import { z } from "zod";
 import {
   configureSaatriManifest,
+  createSaatriProviderOptionsSchema,
+  saatriCredentialsSchema,
+  saatriEnvironmentConfigSchema,
+  saatriProviderPackageConfigSchema,
   SAATRI_ABRASF_VERSION,
   type SaatriCredentials,
   type SaatriEnvironmentConfig,
@@ -46,36 +51,53 @@ export interface ConfiguredSaatriProviderPackage {
 export const configureSaatriProviderPackage = (
   packageConfig: SaatriProviderPackageConfig,
 ): ConfiguredSaatriProviderPackage => {
+  const parsedPackageConfig = saatriProviderPackageConfigSchema.safeParse(packageConfig);
+  if (!parsedPackageConfig.success) {
+    panic(`Invalid SAATRI provider package config: ${z.prettifyError(parsedPackageConfig.error)}`);
+  }
+
   const manifest = configureSaatriManifest({
-    providerId: packageConfig.providerId,
-    providerName: packageConfig.providerName,
-    ...(packageConfig.extraCapabilityMetadata !== undefined
-      ? { extraCapabilityMetadata: packageConfig.extraCapabilityMetadata }
+    providerId: parsedPackageConfig.data.providerId,
+    providerName: parsedPackageConfig.data.providerName,
+    ...(parsedPackageConfig.data.extraCapabilityMetadata !== undefined
+      ? { extraCapabilityMetadata: parsedPackageConfig.data.extraCapabilityMetadata }
       : {}),
   });
 
   return {
     manifest,
     createProvider: (credentials, options) => {
-      const endpoint = packageConfig.endpoints[options.environment];
-      if (endpoint === undefined) {
-        panic(`Missing SAATRI endpoint for environment: ${options.environment}`);
+      const parsedCredentials = saatriCredentialsSchema.safeParse(credentials);
+      if (!parsedCredentials.success) {
+        panic(`Invalid SAATRI credentials: ${z.prettifyError(parsedCredentials.error)}`);
       }
 
-      const config: SaatriEnvironmentConfig = {
-        environment: options.environment,
-        endpoint,
-        cityCode: packageConfig.cityCode,
-      };
+      const parsedOptions = createSaatriProviderOptionsSchema.safeParse(options);
+      if (!parsedOptions.success) {
+        panic(`Invalid SAATRI provider options: ${z.prettifyError(parsedOptions.error)}`);
+      }
+
+      const config = {
+        environment: parsedOptions.data.environment,
+        endpoint: parsedPackageConfig.data.endpoints[parsedOptions.data.environment],
+        cityCode: parsedPackageConfig.data.cityCode,
+      } satisfies SaatriEnvironmentConfig;
+      const parsedConfig = saatriEnvironmentConfigSchema.safeParse(config);
+      if (!parsedConfig.success) {
+        panic(`Invalid SAATRI runtime config: ${z.prettifyError(parsedConfig.error)}`);
+      }
+
       const httpOptions: CreateSaatriHttpOptions =
-        options.timeoutMs === undefined ? {} : { timeoutMs: options.timeoutMs };
+        parsedOptions.data.timeoutMs === undefined
+          ? {}
+          : { timeoutMs: parsedOptions.data.timeoutMs };
       const http = createSaatriHttpClient(httpOptions);
 
       return createSaatriProvider({
         manifest,
         http,
-        config,
-        credentials,
+        config: parsedConfig.data,
+        credentials: parsedCredentials.data,
         ...(options.signer !== undefined ? { signer: options.signer } : {}),
         ...(options.eventSink !== undefined ? { eventSink: options.eventSink } : {}),
       });

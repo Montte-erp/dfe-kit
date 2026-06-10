@@ -82,6 +82,31 @@ export const saatriEnvironmentConfigSchema = z.object({
 
 export type SaatriEnvironmentConfig = z.infer<typeof saatriEnvironmentConfigSchema>;
 
+export const saatriProviderPackageConfigSchema = z.object({
+  providerId: z.string().min(1),
+  providerName: z.string().min(1),
+  cityCode: z.string().regex(/^\d{7}$/),
+  endpoints: z.object({
+    homologation: z.url(),
+    production: z.url(),
+  }),
+  extraCapabilityMetadata: z
+    .custom<readonly FiscalProviderCapabilityMetadata[]>((value) => Array.isArray(value))
+    .optional(),
+});
+
+export const createSaatriProviderOptionsSchema = z.object({
+  environment: z.enum(["homologation", "production"]),
+  timeoutMs: z.number().int().positive().optional(),
+  signer: z.custom<unknown>().optional(),
+  eventSink: z.custom<unknown>().optional(),
+});
+
+export const saatriIssueRuntimeConfigSchema = z.object({
+  credentials: saatriCredentialsSchema,
+  config: saatriEnvironmentConfigSchema,
+});
+
 export const saatriSoapHeaderSchema = z.object({
   cabecalhoVersion: z.literal("2.01"),
   dataVersion: z.literal("2.03"),

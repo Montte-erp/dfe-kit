@@ -9,7 +9,8 @@ import type {
   ProviderResponse,
 } from "@dfe-kit/fiscal";
 import { encodeUtf8, getUtf8ByteLength, XML_MEDIA_TYPE } from "@dfe-kit/xml";
-import { Result } from "better-result";
+import { panic, Result } from "better-result";
+import { z } from "zod";
 import { buildGerarNfseEnvelope, type GerarNfseSigner, SOAP_ACTION_GERAR_NFSE } from "./envelope";
 import type { SaatriHttpClient } from "./http";
 import { parseGerarNfseResponse } from "./parse";
@@ -19,7 +20,7 @@ import type {
   SaatriEventName,
   SaatriEventSink,
 } from "./config";
-import { saatriErrorCatalog } from "./config";
+import { saatriErrorCatalog, saatriIssueRuntimeConfigSchema } from "./config";
 
 export interface SaatriProviderDeps {
   readonly manifest: FiscalProviderManifest;
@@ -109,7 +110,16 @@ const validateSaatriIssueInput = (input: IssueFiscalDocumentInput): readonly Fis
 };
 
 export const createSaatriProvider = (deps: SaatriProviderDeps): FiscalProvider => {
-  const { manifest, http, config, credentials, signer, eventSink } = deps;
+  const parsedRuntimeConfig = saatriIssueRuntimeConfigSchema.safeParse({
+    credentials: deps.credentials,
+    config: deps.config,
+  });
+  if (!parsedRuntimeConfig.success) {
+    panic(`Invalid SAATRI issue runtime config: ${z.prettifyError(parsedRuntimeConfig.error)}`);
+  }
+
+  const { manifest, http, signer, eventSink } = deps;
+  const { credentials, config } = parsedRuntimeConfig.data;
 
   return {
     manifest,
