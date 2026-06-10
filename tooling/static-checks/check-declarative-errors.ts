@@ -1,47 +1,72 @@
 #!/usr/bin/env bun
 
-import { spawnSync } from "node:child_process";
-import { existsSync } from "node:fs";
+import { readdirSync, readFileSync, statSync } from "node:fs";
+import { join, relative } from "node:path";
 
-const directories = ["core", "packages", ...(existsSync("adapters") ? ["adapters"] : [])];
-const globs = [
-  "--glob",
-  "!**/dist/**",
-  "--glob",
-  "!**/.tsbuildinfo",
-  "--glob",
-  "!outputs/**",
-  "--glob",
-  "!docs/**",
-  "--glob",
-  "!**/README.md",
-  "--glob",
-  "!**/__tests__/**",
-];
+const roots = ["core", "packages", "adapters"].filter((path) => {
+  try {
+    return statSync(path).isDirectory();
+  } catch {
+    return false;
+  }
+});
+
+const skippedSegments = new Set(["dist", "node_modules", "outputs", "docs", "__tests__"]);
+const skippedSuffixes = [".tsbuildinfo", "README.md"];
+const checkedExtensions = new Set([".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs"]);
 
 const checks = [
   {
     pattern:
-      "instanceof|throw new Error|catch\\s*\\(|isHTTPError|isTimeoutError|HTTPError|TimeoutError",
+      /instanceof|throw new Error|catch\s*\(|isHTTPError|isTimeoutError|HTTPError|TimeoutError/,
     message:
       "Use better-result panic for mandatory invariants and typed Result data for recoverable faults. Do not branch on runtime Error wrappers/classes.",
   },
   {
     pattern:
-      "(const|function)\\s+[A-Za-z0-9_]*(Failure|Fault)[A-Za-z0-9_]*|const\\s+[A-Za-z0-9_]*Error[A-Za-z0-9_]*\\s*=\\s*\\([^)]*\\)\\s*[:=]|:\\s*FiscalProviderError\\s*=>|\\)\\s*:\\s*FiscalProviderError\\s*=>",
+      /(const|function)\s+[A-Za-z0-9_]*(Failure|Fault)[A-Za-z0-9_]*|const\s+[A-Za-z0-9_]*Error[A-Za-z0-9_]*\s*=\s*\([^)]*\)\s*[:=]|:\s*FiscalProviderError\s*=>|\)\s*:\s*FiscalProviderError\s*=>/,
     message:
       "Do not create error/failure helper functions. Build Result.err objects inline at the decision point, from the declarative evlog catalog.",
   },
-];
+] satisfies readonly { pattern: RegExp; message: string }[];
+
+const hasCheckedExtension = (path: string): boolean => {
+  const dot = path.lastIndexOf(".");
+  return dot >= 0 && checkedExtensions.has(path.slice(dot));
+};
+
+const shouldSkip = (path: string): boolean => {
+  const parts = path.split("/");
+  return (
+    parts.some((part) => skippedSegments.has(part)) ||
+    skippedSuffixes.some((suffix) => path.endsWith(suffix))
+  );
+};
+
+function* walk(root: string): Generator<string> {
+  for (const entry of readdirSync(root)) {
+    const path = join(root, entry);
+    const normalized = path.replaceAll("\\", "/");
+    if (shouldSkip(normalized)) continue;
+
+    const stats = statSync(path);
+    if (stats.isDirectory()) yield* walk(path);
+    else if (stats.isFile() && hasCheckedExtension(normalized)) yield normalized;
+  }
+}
 
 let failed = false;
-for (const check of checks) {
-  const result = spawnSync("rg", [...globs, check.pattern, ...directories], { stdio: "inherit" });
-  if (result.status === 0) {
-    console.error(`Declarative error handling check failed. ${check.message}`);
-    failed = true;
-  } else if (result.status !== 1) {
-    process.exit(result.status ?? 1);
+for (const file of roots.flatMap((root) => [...walk(root)])) {
+  const source = readFileSync(file, "utf8");
+  const lines = source.split(/\r?\n/);
+
+  for (const check of checks) {
+    for (const [index, line] of lines.entries()) {
+      if (!check.pattern.test(line)) continue;
+      console.error(`${relative(process.cwd(), file)}:${index + 1}: ${line.trim()}`);
+      console.error(`Declarative error handling check failed. ${check.message}`);
+      failed = true;
+    }
   }
 }
 
