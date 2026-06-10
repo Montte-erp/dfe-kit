@@ -85,6 +85,7 @@ export const configureSaatriProviderPackage = (
 
 export {
   buildGerarNfseEnvelope,
+  configureSaatriManifest,
   createSaatriHttpClient,
   createSaatriProvider,
   parseGerarNfseResponse,

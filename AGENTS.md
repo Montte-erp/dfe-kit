@@ -15,7 +15,10 @@ DFeKit is source-available fiscal infrastructure for Brazilian electronic invoic
 - Recoverable technical faults are typed `Result.err` data.
 - Mandatory invariants must hard-fail with `panic` from `better-result`. Do not silently fallback for required configuration or impossible states.
 - Optional behavior may emit a warning/lifecycle event through evlog/event sinks, but must not hide missing mandatory data.
-- Do not use ad-hoc error helper functions, `instanceof Error`, `throw new Error`, `HTTPError`/`TimeoutError` branches, or provider-level `try/catch`.
+- Error definitions are declarative: use evlog `defineErrorCatalog` entries in `config.ts` and build typed `Result.err({ code, message, retryable })` objects at the exact decision point.
+- Do not create ad-hoc error/failure helper functions such as `parseFailure()`, `responseShapeFailure()`, `makeProviderError()`, or typed helpers returning `FiscalProviderError`.
+- Do not use `instanceof Error`, `throw new Error`, `HTTPError`/`TimeoutError` branches, provider-level `try/catch`, or runtime error wrapper classes.
+- Promise/IO adaptation may use `Result.tryPromise` with inline `catch: () => ({ ... })` data. Keep catch handlers declarative and never branch on caught error shapes unless a real provider contract requires it.
 
 ## Architecture taste
 
@@ -26,6 +29,15 @@ DFeKit is source-available fiscal infrastructure for Brazilian electronic invoic
 - Date handling uses `dayjs`.
 - `core/*` is for reusable core building blocks only. Do not create a generic `core/core` registry/framework layer unless a real use case earns it.
 - Adapter packages expose a package configuration function so municipal providers can declare endpoints, city code, and capabilities from the adapter in one type-safe place.
+- Prefer top-level exports that are constants, schemas, config functions, or pure factories. Avoid top-level instantiated provider wrappers that pull networking/parsing dependencies into consumers that only import metadata.
+
+## Package and tree-shaking taste
+
+- Packages are ESM-only and should expose explicit `exports` with the `import` condition.
+- Every package should declare `"sideEffects": false` unless it truly has module-load side effects.
+- Avoid `export *` barrels. Re-export named values/types explicitly from meaningful entry points.
+- Keep public provider package metadata tree-shakeable: importing a manifest should not instantiate HTTP clients, XML parsers, or configured provider wrappers.
+- Published provider packages should inline private `@dfe-kit/*` core/adapter code through bunup `noExternal`/`dts.resolve`, but keep external public runtime dependencies explicit.
 
 ## Fiscal rules
 
