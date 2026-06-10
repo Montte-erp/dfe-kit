@@ -1,0 +1,26 @@
+name: Check
+
+on:
+  pull_request:
+    branches: ["*"]
+    types: [opened, synchronize, reopened, ready_for_review]
+
+jobs:
+  check:
+    if: github.event.pull_request.draft == false
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          filter: tree:0
+
+      - name: Bun & Nx Setup
+        uses: ./.github/actions/setup-bun-nx
+
+      - name: Run static checks
+        run: bun run check:static
+
+      - name: Run Nx affected checks
+        run: bunx nx affected -t typecheck test build --base=$NX_BASE --head=$NX_HEAD

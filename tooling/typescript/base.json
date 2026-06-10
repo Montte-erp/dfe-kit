@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "compilerOptions": {
+    "types": ["bun"],
+    "allowJs": true,
+    "checkJs": false,
+    "disableSourceOfProjectReferenceRedirect": false,
+    "esModuleInterop": true,
+    "composite": true,
+    "declaration": true,
+    "declarationMap": true,
+    "incremental": true,
+    "isolatedModules": true,
+    "lib": ["ES2022"],
+    "module": "ESNext",
+    "moduleDetection": "force",
+    "moduleResolution": "bundler",
+    "emitDeclarationOnly": true,
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true,
+    "resolveJsonModule": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "target": "ES2022",
+    "tsBuildInfoFile": "${configDir}/.cache/tsbuildinfo.json",
+    "verbatimModuleSyntax": true,
+    "ignoreDeprecations": "6.0",
+    "baseUrl": "../..",
+    "paths": {
+      "@dfekit/fiscal": ["core/fiscal/src/index.ts"],
+      "@dfekit/fiscal/schemas": ["core/fiscal/src/schemas.ts"],
+      "@dfekit/utils": ["core/utils/src/index.ts"],
+      "@dfekit/xml": ["core/xml/src/index.ts"],
+      "@dfekit/adapter-saatri": ["adapters/saatri/src/index.ts"],
+      "@dfekit/adapter-saatri/config": ["adapters/saatri/src/config.ts"]
+    }
+  },
+  "display": "Default"
+}

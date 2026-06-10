@@ -1,0 +1,22 @@
+<CancelarNfseResposta xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="http://www.abrasf.org.br/nfse.xsd">
+	<RetCancelamento>
+		<NfseCancelamento versao="2.01">
+			<Confirmacao Id="NFSE_Cancelamento_000002_AAADAAAC-CKAAAA">
+				<Pedido>
+					<InfPedidoCancelamento Id="Cancelamento_31847389000139">
+						<IdentificacaoNfse>
+							<Numero>2</Numero>
+							<CpfCnpj>
+								<Cnpj>31847389000139</Cnpj>
+							</CpfCnpj>
+							<InscricaoMunicipal>111111</InscricaoMunicipal>
+							<CodigoMunicipio>4216602</CodigoMunicipio>
+						</IdentificacaoNfse>
+						<CodigoCancelamento>1</CodigoCancelamento>
+					</InfPedidoCancelamento>
+				</Pedido>
+				<DataHora>2012-06-30T17:26:54</DataHora>
+			</Confirmacao>
+		</NfseCancelamento>
+	</RetCancelamento>
+</CancelarNfseResposta>

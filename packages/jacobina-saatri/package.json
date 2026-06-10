@@ -1,0 +1,39 @@
+{
+  "name": "@dfekit/jacobina-saatri",
+  "version": "0.0.0",
+  "license": "BUSL-1.1",
+  "files": [
+    "dist"
+  ],
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "bunup",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "bun test ./__tests__",
+    "publint": "publint --strict"
+  },
+  "dependencies": {
+    "@dfekit/adapter-saatri": "workspace:*",
+    "better-result": "^2.9.2"
+  },
+  "nx": {
+    "tags": [
+      "scope:provider"
+    ],
+    "implicitDependencies": [
+      "@dfekit/fiscal",
+      "@dfekit/adapter-saatri"
+    ]
+  }
+}

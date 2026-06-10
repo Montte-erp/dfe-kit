@@ -1,0 +1,77 @@
+{
+  "$schema": "./node_modules/nx/schemas/nx-schema.json",
+  "defaultBase": "main",
+  "namedInputs": {
+    "default": ["{projectRoot}/**/*", "sharedGlobals"],
+    "sharedGlobals": [
+      "{workspaceRoot}/tsconfig.base.json",
+      "{workspaceRoot}/tooling/typescript/*.json",
+      "{workspaceRoot}/tooling/bunup/index.ts",
+      "{workspaceRoot}/tooling/oxc/*.json",
+      "{workspaceRoot}/tooling/static-checks/*.ts"
+    ],
+    "production": [
+      "default",
+      "!{projectRoot}/**/*.spec.ts",
+      "!{projectRoot}/**/*.test.ts",
+      "!{projectRoot}/**/__tests__/**/*",
+      "!{projectRoot}/.env*"
+    ]
+  },
+  "targetDefaults": {
+    "build": {
+      "cache": true,
+      "dependsOn": ["^build"],
+      "inputs": ["production", "^production"],
+      "outputs": ["{projectRoot}/dist", "{projectRoot}/.cache"]
+    },
+    "typecheck": {
+      "cache": true,
+      "dependsOn": ["^typecheck"],
+      "inputs": ["default", "^default"],
+      "outputs": ["{projectRoot}/.cache/tsbuildinfo.json"]
+    },
+    "test": {
+      "cache": true,
+      "dependsOn": ["^build"],
+      "inputs": ["default", "^production"],
+      "outputs": ["{projectRoot}/coverage"]
+    },
+    "check": {
+      "cache": true,
+      "inputs": ["default", "^default"]
+    },
+    "publint": {
+      "cache": true,
+      "dependsOn": ["build"],
+      "inputs": ["{projectRoot}/dist", "{projectRoot}/package.json"]
+    }
+  },
+  "release": {
+    "projects": ["packages/*"],
+    "projectsRelationship": "independent",
+    "releaseTagPattern": "{projectName}@{version}",
+    "releaseTagPatternRequireSemver": true,
+    "version": {
+      "conventionalCommits": true,
+      "preserveLocalDependencyProtocols": true
+    },
+    "changelog": {
+      "projectChangelogs": true,
+      "workspaceChangelog": false
+    },
+    "git": {
+      "commit": true,
+      "tag": true,
+      "commitMessage": "chore(release): publish {version}"
+    }
+  },
+  "sync": {
+    "applyChanges": true
+  },
+  "tui": {
+    "enabled": true
+  },
+  "useDaemonProcess": true,
+  "parallel": 8
+}

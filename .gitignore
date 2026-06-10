@@ -1,0 +1,10 @@
+node_modules
+dist
+*.tsbuildinfo
+.nx
+.pi
+bun.lockb
+.env
+.env.*
+!.env.example
+.DS_Store
