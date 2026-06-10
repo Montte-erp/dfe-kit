@@ -46,8 +46,8 @@
       "version": "0.0.0",
     },
     "packages/jacobina-saatri": {
-      "name": "@dfe-kit/jacobina-saatri",
-      "version": "0.0.0",
+      "name": "@montte-erp/jacobina-saatri",
+      "version": "0.1.0",
       "dependencies": {
         "better-result": "^2.9.2",
       },
@@ -92,8 +92,6 @@
 
     "@dfe-kit/fiscal": ["@dfe-kit/fiscal@workspace:core/fiscal"],
 
-    "@dfe-kit/jacobina-saatri": ["@dfe-kit/jacobina-saatri@workspace:packages/jacobina-saatri"],
-
     "@dfe-kit/utils": ["@dfe-kit/utils@workspace:core/utils"],
 
     "@dfe-kit/xml": ["@dfe-kit/xml@workspace:core/xml"],
@@ -105,6 +103,8 @@
     "@emnapi/wasi-threads": ["@emnapi/wasi-threads@1.0.4", "", { "dependencies": { "tslib": "^2.4.0" } }, "sha512-PJR+bOmMOPH8AtcTGAyYNiuJ3/Fcoj2XN/gBEWzDIKh254XO+mM9XoXHk5GNEhodxeMznbg7BlRojVbKN+gC6g=="],
 
     "@jest/diff-sequences": ["@jest/diff-sequences@30.0.1", "", {}, "sha512-n5H8QLDJ47QqbCNn5SuFjCRDrOLEZ0h8vAHCK5RL9Ls7Xa8AQLa/YxAc9UjFqoEDM48muwtBGjtMY5cr0PLDCw=="],
+
+    "@montte-erp/jacobina-saatri": ["@montte-erp/jacobina-saatri@workspace:packages/jacobina-saatri"],
 
     "@napi-rs/wasm-runtime": ["@napi-rs/wasm-runtime@0.2.4", "", { "dependencies": { "@emnapi/core": "^1.1.0", "@emnapi/runtime": "^1.1.0", "@tybys/wasm-util": "^0.9.0" } }, "sha512-9zESzOO5aDByvhIAsOy9TbpZ0Ur2AJbUI7UT73kcUTS2mxAMHOBaa1st/jAymNoCtvrit99kkzT1FZuXVcgfIQ=="],
 
