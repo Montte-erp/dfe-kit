@@ -6,11 +6,9 @@ O DFeKit começa com NFS-e via SAATRI/ABRASF 2.03 e segue evoluindo para NF-e, N
 
 ## Licença
 
-DFeKit é source-available sob a Business Source License 1.1 (`BUSL-1.1`). A licença pública permite desenvolvimento, testes, avaliação, revisão de segurança, modificação e uso não produtivo.
+O DFeKit é distribuído sob a **Apache License 2.0 (`Apache-2.0`)**.
 
-Uso em produção ou uso comercial por terceiros exige uma licença separada da Montte. A Montte, como licenciante, pode usar, distribuir e sublicenciar o DFeKit conforme seus próprios contratos.
-
-Na data de mudança indicada no [`LICENSE`](./LICENSE), o código passa para Apache License 2.0. Em caso de conflito, prevalece o arquivo [`LICENSE`](./LICENSE) ou o contrato comercial assinado com a Montte.
+Veja o arquivo [`LICENSE`](./LICENSE).
 
 ## Pacotes
 

@@ -31,9 +31,11 @@ Essas capacidades só devem aparecer no `manifest` depois de prova em homologaç
 
 ## Licença
 
-Este pacote segue a licença do repositório DFeKit: **Business Source License 1.1 (`BUSL-1.1`)**, com mudança futura para Apache License 2.0 conforme indicado no arquivo [`LICENSE`](../../LICENSE).
+Este pacote é distribuído sob **Apache License 2.0 (`Apache-2.0`)**.
 
-Uso em produção ou uso comercial por terceiros exige licença separada da Montte, salvo contrato específico.
+A licença permite uso, cópia, modificação, distribuição, sublicenciamento e uso comercial conforme os termos da Apache 2.0.
+
+Veja o arquivo [`LICENSE`](../../LICENSE).
 
 ## Instalação
 
