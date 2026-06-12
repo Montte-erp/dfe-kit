@@ -19,8 +19,9 @@
     "format": "oxfmt -c tooling/oxc/oxfmt.json --write core adapters packages tooling '!**/.cache/**' '!**/dist/**' '!**/*.d.ts' '!**/*.tsbuildinfo'",
     "format:check": "oxfmt -c tooling/oxc/oxfmt.json --check core adapters packages tooling '!**/.cache/**' '!**/dist/**' '!**/*.d.ts' '!**/*.tsbuildinfo'",
     "check:declarative-errors": "bun tooling/static-checks/check-declarative-errors.ts",
+    "check:dts-warnings": "bun tooling/static-checks/check-dts-warnings.ts -- bun nx run-many -t build --skip-nx-cache --output-style=stream",
     "check:static": "bun run check:declarative-errors && bun run lint && bun run format:check",
-    "check": "bun run check:static && nx run-many -t typecheck test build",
+    "check": "bun run check:static && nx run-many -t typecheck test && bun run check:dts-warnings",
     "release:dry": "nx release --dry-run",
     "release:version": "nx release version",
     "release:publish": "nx release publish",
@@ -28,13 +29,15 @@
     "publish:npm:dry": "bun run check && bun run publint && nx run @dfe-kit/jacobina-saatri:publish:npm:dry"
   },
   "devDependencies": {
+    "@effect/vitest": "4.0.0-beta.81",
     "@types/bun": "latest",
     "bunup": "^0.16.32",
     "nx": "^22.7.5",
     "oxfmt": "^0.54.0",
     "oxlint": "^1.69.0",
     "publint": "^0.3.21",
-    "typescript": "latest"
+    "typescript": "latest",
+    "vitest": "^3"
   },
-  "license": "BUSL-1.1"
+  "license": "Apache-2.0"
 }

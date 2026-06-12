@@ -1,9 +1,22 @@
-import type { FiscalProviderError, IssueFiscalDocumentInput } from "@dfe-kit/fiscal";
+import type { IssueFiscalDocumentInput } from "@dfe-kit/fiscal";
 import { escapeXmlText } from "@dfe-kit/xml";
-import { panic, Result } from "better-result";
 import dayjs from "dayjs";
-import type { SaatriCredentials, SaatriEnvironmentConfig } from "./config";
-
+import { Effect, Redacted, Schema } from "effect";
+import {
+  AbrasfIssEnforceabilityValue,
+  AbrasfIssWithheldValue,
+  AbrasfRpsStatusValue,
+  AbrasfRpsTypeValue,
+  AbrasfYesNoCodeValue,
+  SaatriProviderError,
+  SaatriProviderErrorCodeValue,
+  SAATRI_ABRASF_VERSION,
+  SAATRI_CABECALHO_VERSION,
+  type GerarNfseSigner,
+  type SaatriCredentials,
+  type SaatriEnvironmentConfig,
+} from "./config";
+import { SaatriSpanNameValue } from "./observability";
 /**
  * Montagem do envelope SOAP 1.1 do GerarNfse (ABRASF 2.03) para a SAATRI.
  *
@@ -26,29 +39,37 @@ import type { SaatriCredentials, SaatriEnvironmentConfig } from "./config";
 export const SOAP_ACTION_GERAR_NFSE = "http://nfse.abrasf.org.br/Infse/GerarNfse";
 
 /** cabecalho fixo (string interna do CDATA de nfseCabecMsg). */
-const CABECALHO_INNER =
-  '<cabecalho xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="http://www.abrasf.org.br/nfse.xsd" versao="2.01"><versaoDados>2.03</versaoDados></cabecalho>';
+const CABECALHO_INNER = `<cabecalho xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="http://www.abrasf.org.br/nfse.xsd" versao="${SAATRI_CABECALHO_VERSION}"><versaoDados>${SAATRI_ABRASF_VERSION}</versaoDados></cabecalho>`;
 
-/**
- * Hook de assinatura injetavel. Recebe o XML do GerarNfseEnvio (string crua) e
- * devolve a versao assinada (com <ds:Signature>) ou um erro. OFF por padrao.
- */
-export type GerarNfseSigner = (xmlToSign: string) => Promise<Result<string, FiscalProviderError>>;
+const SAATRI_SERVICE_DESCRIPTION_SEPARATOR = " | ";
 
-export interface BuildGerarNfseEnvelopeOptions {
-  /** Assinador opcional (XML-DSig). Ausente => documento NAO assinado. */
-  readonly signer?: GerarNfseSigner;
-}
+type BuildGerarNfseEnvelopeOptionsInput = {
+  readonly signer?: unknown | undefined;
+};
 
-/** Escapa caracteres reservados de XML em valores de texto. */
+export const buildGerarNfseEnvelopeOptionsSchema: Schema.Schema<BuildGerarNfseEnvelopeOptionsInput> =
+  Schema.Struct({
+    signer: Schema.optional(Schema.Unknown),
+  });
+export type BuildGerarNfseEnvelopeOptions = BuildGerarNfseEnvelopeOptionsInput & {
+  readonly signer?: GerarNfseSigner | undefined;
+};
+
 /**
  * Normaliza um `issuedAt` ISO para `xsd:date` (YYYY-MM-DD). Os testes automatizados e o fixture
  * de homologacao usam data sem hora; ABRASF aceita date.
  */
-const toAbrasfDate = (isoDateTime: string): string => {
+const toAbrasfDate = (isoDateTime: string): Effect.Effect<string, SaatriProviderError> => {
   const date = dayjs(isoDateTime);
-  if (!date.isValid()) panic("IssueFiscalDocumentInput.issuedAt must be a valid ISO date.");
-  return date.format("YYYY-MM-DD");
+  return date.isValid()
+    ? Effect.succeed(isoDateTime.slice(0, 10))
+    : Effect.fail(
+        new SaatriProviderError({
+          code: SaatriProviderErrorCodeValue.invalidInput,
+          retryable: false,
+          reason: "IssueFiscalDocumentInput.issuedAt deve ser uma data ISO válida.",
+        }),
+      );
 };
 
 /**
@@ -78,25 +99,28 @@ const buildGerarNfseEnvio = (
   input: IssueFiscalDocumentInput,
   credentials: SaatriCredentials,
   config: SaatriEnvironmentConfig,
-): string => {
-  const issuerCnpj = credentials.issuerCnpj;
-  const inscricaoMunicipal = credentials.municipalRegistration;
-  const documentNumber = escapeXmlText(input.number);
-  const series = escapeXmlText(input.series);
-  const issueDate = toAbrasfDate(input.issuedAt);
-  const serviceAmount = sumMoneyValues(input.services.map((service) => service.amount));
-  // ItemListaServico e Discriminacao vem do primeiro servico (NFS-e da SAATRI
-  // emite uma nota por declaracao; agregamos a discriminacao dos itens).
-  const firstService = input.services[0];
-  const serviceListCode = escapeXmlText(firstService?.serviceListCode ?? "");
-  const nbsCode = firstService?.nbsCode;
-  const nbsCodeXml =
-    nbsCode === undefined ? "" : `\n        <CodigoNbs>${escapeXmlText(nbsCode)}</CodigoNbs>`;
-  const description = escapeXmlText(
-    input.services.map((service) => service.description).join(" | "),
-  );
+): Effect.Effect<string, SaatriProviderError> =>
+  Effect.gen(function* () {
+    const issuerCnpj = credentials.issuerCnpj;
+    const inscricaoMunicipal = credentials.municipalRegistration;
+    const documentNumber = escapeXmlText(input.number);
+    const series = escapeXmlText(input.series);
+    const issueDate = yield* toAbrasfDate(input.issuedAt);
+    const serviceAmount = sumMoneyValues(input.services.map((service) => service.amount));
+    // ItemListaServico e Discriminacao vem do primeiro servico (NFS-e da SAATRI
+    // emite uma nota por declaracao; agregamos a discriminacao dos itens).
+    const firstService = input.services[0];
+    const serviceListCode = escapeXmlText(firstService?.serviceListCode ?? "");
+    const nbsCode = firstService?.nbsCode;
+    const nbsCodeXml =
+      nbsCode === undefined ? "" : `\n        <CodigoNbs>${escapeXmlText(nbsCode)}</CodigoNbs>`;
+    const description = escapeXmlText(
+      input.services
+        .map((service) => service.description)
+        .join(SAATRI_SERVICE_DESCRIPTION_SEPARATOR),
+    );
 
-  return `<?xml version="1.0" encoding="UTF-8"?>
+    return `<?xml version="1.0" encoding="UTF-8"?>
 <GerarNfseEnvio xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="http://www.abrasf.org.br/nfse.xsd">
   <Rps>
     <InfDeclaracaoPrestacaoServico Id="Declaracao_${issuerCnpj}">
@@ -104,21 +128,21 @@ const buildGerarNfseEnvio = (
         <IdentificacaoRps>
           <Numero>${documentNumber}</Numero>
           <Serie>${series}</Serie>
-          <Tipo>1</Tipo>
+          <Tipo>${AbrasfRpsTypeValue.rps}</Tipo>
         </IdentificacaoRps>
         <DataEmissao>${issueDate}</DataEmissao>
-        <Status>1</Status>
+        <Status>${AbrasfRpsStatusValue.normal}</Status>
       </Rps>
       <Competencia>${issueDate}</Competencia>
       <Servico>
         <Valores>
           <ValorServicos>${serviceAmount}</ValorServicos>
         </Valores>
-        <IssRetido>2</IssRetido>
+        <IssRetido>${AbrasfIssWithheldValue.no}</IssRetido>
         <ItemListaServico>${serviceListCode}</ItemListaServico>${nbsCodeXml}
         <Discriminacao>${description}</Discriminacao>
         <CodigoMunicipio>${config.cityCode}</CodigoMunicipio>
-        <ExigibilidadeISS>1</ExigibilidadeISS>
+        <ExigibilidadeISS>${AbrasfIssEnforceabilityValue.taxable}</ExigibilidadeISS>
       </Servico>
       <Prestador>
         <CpfCnpj>
@@ -126,17 +150,17 @@ const buildGerarNfseEnvio = (
         </CpfCnpj>
         <InscricaoMunicipal>${escapeXmlText(inscricaoMunicipal)}</InscricaoMunicipal>
       </Prestador>
-      <OptanteSimplesNacional>2</OptanteSimplesNacional>
-      <IncentivoFiscal>2</IncentivoFiscal>
+      <OptanteSimplesNacional>${AbrasfYesNoCodeValue.no}</OptanteSimplesNacional>
+      <IncentivoFiscal>${AbrasfYesNoCodeValue.no}</IncentivoFiscal>
     </InfDeclaracaoPrestacaoServico>
   </Rps>
 </GerarNfseEnvio>`;
-};
+  });
 
 /** Embrulha cabecalho + dados no envelope SOAP 1.1 com WS-Security. */
 const wrapEnvelope = (dados: string, credentials: SaatriCredentials): string => {
   const username = escapeXmlText(credentials.username);
-  const password = escapeXmlText(credentials.password);
+  const password = escapeXmlText(Redacted.value(credentials.password));
   return `<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:nfse="http://nfse.abrasf.org.br">
    <soapenv:Header>
       <wsse:Security soapenv:mustUnderstand="1" xmlns:wsse="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd" xmlns:wsu="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd">
@@ -160,23 +184,19 @@ const wrapEnvelope = (dados: string, credentials: SaatriCredentials): string => 
  *
  * Sem `opts.signer`: o GerarNfseEnvio sai UNSIGNED (sem <ds:Signature>).
  * Com `opts.signer`: o documento e assinado antes de entrar no CDATA. O signer
- * pode falhar (Result.err) — nesse caso o erro tecnico e propagado.
- *
- * Retorna `Result` porque a assinatura e uma operacao que pode falhar; sem
- * signer o resultado e sempre `Result.ok`.
+ * pode falhar no canal de erro do Effect — nesse caso o erro tecnico e propagado.
  */
-export const buildGerarNfseEnvelope = async (
+export const buildGerarNfseEnvelope = (
   input: IssueFiscalDocumentInput,
   credentials: SaatriCredentials,
   config: SaatriEnvironmentConfig,
   opts: BuildGerarNfseEnvelopeOptions = {},
-): Promise<Result<string, FiscalProviderError>> => {
-  const dadosUnsigned = buildGerarNfseEnvio(input, credentials, config);
+): Effect.Effect<string, SaatriProviderError> =>
+  Effect.gen(function* () {
+    const dadosUnsigned = yield* buildGerarNfseEnvio(input, credentials, config);
 
-  if (opts.signer === undefined) {
-    return Result.ok(wrapEnvelope(dadosUnsigned, credentials));
-  }
-
-  const signed = await opts.signer(dadosUnsigned);
-  return signed.map((dadosSigned) => wrapEnvelope(dadosSigned, credentials));
-};
+    const dados = yield* opts.signer === undefined
+      ? Effect.succeed(dadosUnsigned)
+      : opts.signer(dadosUnsigned).pipe(Effect.withSpan(SaatriSpanNameValue.sign));
+    return wrapEnvelope(dados, credentials);
+  });

@@ -1,61 +1,71 @@
+import {
+  FiscalArtifactKindValue,
+  FiscalDocumentKindValue,
+  FiscalDocumentStatusValue,
+} from "@dfe-kit/fiscal";
 import type {
+  FiscalArtifact,
   FiscalDocumentRef,
-  FiscalProvider,
-  FiscalProviderError,
   FiscalProviderManifest,
   FiscalRejection,
   IssueFiscalDocumentInput,
   IssueFiscalDocumentResponse,
-  ProviderResponse,
 } from "@dfe-kit/fiscal";
 import { encodeUtf8, getUtf8ByteLength, XML_MEDIA_TYPE } from "@dfe-kit/xml";
-import { Result } from "better-result";
-import { buildGerarNfseEnvelope, type GerarNfseSigner, SOAP_ACTION_GERAR_NFSE } from "./envelope";
-import type { SaatriHttpClient } from "./http";
+import { Effect, Metric } from "effect";
+import { buildGerarNfseEnvelope, SOAP_ACTION_GERAR_NFSE } from "./envelope";
+import { SaatriHttpClient as SaatriHttpClientService, type SaatriHttpClient } from "./http";
 import { parseGerarNfseResponse } from "./parse";
+import {
+  SaatriEventNameValue,
+  SaatriFiscalRejection,
+  SaatriProviderError,
+  SaatriProviderErrorCodeValue,
+} from "./config";
 import type {
+  GerarNfseSigner,
   SaatriCredentials,
   SaatriEnvironmentConfig,
   SaatriEventName,
   SaatriEventSink,
 } from "./config";
-import { saatriErrorCatalog } from "./config";
-
-export interface SaatriProviderDeps {
-  readonly manifest: FiscalProviderManifest;
-  readonly http: SaatriHttpClient;
-  readonly config: SaatriEnvironmentConfig;
-  readonly credentials: SaatriCredentials;
-  readonly signer?: GerarNfseSigner;
-  readonly eventSink?: SaatriEventSink;
-}
+import {
+  SaatriAttributeNameValue,
+  SaatriSpanNameValue,
+  saatriFiscalStatusTotal,
+  saatriIssueErrorTotal,
+  saatriIssueTotal,
+} from "./observability";
 
 const SAATRI_XML_SIZE_LIMIT_BYTES = 512 * 1024;
 
 const emit = (
-  eventSink: SaatriEventSink | undefined,
+  sink: SaatriEventSink | undefined,
   name: SaatriEventName,
   input: IssueFiscalDocumentInput,
   providerId: string,
   config: SaatriEnvironmentConfig,
-): void => {
-  eventSink?.({
-    name,
-    providerId,
-    documentKind: input.documentKind,
-    environment: input.environment,
-    cityCode: config.cityCode,
-    series: input.series,
-    number: input.number,
-  });
-};
+  correlationId: string | undefined,
+): Effect.Effect<void> =>
+  sink === undefined
+    ? Effect.void
+    : sink({
+        name,
+        providerId,
+        documentKind: input.documentKind,
+        environment: input.environment,
+        cityCode: config.cityCode,
+        series: input.series,
+        number: input.number,
+        ...(correlationId !== undefined ? { correlationId } : {}),
+      });
 
 const buildDocumentRef = (
   input: IssueFiscalDocumentInput,
   credentials: SaatriCredentials,
   providerId: string,
 ): FiscalDocumentRef => ({
-  documentKind: "nfse",
+  documentKind: FiscalDocumentKindValue.nfse,
   providerId,
   environment: input.environment,
   issuerTaxId: credentials.issuerCnpj,
@@ -63,125 +73,300 @@ const buildDocumentRef = (
   number: input.number,
 });
 
-const xmlArtifact = (xml: string) => ({
-  kind: "request_xml" as const,
+const xmlArtifact = (xml: string): FiscalArtifact => ({
+  kind: FiscalArtifactKindValue.requestXml,
   mediaType: XML_MEDIA_TYPE,
   bytes: encodeUtf8(xml),
 });
 
-const validationRejectedResponse = (
-  rejections: readonly FiscalRejection[],
-  requestXml: string,
-): ProviderResponse => ({
-  status: "rejected",
-  rejections,
-  artifacts: [xmlArtifact(requestXml)],
-});
+const validateSaatriIssueInput = (
+  input: IssueFiscalDocumentInput,
+): Effect.Effect<readonly FiscalRejection[], never> =>
+  Effect.sync(() => {
+    const firstInvalidServiceList = input.services.find(
+      (service) => service.serviceListCode.length > 8,
+    );
+    const firstMissingNbs = input.services.find(
+      (service) => service.nbsCode === undefined || service.nbsCode.trim() === "",
+    );
+    const serviceListRejection: readonly FiscalRejection[] =
+      firstInvalidServiceList === undefined ? [] : [SaatriFiscalRejection.serviceListCodeMaxLength];
+    const nbsRejection: readonly FiscalRejection[] =
+      firstMissingNbs === undefined ? [] : [SaatriFiscalRejection.nbsRequired2026];
+    return [...serviceListRejection, ...nbsRejection];
+  });
 
-const validateSaatriIssueInput = (input: IssueFiscalDocumentInput): readonly FiscalRejection[] => {
-  const firstInvalidServiceList = input.services.find(
-    (service) => service.serviceListCode.length > 8,
-  );
-  const firstMissingNbs = input.services.find(
-    (service) => service.nbsCode === undefined || service.nbsCode.trim() === "",
-  );
-  const serviceListRejection: readonly FiscalRejection[] =
-    firstInvalidServiceList === undefined
-      ? []
-      : [
-          {
-            code: "SAATRI_ITEM_LISTA_SERVICO_MAX_LENGTH",
-            message: "ItemListaServico deve ter no máximo 8 caracteres para SAATRI/ABRASF 2.03.",
-            correctionHint: "Informe um código de lista de serviço com até 8 caracteres.",
-          },
-        ];
-  const nbsRejection: readonly FiscalRejection[] =
-    firstMissingNbs === undefined
-      ? []
-      : [
-          {
-            code: "SAATRI_CODIGO_NBS_REQUIRED_2026",
-            message: "CodigoNbs é obrigatório pela regra nacional compartilhada em 2026.",
-            correctionHint: "Informe services[].nbsCode antes de emitir a NFS-e.",
-          },
-        ];
-  return [...serviceListRejection, ...nbsRejection];
+export type SaatriProviderDeps = {
+  readonly manifest: FiscalProviderManifest;
+  readonly http: SaatriHttpClient;
+  readonly config: SaatriEnvironmentConfig;
+  readonly credentials: SaatriCredentials;
+  readonly signer?: GerarNfseSigner | undefined;
+  readonly eventSink?: SaatriEventSink | undefined;
+  readonly correlationId?: string | undefined;
 };
 
-export const createSaatriProvider = (deps: SaatriProviderDeps): FiscalProvider => {
-  const { manifest, http, config, credentials, signer, eventSink } = deps;
+export type SaatriProvider = {
+  readonly manifest: FiscalProviderManifest;
+  issue(
+    input: IssueFiscalDocumentInput,
+  ): Effect.Effect<IssueFiscalDocumentResponse, SaatriProviderError>;
+};
+
+type SaatriProviderWithHttpServiceDeps = Omit<SaatriProviderDeps, "http">;
+
+export type SaatriProviderWithHttpService = {
+  readonly manifest: FiscalProviderManifest;
+  issue(
+    input: IssueFiscalDocumentInput,
+  ): Effect.Effect<IssueFiscalDocumentResponse, SaatriProviderError, SaatriHttpClient>;
+};
+
+export const createSaatriProviderWithHttpService = (
+  deps: SaatriProviderWithHttpServiceDeps,
+): SaatriProviderWithHttpService => ({
+  manifest: deps.manifest,
+  issue: (input) =>
+    Effect.flatMap(SaatriHttpClientService, (http) =>
+      createSaatriProvider({ ...deps, http }).issue(input),
+    ),
+});
+
+export const createSaatriProvider = (deps: SaatriProviderDeps): SaatriProvider => {
+  const { manifest, http, signer, eventSink, correlationId } = deps;
 
   return {
     manifest,
-    issue: (
-      input: IssueFiscalDocumentInput,
-    ): Promise<Result<IssueFiscalDocumentResponse, FiscalProviderError>> =>
-      Result.gen(async function* () {
-        emit(eventSink, "saatri.issue.started", input, manifest.id, config);
-        if (signer === undefined)
-          emit(eventSink, "saatri.optional.signer.not_configured", input, manifest.id, config);
+    issue: (input): Effect.Effect<IssueFiscalDocumentResponse, SaatriProviderError> => {
+      const spanAttributes = {
+        [SaatriAttributeNameValue.providerId]: manifest.id,
+        [SaatriAttributeNameValue.documentKind]: input.documentKind,
+        [SaatriAttributeNameValue.environment]: input.environment,
+        [SaatriAttributeNameValue.cityCode]: deps.config.cityCode,
+        [SaatriAttributeNameValue.documentSeries]: input.series,
+        [SaatriAttributeNameValue.documentNumber]: input.number,
+        ...(correlationId !== undefined
+          ? { [SaatriAttributeNameValue.correlationId]: correlationId }
+          : {}),
+      };
 
-        emit(eventSink, "saatri.envelope.build.started", input, manifest.id, config);
-        const envelope = yield* Result.await(
-          buildGerarNfseEnvelope(
-            input,
-            credentials,
-            config,
-            signer !== undefined ? { signer } : {},
-          ),
-        );
-        emit(eventSink, "saatri.envelope.build.succeeded", input, manifest.id, config);
-
-        if (getUtf8ByteLength(envelope) > SAATRI_XML_SIZE_LIMIT_BYTES) {
-          emit(eventSink, "saatri.envelope.build.failed", input, manifest.id, config);
-          return yield* Result.err({
-            code: saatriErrorCatalog.XML_SIZE_LIMIT_EXCEEDED.code,
-            message: saatriErrorCatalog.XML_SIZE_LIMIT_EXCEEDED().message,
-            retryable: false,
-          });
-        }
-
-        const validationRejections = validateSaatriIssueInput(input);
-        if (validationRejections.length > 0) {
-          emit(eventSink, "saatri.fiscal.rejected", input, manifest.id, config);
-          return Result.ok<IssueFiscalDocumentResponse>({
-            documentRef: buildDocumentRef(input, credentials, manifest.id),
-            providerResponse: validationRejectedResponse(validationRejections, envelope),
-          });
-        }
-
-        emit(eventSink, "saatri.http.post.started", input, manifest.id, config);
-        const responseXml = yield* Result.await(
-          http.postSoap({
-            endpoint: config.endpoint,
-            soapAction: SOAP_ACTION_GERAR_NFSE,
-            envelope,
+      return Effect.gen(function* () {
+        const credentials = deps.credentials;
+        const config = deps.config;
+        const documentRef = buildDocumentRef(input, credentials, manifest.id);
+        yield* Metric.update(
+          Metric.withAttributes(saatriIssueTotal, {
+            provider_id: manifest.id,
+            environment: input.environment,
           }),
+          1,
         );
-        emit(eventSink, "saatri.http.post.succeeded", input, manifest.id, config);
-
-        emit(eventSink, "saatri.response.parse.started", input, manifest.id, config);
-        const providerResponse = yield* parseGerarNfseResponse({
-          requestXml: envelope,
-          responseXml,
-        });
-        emit(eventSink, "saatri.response.parse.succeeded", input, manifest.id, config);
-        emit(
+        yield* Effect.logInfo(SaatriEventNameValue.issueStarted, spanAttributes);
+        yield* emit(
           eventSink,
-          providerResponse.status === "rejected"
-            ? "saatri.fiscal.rejected"
-            : providerResponse.status === "authorized"
-              ? "saatri.fiscal.authorized"
-              : "saatri.artifact.created",
+          SaatriEventNameValue.issueStarted,
           input,
           manifest.id,
           config,
+          correlationId,
+        );
+        if (signer === undefined) {
+          yield* emit(
+            eventSink,
+            SaatriEventNameValue.optionalSignerNotConfigured,
+            input,
+            manifest.id,
+            config,
+            correlationId,
+          );
+        }
+
+        yield* emit(
+          eventSink,
+          SaatriEventNameValue.envelopeBuildStarted,
+          input,
+          manifest.id,
+          config,
+          correlationId,
+        );
+        const envelope = yield* buildGerarNfseEnvelope(input, credentials, config, { signer }).pipe(
+          Effect.withSpan(SaatriSpanNameValue.envelopeBuild, { attributes: spanAttributes }),
+          Effect.tapError(() =>
+            emit(
+              eventSink,
+              SaatriEventNameValue.envelopeBuildFailed,
+              input,
+              manifest.id,
+              config,
+              correlationId,
+            ),
+          ),
+        );
+        yield* emit(
+          eventSink,
+          SaatriEventNameValue.envelopeBuildSucceeded,
+          input,
+          manifest.id,
+          config,
+          correlationId,
         );
 
-        return Result.ok<IssueFiscalDocumentResponse>({
-          documentRef: buildDocumentRef(input, credentials, manifest.id),
-          providerResponse,
+        if (getUtf8ByteLength(envelope) > SAATRI_XML_SIZE_LIMIT_BYTES) {
+          yield* emit(
+            eventSink,
+            SaatriEventNameValue.envelopeBuildFailed,
+            input,
+            manifest.id,
+            config,
+            correlationId,
+          );
+          return yield* Effect.fail(
+            new SaatriProviderError({
+              code: SaatriProviderErrorCodeValue.xmlSizeLimitExceeded,
+              retryable: false,
+            }),
+          );
+        }
+
+        const validationRejections = yield* validateSaatriIssueInput(input);
+        if (validationRejections.length > 0) {
+          yield* emit(
+            eventSink,
+            SaatriEventNameValue.fiscalRejected,
+            input,
+            manifest.id,
+            config,
+            correlationId,
+          );
+          return {
+            documentRef,
+            providerResponse: {
+              status: FiscalDocumentStatusValue.rejected,
+              rejections: validationRejections,
+              artifacts: [xmlArtifact(envelope)],
+            },
+          };
+        }
+
+        yield* emit(
+          eventSink,
+          SaatriEventNameValue.httpPostStarted,
+          input,
+          manifest.id,
+          config,
+          correlationId,
+        );
+        const responseXml = yield* http
+          .postSoap({
+            endpoint: config.endpoint,
+            soapAction: SOAP_ACTION_GERAR_NFSE,
+            envelope,
+          })
+          .pipe(
+            Effect.tapError(() =>
+              emit(
+                eventSink,
+                SaatriEventNameValue.httpPostFailed,
+                input,
+                manifest.id,
+                config,
+                correlationId,
+              ),
+            ),
+          );
+        yield* emit(
+          eventSink,
+          SaatriEventNameValue.httpPostSucceeded,
+          input,
+          manifest.id,
+          config,
+          correlationId,
+        );
+
+        yield* emit(
+          eventSink,
+          SaatriEventNameValue.responseParseStarted,
+          input,
+          manifest.id,
+          config,
+          correlationId,
+        );
+        const providerResponse = yield* parseGerarNfseResponse({
+          requestXml: envelope,
+          responseXml,
+        }).pipe(
+          Effect.withSpan(SaatriSpanNameValue.responseParse, { attributes: spanAttributes }),
+          Effect.tapError(() =>
+            emit(
+              eventSink,
+              SaatriEventNameValue.responseParseFailed,
+              input,
+              manifest.id,
+              config,
+              correlationId,
+            ),
+          ),
+        );
+        yield* emit(
+          eventSink,
+          SaatriEventNameValue.responseParseSucceeded,
+          input,
+          manifest.id,
+          config,
+          correlationId,
+        );
+        yield* emit(
+          eventSink,
+          providerResponse.status === FiscalDocumentStatusValue.rejected
+            ? SaatriEventNameValue.fiscalRejected
+            : providerResponse.status === FiscalDocumentStatusValue.authorized
+              ? SaatriEventNameValue.fiscalAuthorized
+              : SaatriEventNameValue.fiscalAcceptedPendingAuthorization,
+          input,
+          manifest.id,
+          config,
+          correlationId,
+        );
+        yield* Effect.logInfo(SaatriEventNameValue.issueCompleted, {
+          ...spanAttributes,
+          [SaatriAttributeNameValue.documentStatus]: providerResponse.status,
         });
-      }),
+
+        return {
+          documentRef,
+          providerResponse,
+        };
+      }).pipe(
+        Effect.tap((response) =>
+          Metric.update(
+            Metric.withAttributes(saatriFiscalStatusTotal, {
+              provider_id: manifest.id,
+              environment: input.environment,
+              status: response.providerResponse.status,
+            }),
+            1,
+          ),
+        ),
+        Effect.tapError((error) =>
+          Effect.all([
+            Metric.update(
+              Metric.withAttributes(saatriIssueErrorTotal, {
+                provider_id: manifest.id,
+                environment: input.environment,
+                code: error.code,
+                phase: error.phase ?? "unknown",
+              }),
+              1,
+            ),
+            Effect.logError(SaatriEventNameValue.issueFailed, {
+              ...spanAttributes,
+              [SaatriAttributeNameValue.errorCode]: error.code,
+              [SaatriAttributeNameValue.errorPhase]: error.phase ?? "unknown",
+            }),
+          ]),
+        ),
+        Effect.withSpan(SaatriSpanNameValue.issue, { attributes: spanAttributes }),
+      );
+    },
   };
 };

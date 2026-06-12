@@ -1,7 +1,8 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, it } from "@effect/vitest";
 import type { FiscalProviderManifest, IssueFiscalDocumentInput } from "@dfe-kit/fiscal";
-import { Result } from "better-result";
+import { Effect, Redacted, Schema } from "effect";
 import { createSaatriProvider } from "../src/provider";
+import { saatriEnvironmentConfigSchema } from "../src/config";
 import type { SaatriCredentials, SaatriEnvironmentConfig } from "../src/config";
 
 const manifest: FiscalProviderManifest = {
@@ -14,14 +15,14 @@ const manifest: FiscalProviderManifest = {
 
 const credentials: SaatriCredentials = {
   username: "12345678909",
-  password: "secret-password",
+  password: Redacted.make("secret-password"),
   issuerCnpj: "31847389000139",
   municipalRegistration: "111111",
 };
 
 const config: SaatriEnvironmentConfig = {
   environment: "homologation",
-  endpoint: "https://example.test/nfse.svc",
+  endpoint: "https://example-saatri.test/nfse.svc",
   cityCode: "2917706",
 };
 
@@ -71,29 +72,43 @@ const input: IssueFiscalDocumentInput = {
 };
 
 describe("createSaatriProvider", () => {
-  test("valida ItemListaServico e CodigoNbs como rejeição fiscal sem chamar HTTP", async () => {
-    let postCount = 0;
-    const provider = createSaatriProvider({
-      manifest,
-      credentials,
-      config,
-      http: {
-        postSoap: () => {
-          postCount += 1;
-          return Promise.resolve(Result.ok(""));
-        },
-      },
-    });
+  it.effect("rejeita endpoint que não parece SAATRI no schema de ambiente", () =>
+    Effect.gen(function* () {
+      const decoded = Schema.decodeUnknownEffect(saatriEnvironmentConfigSchema)({
+        environment: "homologation",
+        endpoint: "https://example.test/nfse.svc",
+        cityCode: "2917706",
+      });
 
-    const result = await provider.issue(input);
-    expect(result.isOk()).toBe(true);
-    const response = result.unwrap().providerResponse;
-    expect(response.status).toBe("rejected");
-    expect(response.rejections.map((r) => r.code)).toEqual([
-      "SAATRI_ITEM_LISTA_SERVICO_MAX_LENGTH",
-      "SAATRI_CODIGO_NBS_REQUIRED_2026",
-    ]);
-    expect(postCount).toBe(0);
-    expect(response.artifacts.map((artifact) => artifact.kind)).toContain("request_xml");
-  });
+      const exit = yield* Effect.exit(decoded);
+      expect(exit._tag).toBe("Failure");
+    }),
+  );
+
+  it.effect("valida ItemListaServico e CodigoNbs como rejeição fiscal sem chamar HTTP", () =>
+    Effect.gen(function* () {
+      let postCount = 0;
+      const provider = createSaatriProvider({
+        manifest,
+        credentials,
+        config,
+        http: {
+          postSoap: () => {
+            postCount += 1;
+            return Effect.succeed("");
+          },
+        },
+      });
+
+      const issued = yield* provider.issue(input);
+      const response = issued.providerResponse;
+      expect(response.status).toBe("rejected");
+      expect(response.rejections.map((r) => r.code)).toEqual([
+        "SAATRI_ITEM_LISTA_SERVICO_MAX_LENGTH",
+        "SAATRI_CODIGO_NBS_REQUIRED_2026",
+      ]);
+      expect(postCount).toBe(0);
+      expect(response.artifacts.map((artifact) => artifact.kind)).toContain("request_xml");
+    }),
+  );
 });

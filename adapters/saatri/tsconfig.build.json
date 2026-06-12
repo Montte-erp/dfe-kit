@@ -4,6 +4,6 @@
     "composite": false,
     "declarationMap": false
   },
-  "include": ["src/**/*.ts"],
+  "include": ["src/**/*.ts", "../../core/fiscal/src/**/*.ts", "../../core/xml/src/**/*.ts"],
   "exclude": ["src/**/*.test.ts", "src/**/*.spec.ts"]
 }

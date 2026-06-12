@@ -10,7 +10,7 @@
     "declaration": true,
     "declarationMap": true,
     "incremental": true,
-    "isolatedModules": true,
+    "isolatedDeclarations": false,
     "lib": ["ES2022"],
     "module": "ESNext",
     "moduleDetection": "force",
@@ -29,10 +29,11 @@
     "paths": {
       "@dfe-kit/fiscal": ["core/fiscal/src/index.ts"],
       "@dfe-kit/fiscal/schemas": ["core/fiscal/src/schemas.ts"],
-      "@dfe-kit/utils": ["core/utils/src/index.ts"],
       "@dfe-kit/xml": ["core/xml/src/index.ts"],
       "@dfe-kit/adapter-saatri": ["adapters/saatri/src/index.ts"],
-      "@dfe-kit/adapter-saatri/config": ["adapters/saatri/src/config.ts"]
+      "@dfe-kit/adapter-saatri/config": ["adapters/saatri/src/config.ts"],
+      "@dfe-kit/adapter-saatri/manifest": ["adapters/saatri/src/manifest.ts"],
+      "@dfe-kit/adapter-saatri/runtime": ["adapters/saatri/src/runtime.ts"]
     }
   },
   "display": "Default"

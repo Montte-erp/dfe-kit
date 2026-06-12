@@ -1,12 +1,13 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, it } from "@effect/vitest";
 import type { IssueFiscalDocumentInput } from "@dfe-kit/fiscal";
-import { Result } from "better-result";
+import { Effect, Redacted } from "effect";
+import { SaatriProviderError } from "../src/config";
 import { buildGerarNfseEnvelope, type GerarNfseSigner } from "../src/envelope";
 import type { SaatriCredentials, SaatriEnvironmentConfig } from "../src/config";
 
 const credentials: SaatriCredentials = {
   username: "12345678909",
-  password: "secret-password",
+  password: Redacted.make("secret-password"),
   issuerCnpj: "31847389000139",
   municipalRegistration: "111111",
 };
@@ -63,82 +64,90 @@ const sampleInput: IssueFiscalDocumentInput = {
 };
 
 describe("buildGerarNfseEnvelope", () => {
-  test("builds a SOAP envelope with WS-Security UsernameToken and CDATA, unsigned by default", async () => {
-    const result = await buildGerarNfseEnvelope(sampleInput, credentials, config);
-    expect(result.isOk()).toBe(true);
-    const envelope = result.unwrap();
+  it.effect(
+    "builds a SOAP envelope with WS-Security UsernameToken and CDATA, unsigned by default",
+    () =>
+      Effect.gen(function* () {
+        const envelope = yield* buildGerarNfseEnvelope(sampleInput, credentials, config);
 
-    // WS-Security UsernameToken (CPF + PasswordText password).
-    expect(envelope).toContain("<wsse:Security");
-    expect(envelope).toContain("<wsse:UsernameToken");
-    expect(envelope).toContain(`<wsse:Username>${credentials.username}</wsse:Username>`);
-    expect(envelope).toContain("#PasswordText");
-    expect(envelope).toContain(`>${credentials.password}</wsse:Password>`);
+        // WS-Security UsernameToken (CPF + PasswordText password).
+        expect(envelope).toContain("<wsse:Security");
+        expect(envelope).toContain("<wsse:UsernameToken");
+        expect(envelope).toContain(`<wsse:Username>${credentials.username}</wsse:Username>`);
+        expect(envelope).toContain("#PasswordText");
+        expect(envelope).toContain(">secret-password</wsse:Password>");
 
-    // Correct body element + both CDATA blocks.
-    expect(envelope).toContain("<nfse:GerarNfseRequest>");
-    expect(envelope).toContain("<nfseCabecMsg><![CDATA[");
-    expect(envelope).toContain("<nfseDadosMsg><![CDATA[");
+        // Correct body element + both CDATA blocks.
+        expect(envelope).toContain("<nfse:GerarNfseRequest>");
+        expect(envelope).toContain("<nfseCabecMsg><![CDATA[");
+        expect(envelope).toContain("<nfseDadosMsg><![CDATA[");
 
-    // Header version 2.01 + data version 2.03.
-    expect(envelope).toContain('versao="2.01"');
-    expect(envelope).toContain("<versaoDados>2.03</versaoDados>");
+        // Header version 2.01 + data version 2.03.
+        expect(envelope).toContain('versao="2.01"');
+        expect(envelope).toContain("<versaoDados>2.03</versaoDados>");
 
-    // GerarNfseEnvio with required fields, including InscricaoMunicipal.
-    expect(envelope).toContain("<GerarNfseEnvio");
-    expect(envelope).toContain("<InfDeclaracaoPrestacaoServico");
-    expect(envelope).toContain(`<Cnpj>${credentials.issuerCnpj}</Cnpj>`);
-    expect(envelope).toContain(
-      `<InscricaoMunicipal>${credentials.municipalRegistration}</InscricaoMunicipal>`,
-    );
-    expect(envelope).toContain("<ValorServicos>150.00</ValorServicos>");
-    expect(envelope).toContain("<ItemListaServico>01.05</ItemListaServico>");
-    expect(envelope).toContain(`<CodigoMunicipio>${config.cityCode}</CodigoMunicipio>`);
-    expect(envelope).toContain("<Numero>1</Numero>");
-    expect(envelope).toContain("<DataEmissao>2026-06-09</DataEmissao>");
+        // GerarNfseEnvio with required fields, including InscricaoMunicipal.
+        expect(envelope).toContain("<GerarNfseEnvio");
+        expect(envelope).toContain("<InfDeclaracaoPrestacaoServico");
+        expect(envelope).toContain(`<Cnpj>${credentials.issuerCnpj}</Cnpj>`);
+        expect(envelope).toContain(
+          `<InscricaoMunicipal>${credentials.municipalRegistration}</InscricaoMunicipal>`,
+        );
+        expect(envelope).toContain("<ValorServicos>150.00</ValorServicos>");
+        expect(envelope).toContain("<ItemListaServico>01.05</ItemListaServico>");
+        expect(envelope).toContain(`<CodigoMunicipio>${config.cityCode}</CodigoMunicipio>`);
+        expect(envelope).toContain("<Numero>1</Numero>");
+        expect(envelope).toContain("<DataEmissao>2026-06-09</DataEmissao>");
 
-    // Not signed by default: no ds:Signature / Signature.
-    expect(envelope).not.toContain("ds:Signature");
-    expect(envelope).not.toContain("<Signature");
-  });
+        // Not signed by default: no ds:Signature / Signature.
+        expect(envelope).not.toContain("ds:Signature");
+        expect(envelope).not.toContain("<Signature");
+      }),
+  );
 
-  test("sums multiple service amounts", async () => {
-    const multi: IssueFiscalDocumentInput = {
-      ...sampleInput,
-      services: [
-        { description: "A", serviceListCode: "01.05", amount: "150.00", taxable: true },
-        { description: "B", serviceListCode: "01.05", amount: "49.90", taxable: true },
-      ],
-    };
-    const envelope = (await buildGerarNfseEnvelope(multi, credentials, config)).unwrap();
-    expect(envelope).toContain("<ValorServicos>199.90</ValorServicos>");
-    expect(envelope).toContain("<Discriminacao>A | B</Discriminacao>");
-  });
+  it.effect("sums multiple service amounts", () =>
+    Effect.gen(function* () {
+      const multi: IssueFiscalDocumentInput = {
+        ...sampleInput,
+        services: [
+          { description: "A", serviceListCode: "01.05", amount: "150.00", taxable: true },
+          { description: "B", serviceListCode: "01.05", amount: "49.90", taxable: true },
+        ],
+      };
+      const envelope = yield* buildGerarNfseEnvelope(multi, credentials, config);
+      expect(envelope).toContain("<ValorServicos>199.90</ValorServicos>");
+      expect(envelope).toContain("<Discriminacao>A | B</Discriminacao>");
+    }),
+  );
 
-  test("signs the document when a signer is injected (ds:Signature present)", async () => {
-    const signer: GerarNfseSigner = async (xmlToSign) =>
-      Result.ok(
-        xmlToSign.replace(
-          "</InfDeclaracaoPrestacaoServico>",
-          "</InfDeclaracaoPrestacaoServico><ds:Signature>FAKE</ds:Signature>",
-        ),
+  it.effect("signs the document when a signer is injected (ds:Signature present)", () =>
+    Effect.gen(function* () {
+      const signer: GerarNfseSigner = (xmlToSign) =>
+        Effect.succeed(
+          xmlToSign.replace(
+            "</InfDeclaracaoPrestacaoServico>",
+            "</InfDeclaracaoPrestacaoServico><ds:Signature>FAKE</ds:Signature>",
+          ),
+        );
+      const envelope = yield* buildGerarNfseEnvelope(sampleInput, credentials, config, { signer });
+      expect(envelope).toContain("<ds:Signature>FAKE</ds:Signature>");
+    }),
+  );
+
+  it.effect("propagates signer failure as Effect failure", () =>
+    Effect.gen(function* () {
+      const signer: GerarNfseSigner = () =>
+        Effect.fail(
+          new SaatriProviderError({
+            code: "saatri.SIGN_ERROR",
+            reason: "Invalid certificate.",
+            retryable: false,
+          }),
+        );
+      const error = yield* Effect.flip(
+        buildGerarNfseEnvelope(sampleInput, credentials, config, { signer }),
       );
-    const envelope = (
-      await buildGerarNfseEnvelope(sampleInput, credentials, config, { signer })
-    ).unwrap();
-    expect(envelope).toContain("<ds:Signature>FAKE</ds:Signature>");
-  });
-
-  test("propagates signer failure as Result.err", async () => {
-    const signer: GerarNfseSigner = async () =>
-      Result.err({
-        code: "SIGN_ERROR",
-        message: "Invalid certificate.",
-        retryable: false,
-      });
-    const result = await buildGerarNfseEnvelope(sampleInput, credentials, config, {
-      signer,
-    });
-    expect(result.isErr()).toBe(true);
-  });
+      expect(error.code).toBe("saatri.SIGN_ERROR");
+    }),
+  );
 });

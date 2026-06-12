@@ -1,21 +1,26 @@
-import type {
-  FiscalArtifact,
-  FiscalProviderError,
-  FiscalRejection,
-  ProviderResponse,
-} from "@dfe-kit/fiscal";
-import { encodeUtf8, XML_MEDIA_TYPE } from "@dfe-kit/xml";
-import { panic, Result } from "better-result";
+import { FiscalArtifactKindValue, FiscalDocumentStatusValue } from "@dfe-kit/fiscal";
+import type { FiscalArtifact, FiscalRejection, ProviderResponse } from "@dfe-kit/fiscal";
+import { encodeUtf8, getUtf8ByteLength, XML_MEDIA_TYPE } from "@dfe-kit/xml";
+import { Effect, Metric, Schema } from "effect";
 import { XMLParser } from "fast-xml-parser";
-import { z } from "zod";
 import {
-  generateNfseErrorResponseSchema,
   generateNfseOutputDocumentSchema,
   generateNfseSoapDocumentSchema,
-  generateNfseSuccessResponseSchema,
   type GenerateNfseResponse,
-  saatriErrorCatalog,
+  SaatriOperationValue,
+  SaatriPhaseValue,
+  SaatriProviderError,
+  SaatriProviderErrorCodeValue,
+  SaatriSchemaNameValue,
+  safeCauseMetadata,
+  schemaErrorMetadata,
 } from "./config";
+import {
+  SaatriAttributeNameValue,
+  SaatriSpanNameValue,
+  saatriParseErrorTotal,
+  saatriXmlBytes,
+} from "./observability";
 
 const xmlArtifact = (kind: FiscalArtifact["kind"], xml: string): FiscalArtifact => ({
   kind,
@@ -30,100 +35,137 @@ const parser = new XMLParser({
   removeNSPrefix: true,
 });
 
-const extractOutputXml = (soapResponseXml: string): Result<string, FiscalProviderError> => {
-  const parsedSoap = generateNfseSoapDocumentSchema.safeParse(parser.parse(soapResponseXml));
-  if (!parsedSoap.success) {
-    return Result.err({
-      code: saatriErrorCatalog.RESPONSE_SHAPE_ERROR.code,
-      message: saatriErrorCatalog.RESPONSE_SHAPE_ERROR().message,
-      retryable: false,
-    });
-  }
-  return Result.ok(parsedSoap.data.Envelope.Body.GerarNfseResponse.outputXML);
-};
+const decodeSoapDocument = Schema.decodeUnknownEffect(generateNfseSoapDocumentSchema);
+const decodeOutputDocument = Schema.decodeUnknownEffect(generateNfseOutputDocumentSchema);
+
+const SAATRI_PENDING_NATIONAL_SHARE_PATTERNS = [
+  /\bdps\b/i,
+  /compartilh|consulta posterior|ambiente nacional/i,
+];
+
+const isPendingNationalShareMessage = (message: string): boolean =>
+  SAATRI_PENDING_NATIONAL_SHARE_PATTERNS.every((pattern) => pattern.test(message));
+
+const parseXml = (xml: string, phase: string): Effect.Effect<unknown, SaatriProviderError> =>
+  Effect.try({
+    try: () => parser.parse(xml),
+    catch: (cause) =>
+      new SaatriProviderError({
+        code: SaatriProviderErrorCodeValue.parseError,
+        retryable: false,
+        reason: "Falha ao interpretar XML de resposta SAATRI.",
+        operation: SaatriOperationValue.xmlParse,
+        phase,
+        ...safeCauseMetadata(cause),
+      }),
+  }).pipe(
+    Effect.tap(() => Metric.update(saatriXmlBytes, getUtf8ByteLength(xml))),
+    Effect.tapError((error) =>
+      Metric.update(
+        Metric.withAttributes(saatriParseErrorTotal, {
+          code: error.code,
+          phase: error.phase ?? "unknown",
+        }),
+        1,
+      ),
+    ),
+    Effect.withSpan(SaatriSpanNameValue.xmlParse, {
+      attributes: {
+        [SaatriAttributeNameValue.phase]: phase,
+        [SaatriAttributeNameValue.xmlBytes]: getUtf8ByteLength(xml),
+      },
+    }),
+  );
+
+const extractOutputXml = (soapResponseXml: string): Effect.Effect<string, SaatriProviderError> =>
+  parseXml(soapResponseXml, SaatriPhaseValue.responseParse).pipe(
+    Effect.flatMap((parsedXml) =>
+      decodeSoapDocument(parsedXml).pipe(
+        Effect.mapError(
+          (error) =>
+            new SaatriProviderError({
+              code: SaatriProviderErrorCodeValue.responseShapeError,
+              retryable: false,
+              reason: "Resposta SAATRI não contém o formato SOAP esperado.",
+              operation: SaatriOperationValue.schemaDecode,
+              phase: SaatriPhaseValue.soapOutputExtract,
+              schemaName: SaatriSchemaNameValue.generateNfseSoapDocument,
+              ...schemaErrorMetadata(error),
+            }),
+        ),
+      ),
+    ),
+    Effect.map((parsedSoap) => parsedSoap.Envelope.Body.GerarNfseResponse.outputXML),
+  );
 
 const decodeGenerateNfseOutput = (
   outputXml: string,
-): Result<GenerateNfseResponse, FiscalProviderError> => {
-  const parsedOutput = generateNfseOutputDocumentSchema.safeParse(parser.parse(outputXml));
-  if (!parsedOutput.success) {
-    const reason = z.prettifyError(parsedOutput.error);
-    return Result.err({
-      code: saatriErrorCatalog.PARSE_ERROR.code,
-      message: saatriErrorCatalog.PARSE_ERROR({ reason }).message,
-      retryable: false,
-    });
-  }
-
-  if ("GerarNfseResposta" in parsedOutput.data) {
-    return Result.ok(parsedOutput.data.GerarNfseResposta);
-  }
-
-  return Result.ok(parsedOutput.data);
-};
-
-const mapResponse = (
-  parsedResponse: GenerateNfseResponse,
-  requestXml: string,
-  responseXml: string,
-  outputXml: string,
-): Result<ProviderResponse, FiscalProviderError> => {
-  const artifacts: readonly FiscalArtifact[] = [
-    xmlArtifact("request_xml", requestXml),
-    xmlArtifact("response_xml", responseXml),
-  ];
-  const authorizedArtifacts: readonly FiscalArtifact[] = [
-    ...artifacts,
-    xmlArtifact("authorized_xml", outputXml),
-  ];
-
-  const errorResponse = generateNfseErrorResponseSchema.safeParse(parsedResponse);
-  if (errorResponse.success) {
-    const messages = errorResponse.data.ListaMensagemRetorno.MensagemRetorno;
-    const hasPendingNationalShareMessage = messages.some(
-      (message) =>
-        /\bdps\b/i.test(message.Mensagem) &&
-        /compartilh|consulta posterior|ambiente nacional/i.test(message.Mensagem),
-    );
-    if (hasPendingNationalShareMessage) {
-      return Result.ok({
-        status: "accepted_pending_authorization",
-        rejections: [],
-        artifacts,
-      } satisfies ProviderResponse);
-    }
-
-    const rejections: readonly FiscalRejection[] = messages.map((message) => ({
-      code: message.Codigo,
-      message: message.Mensagem,
-      ...(message.Correcao !== undefined ? { correctionHint: message.Correcao } : {}),
-    }));
-    return Result.ok({
-      status: "rejected",
-      rejections,
-      artifacts,
-    } satisfies ProviderResponse);
-  }
-
-  const successResponse = generateNfseSuccessResponseSchema.safeParse(parsedResponse);
-  if (!successResponse.success) panic("generateNfseResponseSchema returned an impossible shape.");
-
-  const infNfse = successResponse.data.ListaNfse.CompNfse.Nfse.InfNfse;
-  return Result.ok({
-    status: "authorized",
-    providerDocumentId: infNfse.Numero,
-    protocol: infNfse.CodigoVerificacao,
-    rejections: [],
-    artifacts: authorizedArtifacts,
-  } satisfies ProviderResponse);
-};
+): Effect.Effect<GenerateNfseResponse, SaatriProviderError> =>
+  parseXml(outputXml, SaatriPhaseValue.nfseOutputDecode).pipe(
+    Effect.flatMap((parsedXml) =>
+      decodeOutputDocument(parsedXml).pipe(
+        Effect.mapError(
+          (error) =>
+            new SaatriProviderError({
+              code: SaatriProviderErrorCodeValue.parseError,
+              reason: "XML de saída SAATRI não contém um retorno ABRASF GerarNfse válido.",
+              retryable: false,
+              operation: SaatriOperationValue.schemaDecode,
+              phase: SaatriPhaseValue.nfseOutputDecode,
+              schemaName: SaatriSchemaNameValue.generateNfseOutputDocument,
+              ...schemaErrorMetadata(error),
+            }),
+        ),
+      ),
+    ),
+    Effect.map((parsedOutput) =>
+      "GerarNfseResposta" in parsedOutput ? parsedOutput.GerarNfseResposta : parsedOutput,
+    ),
+  );
 
 export const parseGerarNfseResponse = (args: {
   readonly requestXml: string;
   readonly responseXml: string;
-}): Result<ProviderResponse, FiscalProviderError> =>
-  extractOutputXml(args.responseXml).andThen((outputXml) =>
-    decodeGenerateNfseOutput(outputXml).andThen((parsedResponse) =>
-      mapResponse(parsedResponse, args.requestXml, args.responseXml, outputXml),
-    ),
-  );
+}): Effect.Effect<ProviderResponse, SaatriProviderError> =>
+  Effect.gen(function* () {
+    const outputXml = yield* extractOutputXml(args.responseXml);
+    const parsedResponse = yield* decodeGenerateNfseOutput(outputXml);
+
+    const artifacts: readonly FiscalArtifact[] = [
+      xmlArtifact(FiscalArtifactKindValue.requestXml, args.requestXml),
+      xmlArtifact(FiscalArtifactKindValue.responseXml, args.responseXml),
+    ];
+    if ("ListaMensagemRetorno" in parsedResponse) {
+      const messages = parsedResponse.ListaMensagemRetorno.MensagemRetorno;
+      const hasPendingNationalShareMessage = messages.some((message) =>
+        isPendingNationalShareMessage(message.Mensagem),
+      );
+      if (hasPendingNationalShareMessage) {
+        return {
+          status: FiscalDocumentStatusValue.acceptedPendingAuthorization,
+          rejections: [],
+          artifacts,
+        };
+      }
+
+      const rejections: readonly FiscalRejection[] = messages.map((message) => ({
+        code: message.Codigo,
+        message: message.Mensagem,
+        ...(message.Correcao !== undefined ? { correctionHint: message.Correcao } : {}),
+      }));
+      return {
+        status: FiscalDocumentStatusValue.rejected,
+        rejections,
+        artifacts,
+      };
+    }
+
+    const infNfse = parsedResponse.ListaNfse.CompNfse.Nfse.InfNfse;
+    return {
+      status: FiscalDocumentStatusValue.authorized,
+      providerDocumentId: infNfse.Numero,
+      protocol: infNfse.CodigoVerificacao,
+      rejections: [],
+      artifacts: [...artifacts, xmlArtifact(FiscalArtifactKindValue.authorizedXml, outputXml)],
+    };
+  });

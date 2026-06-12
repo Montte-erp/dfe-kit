@@ -7,6 +7,8 @@ runs:
       uses: actions/setup-node@v6
       with:
         node-version: "22.12.0"
+        registry-url: "https://registry.npmjs.org"
+        scope: "@dfe-kit"
 
     - name: Setup Bun
       uses: oven-sh/setup-bun@v2
