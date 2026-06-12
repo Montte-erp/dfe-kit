@@ -22,9 +22,6 @@ jobs:
   publish:
     runs-on: ubuntu-latest
     environment: npm
-    env:
-      CI: "false"
-      GITHUB_ACTIONS: "false"
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -44,11 +41,7 @@ jobs:
       - name: Publish dry run
         if: github.event_name == 'workflow_dispatch' && inputs.dry_run == 'true'
         run: bun run publish:npm:dry
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Publish to npm
         if: github.event_name == 'release' || (github.event_name == 'workflow_dispatch' && inputs.dry_run == 'false')
         run: bun run publish:npm
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

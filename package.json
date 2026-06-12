@@ -36,5 +36,5 @@
     "publint": "^0.3.21",
     "typescript": "latest"
   },
-  "license": "BUSL-1.1"
+  "license": "Apache-2.0"
 }

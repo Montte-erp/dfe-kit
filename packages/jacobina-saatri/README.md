@@ -2,7 +2,7 @@
 
 Provider NFS-e para **Jacobina/BA** via **SAATRI / ABRASF 2.03**.
 
-Este pacote é parte do DFeKit: infraestrutura fiscal source-available para documentos fiscais eletrônicos brasileiros.
+Este pacote é parte do DFeKit: infraestrutura fiscal open source para documentos fiscais eletrônicos brasileiros.
 
 ## Status
 
@@ -31,20 +31,9 @@ Essas capacidades só devem aparecer no `manifest` depois de prova em homologaç
 
 ## Licença
 
-DFeKit é **source-available**, não open source.
+Este pacote é distribuído sob **Apache License 2.0 (`Apache-2.0`)**.
 
-Este pacote é distribuído sob **Business Source License 1.1 (`BUSL-1.1`)**.
-
-Uso permitido pela licença pública:
-
-- leitura do código;
-- avaliação;
-- testes;
-- desenvolvimento;
-- revisão de segurança;
-- uso não produtivo.
-
-Uso em produção, uso comercial, revenda, sublicenciamento ou oferta de produto/serviço fiscal semelhante exige licença comercial separada da Montte.
+A licença permite uso, cópia, modificação, distribuição, sublicenciamento e uso comercial conforme os termos da Apache 2.0.
 
 Veja o arquivo [`LICENSE`](./LICENSE).
 

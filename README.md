@@ -1,14 +1,14 @@
 # DFeKit
 
-Source-available fiscal infrastructure for Brazilian electronic invoices.
+Open-source fiscal infrastructure for Brazilian electronic invoices.
 
 DFeKit starts with NFS-e through SAATRI/ABRASF 2.03 and is shaped to grow into NF-e, NFC-e, NFS-e Nacional, SEFAZ events, provider adapters, and auditable fiscal document lifecycles.
 
 ## License
 
-DFeKit is source-available under the Business Source License 1.1 (`BUSL-1.1`). Development, testing, evaluation, security review, modification, and non-production use are permitted under the public license. Production or commercial use requires a separate Montte license.
+DFeKit is distributed under the Apache License 2.0.
 
-See [`LICENSE`](./LICENSE) and [`docs/licensing.md`](./docs/licensing.md).
+See [`LICENSE`](./LICENSE).
 
 ## Packages
 
