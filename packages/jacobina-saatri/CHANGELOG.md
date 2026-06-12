@@ -2,7 +2,7 @@
 
 Todas as mudanças publicáveis de `@dfe-kit/jacobina-saatri` são registradas aqui.
 
-## 0.1.1 - Unreleased
+## 0.1.1 - 2026-06-12
 
 ### Changed
 

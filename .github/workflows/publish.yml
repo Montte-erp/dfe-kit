@@ -1,6 +1,12 @@
 name: Publish
 
 on:
+  push:
+    branches: [master]
+    paths:
+      - "packages/**/package.json"
+      - "packages/**/CHANGELOG.md"
+      - ".github/workflows/publish.yml"
   workflow_dispatch:
     inputs:
       dry_run:
@@ -43,5 +49,5 @@ jobs:
         run: bun run publish:npm:dry
 
       - name: Publish to npm
-        if: github.event_name == 'release' || (github.event_name == 'workflow_dispatch' && inputs.dry_run == 'false')
+        if: github.event_name == 'release' || github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.dry_run == 'false')
         run: bun run publish:npm
