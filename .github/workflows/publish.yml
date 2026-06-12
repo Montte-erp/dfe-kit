@@ -29,7 +29,7 @@ jobs:
     runs-on: ubuntu-latest
     environment: npm
     env:
-      CI: "false"
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -61,8 +61,16 @@ jobs:
 
       - name: Publish dry run
         if: github.event_name == 'workflow_dispatch' && inputs.dry_run == 'true'
-        run: bun run publish:npm:dry
+        working-directory: packages/jacobina-saatri
+        run: |
+          bun run build
+          bun run publint
+          npm publish --access public --provenance --dry-run
 
       - name: Publish to npm
         if: github.event_name == 'release' || github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.dry_run == 'false')
-        run: bun run publish:npm
+        working-directory: packages/jacobina-saatri
+        run: |
+          bun run build
+          bun run publint
+          npm publish --access public --provenance
