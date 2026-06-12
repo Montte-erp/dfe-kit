@@ -6,14 +6,14 @@
  * seus tipos sao inlinados no .d.ts via `dts.resolve`. Assim o package publicado
  * fica self-contained, sem dependencia de runtime em @dfe-kit/*.
  *
- * `dts.inferTypes` usa o tsc para gerar os .d.ts (lida com os tipos inferidos do
- * zod sem exigir anotacoes explicitas / isolatedDeclarations).
+ * `dts.inferTypes` fica desligado por padrão: schemas Effect exportados devem ter
+ * tipos públicos explícitos antes de habilitar inferência DTS por pacote.
  */
 export const dfeKitLibBunup = (noExternal: string[]) => ({
   entry: ["src/index.ts"],
   format: ["esm"],
   target: "node",
   clean: true,
-  dts: { resolve: noExternal, inferTypes: true },
+  dts: { resolve: noExternal, inferTypes: false },
   noExternal,
 });

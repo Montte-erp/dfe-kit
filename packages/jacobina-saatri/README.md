@@ -40,25 +40,31 @@ Veja o arquivo [`LICENSE`](./LICENSE).
 ## Instalação
 
 ```bash
-bun add @dfe-kit/jacobina-saatri better-result
+bun add @dfe-kit/jacobina-saatri effect
 ```
 
 Ou com npm:
 
 ```bash
-npm install @dfe-kit/jacobina-saatri better-result
+npm install @dfe-kit/jacobina-saatri effect
 ```
 
-> `better-result` faz parte do contrato público: APIs fiscais retornam `Result<T, FiscalProviderError>`.
+> `effect` faz parte do contrato público: `provider.issue(...)` e outros métodos fiscais
+> retornam `Effect.Effect<T, SaatriProviderError>`, ou seja, falhas técnicas tipadas no
+> canal de erro. Rejeição fiscal continua como sucesso de negócio (`providerResponse.status`).
 
-## Uso mínimo
+Sem wrappers de retorno legados.
 
 ```ts
-import { createJacobinaSaatriProvider } from "@dfe-kit/jacobina-saatri";
+import { Effect } from "effect";
+import {
+  createJacobinaSaatriProvider,
+  type SaatriProviderError,
+} from "@dfe-kit/jacobina-saatri/runtime";
 
 const provider = createJacobinaSaatriProvider(
   {
-    username: process.env.SAATRI_USERNAME!, // CPF do usuário do portal
+    username: process.env.SAATRI_USERNAME!,
     password: process.env.SAATRI_PASSWORD!,
     issuerCnpj: process.env.SAATRI_ISSUER_CNPJ!,
     municipalRegistration: process.env.SAATRI_MUNICIPAL_REGISTRATION!,
@@ -68,58 +74,53 @@ const provider = createJacobinaSaatriProvider(
   },
 );
 
-const result = await provider.issue({
-  environment: "homologation",
-  documentKind: "nfse",
-  series: "1",
-  number: "1",
-  issuedAt: new Date().toISOString(),
-  issuer: {
-    legalName: "Empresa Prestadora LTDA",
-    cnpj: "00000000000000",
-    municipalRegistration: "12345",
-    address: {
-      street: "Rua Exemplo",
-      number: "100",
-      district: "Centro",
-      cityCode: "2917706",
-      city: "Jacobina",
-      state: "BA",
-      postalCode: "44700000",
-      countryCode: "1058",
+const issued = await Effect.runPromise(
+  provider.issue({
+    environment: "homologation",
+    documentKind: "nfse",
+    series: "1",
+    number: "1",
+    issuedAt: new Date().toISOString(),
+    issuer: {
+      legalName: "Empresa Prestadora LTDA",
+      cnpj: "00000000000000",
+      municipalRegistration: "12345",
+      address: {
+        street: "Rua Exemplo",
+        number: "100",
+        district: "Centro",
+        cityCode: "2917706",
+        city: "Jacobina",
+        state: "BA",
+        postalCode: "44700000",
+        countryCode: "1058",
+      },
     },
-  },
-  customer: {
-    legalName: "Cliente Tomador",
-    cpf: "00000000000",
-    address: {
-      street: "Rua Cliente",
-      number: "200",
-      district: "Centro",
-      cityCode: "2917706",
-      city: "Jacobina",
-      state: "BA",
-      postalCode: "44700000",
-      countryCode: "1058",
+    customer: {
+      legalName: "Cliente Tomador",
+      cpf: "00000000000",
+      address: {
+        street: "Rua Cliente",
+        number: "200",
+        district: "Centro",
+        cityCode: "2917706",
+        city: "Jacobina",
+        state: "BA",
+        postalCode: "44700000",
+        countryCode: "1058",
+      },
     },
-  },
-  services: [
-    {
-      description: "Serviço de teste em homologação",
-      serviceListCode: "01.05",
-      amount: "150.00",
-      taxable: true,
-    },
-  ],
-});
+    services: [
+      {
+        description: "Serviço de teste em homologação",
+        serviceListCode: "01.05",
+        amount: "150.00",
+        taxable: true,
+      },
+    ],
+  }),
+);
 
-if (result.isErr()) {
-  // Falha técnica: rede, timeout, HTTP não-2xx, parse, assinatura etc.
-  console.error(result.error);
-  process.exit(1);
-}
-
-const issued = result.value;
 const providerResponse = issued.providerResponse;
 
 if (providerResponse.status === "rejected") {
@@ -148,7 +149,7 @@ DFeKit separa erro técnico de rejeição fiscal.
 
 ### Rejeição fiscal
 
-Rejeição fiscal é resposta válida do provedor. Ela volta como `Result.ok` com:
+Rejeição fiscal é resposta válida do provedor. Ela volta como sucesso no Effect com:
 
 ```ts
 providerResponse.status === "rejected";
@@ -165,7 +166,7 @@ Exemplos:
 
 ### Erro técnico
 
-Erro técnico volta como `Result.err(FiscalProviderError)`.
+Erro técnico volta como falha tipada no canal de erro do Effect (`SaatriProviderError`), conforme catálogo de códigos em `@dfe-kit/adapter-saatri/src/config.ts`.
 
 Exemplos:
 
@@ -192,15 +193,64 @@ Consumidores devem persistir esses artefatos junto com protocolo, número, códi
 Assinatura XML é opcional e injetável:
 
 ```ts
-import { createJacobinaSaatriProvider, type JacobinaSaatriSigner } from "@dfe-kit/jacobina-saatri";
+import { Effect } from "effect";
+import type { SaatriProviderError, GerarNfseSigner } from "@dfe-kit/jacobina-saatri";
 
-const signer: JacobinaSaatriSigner = async (xmlToSign) => {
+const signer: GerarNfseSigner = (xmlToSign) => {
   // Assine o XML fora do DFeKit usando seu provedor de certificado/HSM/KMS.
-  // Retorne Result.ok(xmlAssinado) ou Result.err(FiscalProviderError).
+  // `GerarNfseSigner` é Effect-native:
+  // - sucesso: Effect.succeed(xmlAssinado)
+  // - falha técnica: Effect.fail(new SaatriProviderError({ ... }))
+  return Effect.succeed(xmlToSign);
 };
-
-const provider = createJacobinaSaatriProvider(credentials, { signer });
 ```
+
+> `GerarNfseSigner` tem assinatura:
+>
+> `type GerarNfseSigner = (xmlToSign: string) => Effect.Effect<string, SaatriProviderError>`
+
+## OpenTelemetry opcional
+
+O subpath `@dfe-kit/jacobina-saatri/manifest` não depende de OpenTelemetry e não instancia SDK, exporter, cliente HTTP ou provider configurado. O subpath `@dfe-kit/jacobina-saatri/runtime` expõe as factories de execução.
+
+O adapter SAATRI já emite spans, métricas e logs via `effect`:
+
+- spans: `dfe.saatri.issue`, `dfe.saatri.envelope.build`, `dfe.saatri.sign`, `dfe.saatri.http.post`, `dfe.saatri.response.parse`, `dfe.saatri.xml.parse`;
+- métricas: `dfe_saatri_issue_total`, `dfe_saatri_issue_error_total`, `dfe_saatri_fiscal_status_total`, `dfe_saatri_http_attempt_total`, `dfe_saatri_http_status_total`, `dfe_saatri_http_retry_total`, `dfe_saatri_parse_error_total`, `dfe_saatri_xml_bytes`.
+
+Para exportar traces via OpenTelemetry, configure `@effect/opentelemetry` no runtime da aplicação consumidora. Métricas e logs exigem leitores/processadores adicionais no `NodeSdk.layer`; o DFeKit não escolhe exporters, resource ou sampling por você.
+
+```bash
+bun add @effect/opentelemetry @opentelemetry/sdk-trace-base @opentelemetry/exporter-trace-otlp-http
+```
+
+Exemplo de composição opcional no boundary da aplicação:
+
+```ts
+import * as NodeSdk from "@effect/opentelemetry/NodeSdk";
+import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-http";
+import { BatchSpanProcessor } from "@opentelemetry/sdk-trace-base";
+import { Effect } from "effect";
+import { createJacobinaSaatriProvider } from "@dfe-kit/jacobina-saatri/runtime";
+
+const OtelLive = NodeSdk.layer(() => ({
+  resource: { serviceName: "my-fiscal-service" },
+  spanProcessor: new BatchSpanProcessor(
+    new OTLPTraceExporter({ url: "http://localhost:4318/v1/traces" }),
+  ),
+}));
+
+const provider = createJacobinaSaatriProvider(credentials, {
+  environment: "homologation",
+  correlationId: "request-123",
+});
+
+const result = await Effect.runPromise(provider.issue(input).pipe(Effect.provide(OtelLive)));
+```
+
+Essa decisão mantém OTel configurável e opcional no adapter: DFeKit emite observabilidade nativa do Effect; a aplicação escolhe exporters, resource, leitores de métricas/logs e política de sampling.
+
+## DFeKit não armazena chaves
 
 DFeKit **não** guarda certificado, senha de PFX ou material criptográfico. Certificado A1, vault, HSM e política de segredo ficam fora deste pacote.
 
@@ -219,40 +269,44 @@ Recomendações para consumidores:
 
 ## API pública principal
 
-### `createJacobinaSaatriProvider(credentials, opts?)`
-
-Cria um provider fiscal para Jacobina/BA.
-
 ```ts
 createJacobinaSaatriProvider(
-  credentials: JacobinaSaatriCredentials,
-  opts: CreateJacobinaSaatriProviderOptions,
+  credentials: SaatriCredentials,
+  options: CreateSaatriPackageProviderOptions,
 ): FiscalProvider
 ```
 
-Credenciais:
+Credenciais e opções da API schema-first vêm dos tipos exportados pelo pacote:
 
 ```ts
-interface JacobinaSaatriCredentials {
-  readonly username: string;
-  readonly password: string;
-  readonly issuerCnpj: string;
-  readonly municipalRegistration: string;
-}
-```
+import {
+  createJacobinaSaatriProvider,
+  type SaatriCredentials,
+  type CreateSaatriPackageProviderOptions,
+} from "@dfe-kit/jacobina-saatri/runtime";
 
-Opções:
+const credentials: SaatriCredentials = {
+  username: process.env.SAATRI_USERNAME!,
+  password: process.env.SAATRI_PASSWORD!,
+  issuerCnpj: process.env.SAATRI_ISSUER_CNPJ!,
+  municipalRegistration: process.env.SAATRI_MUNICIPAL_REGISTRATION!,
+};
 
-```ts
-interface CreateJacobinaSaatriProviderOptions {
-  readonly environment: "homologation" | "production";
-  readonly signer?: JacobinaSaatriSigner;
-  readonly timeoutMs?: number;
-  readonly eventSink?: JacobinaSaatriEventSink;
-}
+const options: CreateSaatriPackageProviderOptions = {
+  environment: "homologation",
+};
+
+const provider = createJacobinaSaatriProvider(credentials, options);
 ```
 
 ## Constantes públicas
+
+Imports recomendados:
+
+```ts
+import { jacobinaSaatriManifest } from "@dfe-kit/jacobina-saatri/manifest";
+import { createJacobinaSaatriProvider } from "@dfe-kit/jacobina-saatri/runtime";
+```
 
 O pacote exporta constantes de provider:
 
@@ -264,11 +318,14 @@ O pacote exporta constantes de provider:
 
 ## Desenvolvimento
 
+Asserções e cenários devem permanecer em `@effect/vitest` (incluindo `@effect/vitest/static` para validação estática de contratos).
+
 Na raiz do repositório:
 
 ```bash
 bun install
-bun test
+bun run check:static
+bun run test
 bun run typecheck
 bun run build
 bun run publint
@@ -287,4 +344,8 @@ O tarball deve incluir apenas:
 - `LICENSE`;
 - `README.md`;
 - `dist/index.js`;
-- `dist/index.d.ts`.
+- `dist/index.d.ts`;
+- `dist/manifest.js`;
+- `dist/manifest.d.ts`;
+- `dist/runtime.js`;
+- `dist/runtime.d.ts`.

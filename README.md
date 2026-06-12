@@ -1,50 +1,64 @@
 # DFeKit
 
-Open-source fiscal infrastructure for Brazilian electronic invoices.
+Infraestrutura open-source para documentos fiscais eletrônicos brasileiros.
 
-DFeKit starts with NFS-e through SAATRI/ABRASF 2.03 and is shaped to grow into NF-e, NFC-e, NFS-e Nacional, SEFAZ events, provider adapters, and auditable fiscal document lifecycles.
+O DFeKit começa com NFS-e via SAATRI/ABRASF 2.03 e segue evoluindo para NF-e, NFC-e, NFS-e Nacional, eventos de SEFAZ, adaptadores de prefeitura e trilhas auditáveis de documentos fiscais.
 
-## License
+## Licença
 
-DFeKit is distributed under the Apache License 2.0.
+O DFeKit é distribuído sob a **Apache License 2.0**.
 
-See [`LICENSE`](./LICENSE).
+Veja o arquivo [`LICENSE`](./LICENSE).
 
-## Packages
-
-```text
-@dfe-kit/fiscal            fiscal adapter contract, domain types, zod schemas
-@dfe-kit/utils             generic validation primitives (CPF/CNPJ)
-@dfe-kit/xml               XML escaping/encoding primitives
-@dfe-kit/adapter-saatri    reusable SAATRI/ABRASF 2.03 adapter engine
-@dfe-kit/jacobina-saatri   SAATRI Jacobina-BA NFS-e provider (ABRASF 2.03)
-```
-
-Planned packages:
+## Pacotes
 
 ```text
-@dfe-kit/provider-sefaz    NF-e/NFC-e SEFAZ adapter
-@dfe-kit/provider-nfse     NFS-e Nacional adapter
-@dfe-kit/cli               local validation and homologation runner
+@dfe-kit/fiscal            contrato fiscal, tipos de domínio e schemas do Effect
+@dfe-kit/xml               primitivas de escape/encoding XML
+@dfe-kit/adapter-saatri    motor de adaptação SAATRI/ABRASF 2.03 reutilizável
+@dfe-kit/jacobina-saatri   provedor SAATRI de NFS-e Jacobina-BA (ABRASF 2.03)
 ```
 
-## Boundaries
+Pacotes planejados:
 
-- DFeKit owns fiscal document semantics, provider adapters, state transitions, rejection mapping, and fiscal artifacts.
-- XML signing is an injectable hook (`signer`), off by default. DFeKit does not own certificate handling.
-- Generic XML, SOAP, mTLS, CPF/CNPJ, and hashing primitives may move to `@f-o-t/*` after two real consumers exist.
+```text
+@dfe-kit/provider-sefaz    adaptador SEFAZ para NF-e/NFC-e
+@dfe-kit/provider-nfse     adaptador para NFS-e Nacional
+@dfe-kit/cli               validador local e runner de homologação
+```
 
-## First target
+## Limites de responsabilidade
 
-Jacobina/BA NFS-e through SAATRI:
+- O DFeKit define semântica fiscal, contratos de provider, transições de estado, mapeamento de rejeições e artefatos fiscais.
+- O XML firmado é um _hook_ injetável (`signer`), desativado por padrão. O DFeKit não possui manejo de certificados.
+- Primitivas genéricas de XML, SOAP, mTLS, CPF/CNPJ e hash só devem sair para pacote próprio após API estável e pelo menos dois consumidores reais.
 
-- ABRASF 2.03 payloads
+## Primeiro alvo
+
+Jacobina/BA NFS-e via SAATRI:
+
+- payloads ABRASF 2.03
 - SOAP 1.1
 - `wsse:UsernameToken`
 - `GerarNfse`
 - `ConsultarNfsePorRps`
-- cancellation and substitution only after homologation proves the supported flow
+- cancelamento e substituição apenas após comprovação em homologação
 
-## Public API shape
+## Forma da API pública (Effect-first)
 
-Public package APIs return typed results (`better-result`): typed input, typed output, typed errors. No exceptions for fiscal rejection; no extra runtime required by callers.
+As APIs públicas retornam valores de `Effect.Effect` com entrada, saída e falhas tipadas.
+
+- Falhas técnicas são expostas no canal de erro via classes tipadas de `Schema.TaggedErrorClass` do próprio adapter (`SaatriProviderError` em `@dfe-kit/adapter-saatri`).
+- Rejeição fiscal não é exceção técnica: ela permanece como sucesso do Effect com `providerResponse.status === "rejected"` e detalhes de rejeição em `providerResponse.rejections`.
+- Não há wrappers legados de resultado no contrato público.
+### Exemplo de borda da aplicação
+
+```ts
+import { Effect } from "effect";
+import { createJacobinaSaatriProvider } from "@dfe-kit/jacobina-saatri";
+
+const provider = createJacobinaSaatriProvider({ ...credentials }, { environment: "homologation" });
+const issued = await Effect.runPromise(provider.issue({ ...input }));
+```
+
+`provider.issue(...)` retorna `Effect.Effect<... , SaatriProviderError>`, com falhas técnicas tipadas e rejeição fiscal como sucesso de negócio.

@@ -1,233 +1,460 @@
 import type {
   FiscalProviderCapability,
   FiscalProviderCapabilityMetadata,
-  FiscalProviderManifest,
+  FiscalProviderError,
+  FiscalRejection,
 } from "@dfe-kit/fiscal";
 import {
-  defineAuditCatalog,
-  defineErrorCatalog,
-  type AuditCatalog,
-  type ErrorCatalog,
-} from "evlog";
-import { z } from "zod";
+  FiscalEnvironmentValue,
+  FiscalProviderCapabilityStatusValue,
+  FiscalProviderCapabilityValue,
+  fiscalDocumentKindSchema,
+  fiscalEnvironmentSchema,
+  fiscalProviderCapabilityMetadataSchema,
+} from "@dfe-kit/fiscal/schemas";
+import { Schema, type Effect, type Redacted, type SchemaIssue } from "effect";
 
-type SaatriAuditCatalogMap = {
-  readonly ISSUE_STARTED: { readonly target: "nfse" };
-  readonly ENVELOPE_BUILD_STARTED: { readonly target: "nfse" };
-  readonly ENVELOPE_BUILD_SUCCEEDED: { readonly target: "nfse" };
-  readonly ENVELOPE_BUILD_FAILED: { readonly target: "nfse" };
-  readonly SIGN_STARTED: { readonly target: "nfse" };
-  readonly SIGN_SUCCEEDED: { readonly target: "nfse" };
-  readonly SIGN_FAILED: { readonly target: "nfse" };
-  readonly HTTP_POST_STARTED: { readonly target: "nfse" };
-  readonly HTTP_POST_SUCCEEDED: { readonly target: "nfse" };
-  readonly HTTP_POST_FAILED: { readonly target: "nfse" };
-  readonly RESPONSE_PARSE_STARTED: { readonly target: "nfse" };
-  readonly RESPONSE_PARSE_SUCCEEDED: { readonly target: "nfse" };
-  readonly RESPONSE_PARSE_FAILED: { readonly target: "nfse" };
-  readonly FISCAL_AUTHORIZED: { readonly target: "nfse" };
-  readonly FISCAL_REJECTED: { readonly target: "nfse" };
-  readonly ARTIFACT_CREATED: { readonly target: "nfse" };
-  readonly OPTIONAL_SIGNER_NOT_CONFIGURED: { readonly target: "nfse" };
-};
-
-type SaatriErrorCatalogMap = {
-  readonly NETWORK_ERROR: {
-    readonly message: "Falha de rede ao comunicar com o servidor SAATRI.";
-    readonly tags: readonly ["saatri", "transport"];
-  };
-  readonly RESPONSE_READ_ERROR: {
-    readonly message: "Não foi possível ler o corpo da resposta SAATRI.";
-    readonly tags: readonly ["saatri", "transport"];
-  };
-  readonly HTTP_STATUS_ERROR: {
-    readonly message: (input: { readonly status: number }) => string;
-    readonly tags: readonly ["saatri", "transport"];
-  };
-  readonly PARSE_ERROR: {
-    readonly message: (input: { readonly reason: string }) => string;
-    readonly tags: readonly ["saatri", "parse"];
-  };
-  readonly RESPONSE_SHAPE_ERROR: {
-    readonly message: "Resposta da SAATRI sem <outputXML> de GerarNfseResponse. O servidor pode ter retornado um SOAP Fault ou erro de autenticação.";
-    readonly tags: readonly ["saatri", "parse"];
-  };
-  readonly XML_SIZE_LIMIT_EXCEEDED: {
-    readonly message: "XML SAATRI excede o limite de 512 KB informado pelo provedor.";
-    readonly tags: readonly ["saatri", "validation"];
-  };
-};
-
-const saatriAuditCatalog: AuditCatalog<"saatri", SaatriAuditCatalogMap> = defineAuditCatalog(
-  "saatri",
+const nonEmptyString: Schema.Decoder<string> = Schema.NonEmptyString;
+const redactedNonEmptyString: Schema.Decoder<Redacted.Redacted<string>> = Schema.RedactedFromValue(
+  nonEmptyString,
   {
-    ISSUE_STARTED: { target: "nfse" },
-    ENVELOPE_BUILD_STARTED: { target: "nfse" },
-    ENVELOPE_BUILD_SUCCEEDED: { target: "nfse" },
-    ENVELOPE_BUILD_FAILED: { target: "nfse" },
-    SIGN_STARTED: { target: "nfse" },
-    SIGN_SUCCEEDED: { target: "nfse" },
-    SIGN_FAILED: { target: "nfse" },
-    HTTP_POST_STARTED: { target: "nfse" },
-    HTTP_POST_SUCCEEDED: { target: "nfse" },
-    HTTP_POST_FAILED: { target: "nfse" },
-    RESPONSE_PARSE_STARTED: { target: "nfse" },
-    RESPONSE_PARSE_SUCCEEDED: { target: "nfse" },
-    RESPONSE_PARSE_FAILED: { target: "nfse" },
-    FISCAL_AUTHORIZED: { target: "nfse" },
-    FISCAL_REJECTED: { target: "nfse" },
-    ARTIFACT_CREATED: { target: "nfse" },
-    OPTIONAL_SIGNER_NOT_CONFIGURED: { target: "nfse" },
+    label: "saatri-secret",
+    disallowEncode: true,
   },
 );
-
-const saatriErrorCatalog: ErrorCatalog<"saatri", SaatriErrorCatalogMap> = defineErrorCatalog(
-  "saatri",
-  {
-    NETWORK_ERROR: {
-      message: "Falha de rede ao comunicar com o servidor SAATRI.",
-      tags: ["saatri", "transport"],
-    },
-    RESPONSE_READ_ERROR: {
-      message: "Não foi possível ler o corpo da resposta SAATRI.",
-      tags: ["saatri", "transport"],
-    },
-    HTTP_STATUS_ERROR: {
-      message: ({ status }: { status: number }) =>
-        `Servidor SAATRI respondeu com status HTTP ${status}.`,
-      tags: ["saatri", "transport"],
-    },
-    PARSE_ERROR: {
-      message: ({ reason }: { reason: string }) => reason,
-      tags: ["saatri", "parse"],
-    },
-    RESPONSE_SHAPE_ERROR: {
-      message:
-        "Resposta da SAATRI sem <outputXML> de GerarNfseResponse. O servidor pode ter retornado um SOAP Fault ou erro de autenticação.",
-      tags: ["saatri", "parse"],
-    },
-    XML_SIZE_LIMIT_EXCEEDED: {
-      message: "XML SAATRI excede o limite de 512 KB informado pelo provedor.",
-      tags: ["saatri", "validation"],
-    },
-  },
+const urlString: Schema.Decoder<string> = Schema.String.check(Schema.isPattern(/^https?:\/\/.+/));
+const saatriEndpointUrl: Schema.Decoder<string> = urlString.check(
+  Schema.makeFilter((value) => value.includes("saatri"), {
+    expected: "SAATRI endpoint URL containing 'saatri'",
+  }),
 );
+const cnpjDigits: Schema.Decoder<string> = Schema.String.check(Schema.isPattern(/^\d{14}$/));
+const cityCode: Schema.Decoder<string> = Schema.String.check(Schema.isPattern(/^\d{7}$/));
 
-declare module "evlog" {
-  interface RegisteredAuditCatalogs {
-    saatri: typeof saatriAuditCatalog;
-  }
+const documentKindSchema = fiscalDocumentKindSchema;
 
-  interface RegisteredErrorCatalogs {
-    saatri: typeof saatriErrorCatalog;
+export type SaatriProviderErrorCode =
+  | "saatri.CONFIG_ERROR"
+  | "saatri.INVALID_INPUT"
+  | "saatri.NETWORK_ERROR"
+  | "saatri.RESPONSE_READ_ERROR"
+  | "saatri.HTTP_STATUS_ERROR"
+  | "saatri.PARSE_ERROR"
+  | "saatri.RESPONSE_SHAPE_ERROR"
+  | "saatri.XML_SIZE_LIMIT_EXCEEDED"
+  | "saatri.SIGN_ERROR";
+const SaatriProviderErrorCodeSchema: Schema.Decoder<SaatriProviderErrorCode> = Schema.Literals([
+  "saatri.CONFIG_ERROR",
+  "saatri.INVALID_INPUT",
+  "saatri.NETWORK_ERROR",
+  "saatri.RESPONSE_READ_ERROR",
+  "saatri.HTTP_STATUS_ERROR",
+  "saatri.PARSE_ERROR",
+  "saatri.RESPONSE_SHAPE_ERROR",
+  "saatri.XML_SIZE_LIMIT_EXCEEDED",
+  "saatri.SIGN_ERROR",
+]);
+export const SaatriProviderErrorCodeValue = {
+  configError: "saatri.CONFIG_ERROR",
+  invalidInput: "saatri.INVALID_INPUT",
+  networkError: "saatri.NETWORK_ERROR",
+  responseReadError: "saatri.RESPONSE_READ_ERROR",
+  httpStatusError: "saatri.HTTP_STATUS_ERROR",
+  parseError: "saatri.PARSE_ERROR",
+  responseShapeError: "saatri.RESPONSE_SHAPE_ERROR",
+  xmlSizeLimitExceeded: "saatri.XML_SIZE_LIMIT_EXCEEDED",
+  signError: "saatri.SIGN_ERROR",
+} satisfies Record<string, SaatriProviderErrorCode>;
+
+export type SaatriOperation = "http.post" | "http.response.text" | "xml.parse" | "schema.decode";
+const SaatriOperationSchema: Schema.Decoder<SaatriOperation> = Schema.Literals([
+  "http.post",
+  "http.response.text",
+  "xml.parse",
+  "schema.decode",
+]);
+export const SaatriOperationValue = {
+  httpPost: "http.post",
+  httpResponseText: "http.response.text",
+  xmlParse: "xml.parse",
+  schemaDecode: "schema.decode",
+} satisfies Record<string, SaatriOperation>;
+
+export type SaatriPhase =
+  | "http.status"
+  | "http.transport"
+  | "http.timeout"
+  | "http.response.body"
+  | "response.parse"
+  | "soap.output.extract"
+  | "nfse.output.decode"
+  | "package.config.decode"
+  | "credentials.decode"
+  | "provider.options.decode"
+  | "environment.config.decode";
+const SaatriPhaseSchema: Schema.Decoder<SaatriPhase> = Schema.Literals([
+  "http.status",
+  "http.transport",
+  "http.timeout",
+  "http.response.body",
+  "response.parse",
+  "soap.output.extract",
+  "nfse.output.decode",
+  "package.config.decode",
+  "credentials.decode",
+  "provider.options.decode",
+  "environment.config.decode",
+]);
+export const SaatriPhaseValue = {
+  httpStatus: "http.status",
+  httpTransport: "http.transport",
+  httpTimeout: "http.timeout",
+  httpResponseBody: "http.response.body",
+  responseParse: "response.parse",
+  soapOutputExtract: "soap.output.extract",
+  nfseOutputDecode: "nfse.output.decode",
+  packageConfigDecode: "package.config.decode",
+  credentialsDecode: "credentials.decode",
+  providerOptionsDecode: "provider.options.decode",
+  environmentConfigDecode: "environment.config.decode",
+} satisfies Record<string, SaatriPhase>;
+
+export type SaatriSchemaName =
+  | "SaatriProviderPackageConfig"
+  | "SaatriCredentials"
+  | "CreateSaatriPackageProviderOptions"
+  | "SaatriEnvironmentConfig"
+  | "GenerateNfseSoapDocument"
+  | "GenerateNfseOutputDocument";
+const SaatriSchemaNameSchema: Schema.Decoder<SaatriSchemaName> = Schema.Literals([
+  "SaatriProviderPackageConfig",
+  "SaatriCredentials",
+  "CreateSaatriPackageProviderOptions",
+  "SaatriEnvironmentConfig",
+  "GenerateNfseSoapDocument",
+  "GenerateNfseOutputDocument",
+]);
+export const SaatriSchemaNameValue = {
+  providerPackageConfig: "SaatriProviderPackageConfig",
+  credentials: "SaatriCredentials",
+  packageProviderOptions: "CreateSaatriPackageProviderOptions",
+  environmentConfig: "SaatriEnvironmentConfig",
+  generateNfseSoapDocument: "GenerateNfseSoapDocument",
+  generateNfseOutputDocument: "GenerateNfseOutputDocument",
+} satisfies Record<string, SaatriSchemaName>;
+
+export type SaatriUpstreamTag =
+  | "StatusCodeError"
+  | "HttpClientError"
+  | "TimeoutError"
+  | "ResponseBodyError";
+const SaatriUpstreamTagSchema: Schema.Decoder<SaatriUpstreamTag> = Schema.Literals([
+  "StatusCodeError",
+  "HttpClientError",
+  "TimeoutError",
+  "ResponseBodyError",
+]);
+export const saatriUpstreamTagSchema: Schema.Decoder<SaatriUpstreamTag> = SaatriUpstreamTagSchema;
+export const SaatriUpstreamTagValue = {
+  statusCodeError: "StatusCodeError",
+  httpClientError: "HttpClientError",
+  timeoutError: "TimeoutError",
+  responseBodyError: "ResponseBodyError",
+} satisfies Record<string, SaatriUpstreamTag>;
+
+type SaatriProviderErrorFields = {
+  readonly _tag: "SaatriProviderError";
+  readonly code: SaatriProviderErrorCode;
+  readonly retryable: boolean;
+  readonly status?: number | undefined;
+  readonly reason?: string | undefined;
+  readonly operation?: string | undefined;
+  readonly phase?: string | undefined;
+  readonly schemaName?: string | undefined;
+  readonly issuePath?: string | undefined;
+  readonly issueMessage?: string | undefined;
+  readonly upstreamTag?: string | undefined;
+  readonly upstreamCode?: string | undefined;
+};
+
+type SaatriProviderErrorInput = {
+  readonly code: SaatriProviderErrorCode;
+  readonly retryable: boolean;
+  readonly status?: number | undefined;
+  readonly reason?: string | undefined;
+  readonly operation?: string | undefined;
+  readonly phase?: string | undefined;
+  readonly schemaName?: string | undefined;
+  readonly issuePath?: string | undefined;
+  readonly issueMessage?: string | undefined;
+  readonly upstreamTag?: string | undefined;
+  readonly upstreamCode?: string | undefined;
+};
+
+type SaatriProviderErrorConstructor = new (
+  input: SaatriProviderErrorInput,
+) => SaatriProviderErrorFields;
+
+const SaatriProviderErrorBase: SaatriProviderErrorConstructor =
+  Schema.TaggedErrorClass<SaatriProviderErrorFields>()("SaatriProviderError", {
+    code: SaatriProviderErrorCodeSchema,
+    retryable: Schema.Boolean,
+    status: Schema.optional(Schema.Number),
+    reason: Schema.optional(Schema.String),
+    operation: Schema.optional(SaatriOperationSchema),
+    phase: Schema.optional(SaatriPhaseSchema),
+    schemaName: Schema.optional(SaatriSchemaNameSchema),
+    issuePath: Schema.optional(Schema.String),
+    issueMessage: Schema.optional(Schema.String),
+    upstreamTag: Schema.optional(Schema.String),
+    upstreamCode: Schema.optional(Schema.String),
+  });
+
+export class SaatriProviderError extends SaatriProviderErrorBase implements FiscalProviderError {
+  get message(): string {
+    switch (this.code) {
+      case "saatri.NETWORK_ERROR":
+        return "Falha de rede ao comunicar com o servidor SAATRI.";
+      case "saatri.RESPONSE_READ_ERROR":
+        return "Não foi possível ler o corpo da resposta SAATRI.";
+      case "saatri.HTTP_STATUS_ERROR":
+        return `Servidor SAATRI respondeu com status HTTP ${this.status}.`;
+      case "saatri.PARSE_ERROR":
+        return this.reason ?? "Falha ao interpretar XML de resposta SAATRI.";
+      case "saatri.RESPONSE_SHAPE_ERROR":
+        return "Resposta da SAATRI sem <outputXML> de GerarNfseResponse. O servidor pode ter retornado um SOAP Fault ou erro de autenticação.";
+      case "saatri.XML_SIZE_LIMIT_EXCEEDED":
+        return "XML SAATRI excede o limite de 512 KB informado pelo provedor.";
+      case "saatri.SIGN_ERROR":
+        return this.reason ?? "Falha ao assinar o XML fiscal.";
+      case "saatri.CONFIG_ERROR":
+        return this.reason ?? "Configuração SAATRI inválida.";
+      case "saatri.INVALID_INPUT":
+        return this.reason ?? "Entrada fiscal inválida para emissão SAATRI.";
+    }
   }
 }
 
-export interface SaatriCredentials {
-  readonly username: string;
-  readonly password: string;
-  readonly issuerCnpj: string;
-  readonly municipalRegistration: string;
-}
+type SafeCauseMetadata = {
+  readonly upstreamTag?: string | undefined;
+  readonly upstreamCode?: string | undefined;
+};
 
-const saatriCredentialsSchema: z.ZodType<SaatriCredentials> = z.object({
-  username: z.string().min(1),
-  password: z.string().min(1),
-  issuerCnpj: z.string().regex(/^\d{14}$/),
-  municipalRegistration: z.string().min(1),
+const firstStringField = (input: unknown, field: string): string | undefined => {
+  if (typeof input !== "object" || input === null) {
+    return undefined;
+  }
+  const entry = Object.entries(input).find(([key]) => key === field);
+  const value = entry?.[1];
+  return typeof value === "string" && value.length > 0 ? value : undefined;
+};
+
+export const safeCauseMetadata = (cause: unknown): SafeCauseMetadata => ({
+  upstreamTag: firstStringField(cause, "_tag") ?? firstStringField(cause, "name"),
+  upstreamCode: firstStringField(cause, "code"),
 });
 
-export interface SaatriEnvironmentConfig {
+type SchemaIssueMetadata = {
+  readonly issuePath?: string | undefined;
+  readonly issueMessage: string;
+  readonly upstreamTag: string;
+};
+
+const formatIssuePath = (path: ReadonlyArray<PropertyKey>): string | undefined =>
+  path.length === 0 ? undefined : path.map((segment) => String(segment)).join(".");
+
+const schemaIssueLeafMetadata = (
+  issue: SchemaIssue.Issue,
+  path: ReadonlyArray<PropertyKey> = [],
+): SchemaIssueMetadata => {
+  switch (issue._tag) {
+    case "Pointer":
+      return schemaIssueLeafMetadata(issue.issue, [...path, ...issue.path]);
+    case "Composite":
+      return schemaIssueLeafMetadata(issue.issues[0], path);
+    case "Encoding":
+      return schemaIssueLeafMetadata(issue.issue, path);
+    case "Filter":
+      return schemaIssueLeafMetadata(issue.issue, path);
+    case "AnyOf":
+      return issue.issues[0] === undefined
+        ? {
+            issuePath: formatIssuePath(path),
+            issueMessage: "Nenhum membro da união aceitou o valor.",
+            upstreamTag: issue._tag,
+          }
+        : schemaIssueLeafMetadata(issue.issues[0], path);
+    case "InvalidType":
+      return {
+        issuePath: formatIssuePath(path),
+        issueMessage: "Tipo inválido para o schema.",
+        upstreamTag: issue._tag,
+      };
+    case "InvalidValue":
+      return {
+        issuePath: formatIssuePath(path),
+        issueMessage: "Valor inválido para o schema.",
+        upstreamTag: issue._tag,
+      };
+    case "MissingKey":
+      return {
+        issuePath: formatIssuePath(path),
+        issueMessage: "Chave obrigatória ausente no schema.",
+        upstreamTag: issue._tag,
+      };
+    case "UnexpectedKey":
+      return {
+        issuePath: formatIssuePath(path),
+        issueMessage: "Chave inesperada no schema.",
+        upstreamTag: issue._tag,
+      };
+    case "Forbidden":
+      return {
+        issuePath: formatIssuePath(path),
+        issueMessage: "Operação proibida durante decode de schema.",
+        upstreamTag: issue._tag,
+      };
+    case "OneOf":
+      return {
+        issuePath: formatIssuePath(path),
+        issueMessage: "Mais de um membro da união aceitou o valor.",
+        upstreamTag: issue._tag,
+      };
+  }
+};
+
+export const schemaErrorMetadata = (error: Schema.SchemaError): SchemaIssueMetadata =>
+  schemaIssueLeafMetadata(error.issue);
+
+export type GerarNfseSigner = (xmlToSign: string) => Effect.Effect<string, SaatriProviderError>;
+
+export type SaatriCredentials = {
+  readonly username: string;
+  readonly password: Redacted.Redacted<string>;
+  readonly issuerCnpj: string;
+  readonly municipalRegistration: string;
+};
+const SaatriCredentialsSchema: Schema.Decoder<SaatriCredentials> = Schema.Struct({
+  username: nonEmptyString,
+  password: redactedNonEmptyString,
+  issuerCnpj: cnpjDigits,
+  municipalRegistration: nonEmptyString,
+});
+export const saatriCredentialsSchema: Schema.Decoder<SaatriCredentials> = SaatriCredentialsSchema;
+
+export type SaatriEnvironmentConfig = {
   readonly environment: "homologation" | "production";
   readonly endpoint: string;
   readonly cityCode: string;
-}
-
-const saatriEnvironmentConfigSchema: z.ZodType<SaatriEnvironmentConfig> = z.object({
-  environment: z.enum(["homologation", "production"]),
-  endpoint: z.url(),
-  cityCode: z.string().regex(/^\d{7}$/),
+};
+const SaatriEnvironmentConfigSchema: Schema.Decoder<SaatriEnvironmentConfig> = Schema.Struct({
+  environment: fiscalEnvironmentSchema,
+  endpoint: saatriEndpointUrl,
+  cityCode,
 });
+export const saatriEnvironmentConfigSchema: Schema.Decoder<SaatriEnvironmentConfig> =
+  SaatriEnvironmentConfigSchema;
 
-interface SaatriProviderPackageConfigInput {
+export type CreateSaatriProviderOptionsInput = {
+  readonly environment: "homologation" | "production";
+  readonly timeoutMs?: number | undefined;
+  readonly maxRetries?: number | undefined;
+  readonly retryBaseMillis?: number | undefined;
+  readonly retryableStatus?: readonly number[] | undefined;
+  readonly signer?: unknown;
+  readonly eventSink?: unknown;
+  readonly correlationId?: string | undefined;
+};
+const CreateSaatriProviderOptionsSchema: Schema.Decoder<CreateSaatriProviderOptionsInput> =
+  Schema.Struct({
+    environment: fiscalEnvironmentSchema,
+    timeoutMs: Schema.optional(Schema.Number.check(Schema.isInt(), Schema.isGreaterThan(0))),
+    maxRetries: Schema.optional(Schema.Number.check(Schema.isInt(), Schema.isGreaterThan(-1))),
+    retryBaseMillis: Schema.optional(Schema.Number.check(Schema.isInt(), Schema.isGreaterThan(0))),
+    retryableStatus: Schema.optional(
+      Schema.Array(Schema.Number.check(Schema.isInt(), Schema.isGreaterThan(0))),
+    ),
+    signer: Schema.optional(Schema.Unknown),
+    eventSink: Schema.optional(Schema.Unknown),
+    correlationId: Schema.optional(Schema.String),
+  });
+export const createSaatriProviderOptionsSchema: Schema.Decoder<CreateSaatriProviderOptionsInput> =
+  CreateSaatriProviderOptionsSchema;
+
+const CreateSaatriPackageProviderOptionsSchema: Schema.Decoder<CreateSaatriProviderOptionsInput> =
+  CreateSaatriProviderOptionsSchema;
+export type CreateSaatriPackageProviderOptions = CreateSaatriProviderOptionsInput & {
+  readonly signer?: GerarNfseSigner | undefined;
+  readonly eventSink?: SaatriEventSink | undefined;
+  readonly correlationId?: string | undefined;
+};
+export const createSaatriPackageProviderOptionsSchema: Schema.Decoder<CreateSaatriProviderOptionsInput> =
+  CreateSaatriPackageProviderOptionsSchema;
+
+export type SaatriProviderPackageConfig = {
   readonly providerId: string;
   readonly providerName: string;
   readonly cityCode: string;
-  readonly endpoints: {
-    readonly homologation: string;
-    readonly production: string;
-  };
+  readonly endpoints: Readonly<Record<"homologation" | "production", string>>;
   readonly extraCapabilityMetadata?: readonly FiscalProviderCapabilityMetadata[] | undefined;
-}
+};
+const SaatriProviderPackageConfigSchema: Schema.Decoder<SaatriProviderPackageConfig> =
+  Schema.Struct({
+    providerId: nonEmptyString,
+    providerName: nonEmptyString,
+    cityCode,
+    endpoints: Schema.Record(Schema.Literals(["homologation", "production"]), saatriEndpointUrl),
+    extraCapabilityMetadata: Schema.optional(Schema.Array(fiscalProviderCapabilityMetadataSchema)),
+  });
+export const saatriProviderPackageConfigSchema: Schema.Decoder<SaatriProviderPackageConfig> =
+  SaatriProviderPackageConfigSchema;
 
-const saatriProviderPackageConfigSchema: z.ZodType<SaatriProviderPackageConfigInput> = z.object({
-  providerId: z.string().min(1),
-  providerName: z.string().min(1),
-  cityCode: z.string().regex(/^\d{7}$/),
-  endpoints: z.object({
-    homologation: z.url(),
-    production: z.url(),
-  }),
-  extraCapabilityMetadata: z
-    .custom<readonly FiscalProviderCapabilityMetadata[]>((value) => Array.isArray(value))
-    .optional(),
-});
-
-interface CreateSaatriProviderOptionsInput {
-  readonly environment: "homologation" | "production";
-  readonly timeoutMs?: number | undefined;
-  readonly signer?: unknown | undefined;
-  readonly eventSink?: unknown | undefined;
-}
-
-const createSaatriProviderOptionsSchema: z.ZodType<CreateSaatriProviderOptionsInput> = z.object({
-  environment: z.enum(["homologation", "production"]),
-  timeoutMs: z.number().int().positive().optional(),
-  signer: z.custom<unknown>().optional(),
-  eventSink: z.custom<unknown>().optional(),
-});
-
-interface SaatriIssueRuntimeConfigInput {
+export type SaatriIssueRuntimeConfigInput = {
   readonly credentials: SaatriCredentials;
   readonly config: SaatriEnvironmentConfig;
-}
+};
+const SaatriIssueRuntimeConfigInputSchema: Schema.Decoder<SaatriIssueRuntimeConfigInput> =
+  Schema.Struct({
+    credentials: saatriCredentialsSchema,
+    config: saatriEnvironmentConfigSchema,
+  });
+export const saatriIssueRuntimeConfigSchema: Schema.Decoder<SaatriIssueRuntimeConfigInput> =
+  SaatriIssueRuntimeConfigInputSchema;
 
-const saatriIssueRuntimeConfigSchema: z.ZodType<SaatriIssueRuntimeConfigInput> = z.object({
-  credentials: saatriCredentialsSchema,
-  config: saatriEnvironmentConfigSchema,
-});
+export const SAATRI_CABECALHO_VERSION = "2.01";
+export const SAATRI_ABRASF_VERSION = "2.03";
 
-export interface SaatriSoapHeader {
-  readonly cabecalhoVersion: "2.01";
-  readonly dataVersion: "2.03";
+export type SaatriSoapHeader = {
+  readonly cabecalhoVersion: typeof SAATRI_CABECALHO_VERSION;
+  readonly dataVersion: typeof SAATRI_ABRASF_VERSION;
   readonly usernameToken: {
     readonly username: string;
-    readonly password: string;
+    readonly password: Redacted.Redacted<string>;
   };
-}
-
-const saatriSoapHeaderSchema: z.ZodType<SaatriSoapHeader> = z.object({
-  cabecalhoVersion: z.literal("2.01"),
-  dataVersion: z.literal("2.03"),
-  usernameToken: z.object({
-    username: z.string().min(1),
-    password: z.string().min(1),
+};
+const SaatriSoapHeaderSchema: Schema.Decoder<SaatriSoapHeader> = Schema.Struct({
+  cabecalhoVersion: Schema.Literal(SAATRI_CABECALHO_VERSION),
+  dataVersion: Schema.Literal(SAATRI_ABRASF_VERSION),
+  usernameToken: Schema.Struct({
+    username: nonEmptyString,
+    password: redactedNonEmptyString,
   }),
 });
+export const saatriSoapHeaderSchema: Schema.Decoder<SaatriSoapHeader> = SaatriSoapHeaderSchema;
 
-export interface ReturnMessage {
+export type ReturnMessage = {
   readonly Codigo: string;
   readonly Mensagem: string;
   readonly Correcao?: string | undefined;
-}
-
-const returnMessageSchema: z.ZodType<ReturnMessage> = z.object({
-  Codigo: z.coerce.string(),
-  Mensagem: z.coerce.string(),
-  Correcao: z.coerce.string().optional(),
+};
+const ReturnMessageSchema: Schema.Decoder<ReturnMessage> = Schema.Struct({
+  Codigo: Schema.String,
+  Mensagem: Schema.String,
+  Correcao: Schema.optional(Schema.String),
 });
+export const returnMessageSchema: Schema.Decoder<ReturnMessage> = ReturnMessageSchema;
 
-export interface GenerateNfseSuccessResponse {
+export type GenerateNfseSuccessResponse = {
   readonly ListaNfse: {
     readonly CompNfse: {
       readonly Nfse: {
@@ -239,44 +466,46 @@ export interface GenerateNfseSuccessResponse {
       };
     };
   };
-}
-
-const generateNfseSuccessResponseSchema: z.ZodType<GenerateNfseSuccessResponse> = z.object({
-  ListaNfse: z.object({
-    CompNfse: z.object({
-      Nfse: z.object({
-        InfNfse: z.object({
-          Numero: z.coerce.string(),
-          CodigoVerificacao: z.coerce.string(),
-          DataEmissao: z.coerce.string().optional(),
+};
+const GenerateNfseSuccessResponseSchema: Schema.Decoder<GenerateNfseSuccessResponse> =
+  Schema.Struct({
+    ListaNfse: Schema.Struct({
+      CompNfse: Schema.Struct({
+        Nfse: Schema.Struct({
+          InfNfse: Schema.Struct({
+            Numero: Schema.String,
+            CodigoVerificacao: Schema.String,
+            DataEmissao: Schema.optional(Schema.String),
+          }),
         }),
       }),
     }),
-  }),
-});
+  });
+export const generateNfseSuccessResponseSchema: Schema.Decoder<GenerateNfseSuccessResponse> =
+  GenerateNfseSuccessResponseSchema;
 
-export interface GenerateNfseErrorResponse {
+export type GenerateNfseErrorResponse = {
   readonly ListaMensagemRetorno: {
-    readonly MensagemRetorno: ReturnMessage[];
+    readonly MensagemRetorno: readonly ReturnMessage[];
   };
-}
-
-const generateNfseErrorResponseSchema: z.ZodType<GenerateNfseErrorResponse> = z.object({
-  ListaMensagemRetorno: z.object({
-    MensagemRetorno: z
-      .union([returnMessageSchema, z.array(returnMessageSchema)])
-      .transform((message) => (Array.isArray(message) ? message : [message])),
+};
+const GenerateNfseErrorResponseSchema: Schema.Decoder<GenerateNfseErrorResponse> = Schema.Struct({
+  ListaMensagemRetorno: Schema.Struct({
+    MensagemRetorno: Schema.ArrayEnsure(returnMessageSchema),
   }),
 });
+export const generateNfseErrorResponseSchema: Schema.Decoder<GenerateNfseErrorResponse> =
+  GenerateNfseErrorResponseSchema;
 
 export type GenerateNfseResponse = GenerateNfseSuccessResponse | GenerateNfseErrorResponse;
-
-const generateNfseResponseSchema: z.ZodType<GenerateNfseResponse> = z.union([
+const GenerateNfseResponseSchema: Schema.Decoder<GenerateNfseResponse> = Schema.Union([
   generateNfseSuccessResponseSchema,
   generateNfseErrorResponseSchema,
 ]);
+export const generateNfseResponseSchema: Schema.Decoder<GenerateNfseResponse> =
+  GenerateNfseResponseSchema;
 
-export interface GenerateNfseSoapDocument {
+export type GenerateNfseSoapDocument = {
   readonly Envelope: {
     readonly Body: {
       readonly GerarNfseResponse: {
@@ -284,29 +513,33 @@ export interface GenerateNfseSoapDocument {
       };
     };
   };
-}
-
-const generateNfseSoapDocumentSchema: z.ZodType<GenerateNfseSoapDocument> = z.object({
-  Envelope: z.object({
-    Body: z.object({
-      GerarNfseResponse: z.object({
-        outputXML: z.string().min(1),
+};
+const GenerateNfseSoapDocumentSchema: Schema.Decoder<GenerateNfseSoapDocument> = Schema.Struct({
+  Envelope: Schema.Struct({
+    Body: Schema.Struct({
+      GerarNfseResponse: Schema.Struct({
+        outputXML: nonEmptyString,
       }),
     }),
   }),
 });
+export const generateNfseSoapDocumentSchema: Schema.Decoder<GenerateNfseSoapDocument> =
+  GenerateNfseSoapDocumentSchema;
 
 export type GenerateNfseOutputDocument =
   | { readonly GerarNfseResposta: GenerateNfseResponse }
   | GenerateNfseResponse;
-
-const generateNfseOutputDocumentSchema: z.ZodType<GenerateNfseOutputDocument> = z.union([
-  z.object({ GerarNfseResposta: generateNfseResponseSchema }),
+const GenerateNfseOutputDocumentSchema: Schema.Decoder<GenerateNfseOutputDocument> = Schema.Union([
+  Schema.Struct({ GerarNfseResposta: generateNfseResponseSchema }),
   generateNfseResponseSchema,
 ]);
+export const generateNfseOutputDocumentSchema: Schema.Decoder<GenerateNfseOutputDocument> =
+  GenerateNfseOutputDocumentSchema;
 
 export type SaatriEventName =
   | "saatri.issue.started"
+  | "saatri.issue.completed"
+  | "saatri.issue.failed"
   | "saatri.envelope.build.started"
   | "saatri.envelope.build.succeeded"
   | "saatri.envelope.build.failed"
@@ -321,10 +554,55 @@ export type SaatriEventName =
   | "saatri.response.parse.failed"
   | "saatri.fiscal.authorized"
   | "saatri.fiscal.rejected"
+  | "saatri.fiscal.accepted_pending_authorization"
   | "saatri.artifact.created"
   | "saatri.optional.signer.not_configured";
-
-export interface SaatriEvent {
+const SaatriEventNameSchema: Schema.Decoder<SaatriEventName> = Schema.Literals([
+  "saatri.issue.started",
+  "saatri.issue.completed",
+  "saatri.issue.failed",
+  "saatri.envelope.build.started",
+  "saatri.envelope.build.succeeded",
+  "saatri.envelope.build.failed",
+  "saatri.sign.started",
+  "saatri.sign.succeeded",
+  "saatri.sign.failed",
+  "saatri.http.post.started",
+  "saatri.http.post.succeeded",
+  "saatri.http.post.failed",
+  "saatri.response.parse.started",
+  "saatri.response.parse.succeeded",
+  "saatri.response.parse.failed",
+  "saatri.fiscal.authorized",
+  "saatri.fiscal.rejected",
+  "saatri.fiscal.accepted_pending_authorization",
+  "saatri.artifact.created",
+  "saatri.optional.signer.not_configured",
+]);
+export const saatriEventNameSchema: Schema.Decoder<SaatriEventName> = SaatriEventNameSchema;
+export const SaatriEventNameValue = {
+  issueStarted: "saatri.issue.started",
+  issueCompleted: "saatri.issue.completed",
+  issueFailed: "saatri.issue.failed",
+  envelopeBuildStarted: "saatri.envelope.build.started",
+  envelopeBuildSucceeded: "saatri.envelope.build.succeeded",
+  envelopeBuildFailed: "saatri.envelope.build.failed",
+  signStarted: "saatri.sign.started",
+  signSucceeded: "saatri.sign.succeeded",
+  signFailed: "saatri.sign.failed",
+  httpPostStarted: "saatri.http.post.started",
+  httpPostSucceeded: "saatri.http.post.succeeded",
+  httpPostFailed: "saatri.http.post.failed",
+  responseParseStarted: "saatri.response.parse.started",
+  responseParseSucceeded: "saatri.response.parse.succeeded",
+  responseParseFailed: "saatri.response.parse.failed",
+  fiscalAuthorized: "saatri.fiscal.authorized",
+  fiscalRejected: "saatri.fiscal.rejected",
+  fiscalAcceptedPendingAuthorization: "saatri.fiscal.accepted_pending_authorization",
+  artifactCreated: "saatri.artifact.created",
+  optionalSignerNotConfigured: "saatri.optional.signer.not_configured",
+} satisfies Record<string, SaatriEventName>;
+export type SaatriEvent = {
   readonly name: SaatriEventName;
   readonly providerId: string;
   readonly documentKind: "nfe" | "nfce" | "nfse";
@@ -332,130 +610,137 @@ export interface SaatriEvent {
   readonly cityCode: string;
   readonly series: string;
   readonly number: string;
-  readonly correlationId?: string;
-}
+  readonly correlationId?: string | undefined;
+};
+const SaatriEventSchema: Schema.Decoder<SaatriEvent> = Schema.Struct({
+  name: SaatriEventNameSchema,
+  providerId: Schema.String,
+  documentKind: documentKindSchema,
+  environment: fiscalEnvironmentSchema,
+  cityCode: Schema.String,
+  series: Schema.String,
+  number: Schema.String,
+  correlationId: Schema.optional(Schema.String),
+});
+export const saatriEventSchema: Schema.Decoder<SaatriEvent> = SaatriEventSchema;
+export type SaatriEventSink = (event: SaatriEvent) => Effect.Effect<void, never>;
 
-export type SaatriEventSink = (event: SaatriEvent) => void;
+export const SaatriFiscalRejection = {
+  serviceListCodeMaxLength: {
+    code: "SAATRI_ITEM_LISTA_SERVICO_MAX_LENGTH",
+    message: "ItemListaServico deve ter no máximo 8 caracteres para SAATRI/ABRASF 2.03.",
+    correctionHint: "Informe um código de lista de serviço com até 8 caracteres.",
+  },
+  nbsRequired2026: {
+    code: "SAATRI_CODIGO_NBS_REQUIRED_2026",
+    message: "CodigoNbs é obrigatório pela regra nacional compartilhada em 2026.",
+    correctionHint: "Informe services[].nbsCode antes de emitir a NFS-e.",
+  },
+} satisfies Record<string, FiscalRejection>;
 
-const SAATRI_ABRASF_VERSION = "2.03" as const;
+export const AbrasfRpsTypeValue = {
+  rps: "1",
+} satisfies Record<string, string>;
+
+export const AbrasfRpsStatusValue = {
+  normal: "1",
+} satisfies Record<string, string>;
+
+export const AbrasfYesNoCodeValue = {
+  yes: "1",
+  no: "2",
+} satisfies Record<string, string>;
+
+export const AbrasfIssWithheldValue = {
+  yes: "1",
+  no: "2",
+} satisfies Record<string, string>;
+
+export const AbrasfIssEnforceabilityValue = {
+  taxable: "1",
+} satisfies Record<string, string>;
 
 const SAATRI_ABRASF_203_CAPABILITIES: readonly FiscalProviderCapability[] = [
-  "issue_nfse",
-] as const satisfies readonly FiscalProviderCapability[];
+  FiscalProviderCapabilityValue.issueNfse,
+];
 
 const SAATRI_ABRASF_203_CAPABILITY_METADATA: readonly FiscalProviderCapabilityMetadata[] = [
   {
-    capability: "issue_nfse",
-    status: "supported",
-    environments: ["homologation", "production"],
+    capability: FiscalProviderCapabilityValue.issueNfse,
+    status: FiscalProviderCapabilityStatusValue.supported,
+    environments: [FiscalEnvironmentValue.homologation, FiscalEnvironmentValue.production],
     reason:
       "Implementado via operação SAATRI GerarNfse ABRASF 2.03; respostas 2026 podem ficar pendentes por compartilhamento com ambiente nacional.",
     requiresSigner: false,
     requiresCertificateOutsideDFeKit: false,
   },
   {
-    capability: "generate_nfse",
-    status: "supported",
-    environments: ["homologation", "production"],
+    capability: FiscalProviderCapabilityValue.generateNfse,
+    status: FiscalProviderCapabilityStatusValue.supported,
+    environments: [FiscalEnvironmentValue.homologation, FiscalEnvironmentValue.production],
     reason: "Equivalente operacional a issue_nfse neste adapter.",
     requiresSigner: false,
     requiresCertificateOutsideDFeKit: false,
   },
   {
-    capability: "query_nfse_by_rps",
-    status: "unverified_in_homologation",
-    environments: ["homologation", "production"],
+    capability: FiscalProviderCapabilityValue.queryNfseByRps,
+    status: FiscalProviderCapabilityStatusValue.unverifiedInHomologation,
+    environments: [FiscalEnvironmentValue.homologation, FiscalEnvironmentValue.production],
     reason:
       "Manual SAATRI lista ConsultaNfsePorRps, mas o fluxo ainda não tem implementação e prova automatizada.",
   },
   {
-    capability: "submit_rps_batch",
-    status: "unverified_in_homologation",
+    capability: FiscalProviderCapabilityValue.submitRpsBatch,
+    status: FiscalProviderCapabilityStatusValue.unverifiedInHomologation,
     reason: "Manual lista recepção de lote RPS, ainda não homologado no DFeKit.",
   },
   {
-    capability: "submit_rps_batch_sync",
-    status: "unverified_in_homologation",
+    capability: FiscalProviderCapabilityValue.submitRpsBatchSync,
+    status: FiscalProviderCapabilityStatusValue.unverifiedInHomologation,
     reason: "Manual lista envio de lote síncrono, ainda não homologado no DFeKit.",
   },
   {
-    capability: "query_rps_batch",
-    status: "unverified_in_homologation",
+    capability: FiscalProviderCapabilityValue.queryRpsBatch,
+    status: FiscalProviderCapabilityStatusValue.unverifiedInHomologation,
     reason: "Manual lista consulta de lote RPS, ainda não homologada no DFeKit.",
   },
   {
-    capability: "query_issued_nfse",
-    status: "unverified_in_homologation",
+    capability: FiscalProviderCapabilityValue.queryIssuedNfse,
+    status: FiscalProviderCapabilityStatusValue.unverifiedInHomologation,
     reason: "Manual lista consulta de NFS-e prestadas, ainda não homologada no DFeKit.",
   },
   {
-    capability: "query_received_nfse",
-    status: "unverified_in_homologation",
+    capability: FiscalProviderCapabilityValue.queryReceivedNfse,
+    status: FiscalProviderCapabilityStatusValue.unverifiedInHomologation,
     reason: "Manual lista consulta de NFS-e tomadas, ainda não homologada no DFeKit.",
   },
   {
-    capability: "query_nfse_range",
-    status: "unverified_in_homologation",
+    capability: FiscalProviderCapabilityValue.queryNfseRange,
+    status: FiscalProviderCapabilityStatusValue.unverifiedInHomologation,
     reason: "Manual lista consulta por faixa, ainda não homologada no DFeKit.",
   },
   {
-    capability: "cancel_nfse",
-    status: "unverified_in_homologation",
+    capability: FiscalProviderCapabilityValue.cancelNfse,
+    status: FiscalProviderCapabilityStatusValue.unverifiedInHomologation,
     reason: "Manual lista cancelamento, ainda não homologado no DFeKit.",
     requiresCertificateOutsideDFeKit: true,
   },
   {
-    capability: "replace_nfse",
-    status: "unverified_in_homologation",
+    capability: FiscalProviderCapabilityValue.replaceNfse,
+    status: FiscalProviderCapabilityStatusValue.unverifiedInHomologation,
     reason: "Manual lista substituição, ainda não homologada no DFeKit.",
     requiresCertificateOutsideDFeKit: true,
   },
   {
-    capability: "issue_nfe",
-    status: "unsupported",
+    capability: FiscalProviderCapabilityValue.issueNfe,
+    status: FiscalProviderCapabilityStatusValue.unsupported,
     reason: "SAATRI é provider municipal de NFS-e, não NF-e modelo 55.",
   },
   {
-    capability: "issue_nfce",
-    status: "unsupported",
+    capability: FiscalProviderCapabilityValue.issueNfce,
+    status: FiscalProviderCapabilityStatusValue.unsupported,
     reason: "SAATRI é provider municipal de NFS-e, não NFC-e modelo 65.",
   },
-] as const satisfies readonly FiscalProviderCapabilityMetadata[];
+];
 
-export interface ConfigureSaatriManifestInput {
-  readonly providerId: string;
-  readonly providerName: string;
-  readonly extraCapabilityMetadata?: readonly FiscalProviderCapabilityMetadata[];
-}
-
-const configureSaatriManifest = (input: ConfigureSaatriManifestInput): FiscalProviderManifest => ({
-  id: input.providerId,
-  name: input.providerName,
-  documentKinds: ["nfse"],
-  environments: ["homologation", "production"],
-  capabilities: SAATRI_ABRASF_203_CAPABILITIES,
-  capabilityMetadata: [
-    ...SAATRI_ABRASF_203_CAPABILITY_METADATA,
-    ...(input.extraCapabilityMetadata ?? []),
-  ],
-});
-export {
-  saatriAuditCatalog,
-  saatriErrorCatalog,
-  saatriCredentialsSchema,
-  saatriEnvironmentConfigSchema,
-  saatriProviderPackageConfigSchema,
-  createSaatriProviderOptionsSchema,
-  saatriIssueRuntimeConfigSchema,
-  saatriSoapHeaderSchema,
-  returnMessageSchema,
-  generateNfseSuccessResponseSchema,
-  generateNfseErrorResponseSchema,
-  generateNfseResponseSchema,
-  generateNfseSoapDocumentSchema,
-  generateNfseOutputDocumentSchema,
-  SAATRI_ABRASF_VERSION,
-  SAATRI_ABRASF_203_CAPABILITIES,
-  SAATRI_ABRASF_203_CAPABILITY_METADATA,
-  configureSaatriManifest,
-};
+export { SAATRI_ABRASF_203_CAPABILITIES, SAATRI_ABRASF_203_CAPABILITY_METADATA };

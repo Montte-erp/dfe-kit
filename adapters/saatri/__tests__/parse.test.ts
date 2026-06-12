@@ -1,4 +1,5 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, it } from "@effect/vitest";
+import { Effect } from "effect";
 import { parseGerarNfseResponse } from "../src/parse";
 
 /**
@@ -74,86 +75,105 @@ const pendingResponse = `<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/en
 const requestXml = "<soapenv:Envelope>...request...</soapenv:Envelope>";
 
 describe("parseGerarNfseResponse", () => {
-  test("success response -> Result.ok with authorized status and artifacts", () => {
-    const result = parseGerarNfseResponse({
-      requestXml,
-      responseXml: successResponse,
-    });
-    expect(result.isOk()).toBe(true);
-    const response = result.unwrap();
-    expect(response.status).toBe("authorized");
-    expect(response.providerDocumentId).toBe("1");
-    expect(response.protocol).toBe("AAAFAAAB-CKAAAA");
-    expect(response.rejections).toHaveLength(0);
+  it.effect("success response -> Effect success with authorized status and artifacts", () =>
+    Effect.gen(function* () {
+      const response = yield* parseGerarNfseResponse({
+        requestXml,
+        responseXml: successResponse,
+      });
+      expect(response.status).toBe("authorized");
+      expect(response.providerDocumentId).toBe("1");
+      expect(response.protocol).toBe("AAAFAAAB-CKAAAA");
+      expect(response.rejections).toHaveLength(0);
 
-    // Raw XML preserved in artifacts.
-    const kinds = response.artifacts.map((a) => a.kind);
-    expect(kinds).toContain("request_xml");
-    expect(kinds).toContain("response_xml");
-    expect(kinds).toContain("authorized_xml");
-    const responseArtifact = response.artifacts.find((a) => a.kind === "response_xml");
-    expect(responseArtifact).toBeDefined();
-    expect(new TextDecoder().decode(responseArtifact?.bytes)).toContain("GerarNfseResposta");
-    const authorizedArtifact = response.artifacts.find((a) => a.kind === "authorized_xml");
-    expect(new TextDecoder().decode(authorizedArtifact?.bytes)).toContain("<ListaNfse>");
-  });
+      // Raw XML preserved in artifacts.
+      const kinds = response.artifacts.map((a) => a.kind);
+      expect(kinds).toContain("request_xml");
+      expect(kinds).toContain("response_xml");
+      expect(kinds).toContain("authorized_xml");
+      const responseArtifact = response.artifacts.find((a) => a.kind === "response_xml");
+      expect(responseArtifact).toBeDefined();
+      expect(new TextDecoder().decode(responseArtifact?.bytes)).toContain("GerarNfseResposta");
+      const authorizedArtifact = response.artifacts.find((a) => a.kind === "authorized_xml");
+      expect(new TextDecoder().decode(authorizedArtifact?.bytes)).toContain("<ListaNfse>");
+    }),
+  );
 
-  test("ListaMensagemRetorno -> Result.ok (not Err) with rejected status and rejections[]", () => {
-    const result = parseGerarNfseResponse({
-      requestXml,
-      responseXml: rejectionResponse,
-    });
-    // Fiscal rejection is a successful Result.ok, not an Err.
-    expect(result.isOk()).toBe(true);
-    const response = result.unwrap();
-    expect(response.status).toBe("rejected");
-    expect(response.rejections).toHaveLength(1);
-    expect(response.rejections[0]?.code).toBe("E141");
-    expect(response.rejections[0]?.message).toContain("Inscricao Municipal");
-    expect(response.rejections[0]?.correctionHint).toContain("Informe");
-    expect(response.providerDocumentId).toBeUndefined();
-  });
+  it.effect("ListaMensagemRetorno -> Effect success with rejected status and rejections[]", () =>
+    Effect.gen(function* () {
+      const response = yield* parseGerarNfseResponse({
+        requestXml,
+        responseXml: rejectionResponse,
+      });
+      // Fiscal rejection is a successful Effect, not a failure.
+      expect(response.status).toBe("rejected");
+      expect(response.rejections).toHaveLength(1);
+      expect(response.rejections[0]?.code).toBe("E141");
+      expect(response.rejections[0]?.message).toContain("Inscricao Municipal");
+      expect(response.rejections[0]?.correctionHint).toContain("Informe");
+      expect(response.providerDocumentId).toBeUndefined();
+    }),
+  );
 
-  test("mensagem de compartilhamento nacional -> accepted_pending_authorization", () => {
-    const result = parseGerarNfseResponse({ requestXml, responseXml: pendingResponse });
-    expect(result.isOk()).toBe(true);
-    const response = result.unwrap();
-    expect(response.status).toBe("accepted_pending_authorization");
-    expect(response.rejections).toHaveLength(0);
-    expect(response.artifacts.map((artifact) => artifact.kind)).toContain("response_xml");
-  });
+  it.effect("mensagem de compartilhamento nacional -> accepted_pending_authorization", () =>
+    Effect.gen(function* () {
+      const response = yield* parseGerarNfseResponse({ requestXml, responseXml: pendingResponse });
+      expect(response.status).toBe("accepted_pending_authorization");
+      expect(response.rejections).toHaveLength(0);
+      expect(response.artifacts.map((artifact) => artifact.kind)).toContain("response_xml");
+    }),
+  );
 
-  test("multiple MensagemRetorno entries become multiple rejections", () => {
-    const multi = rejectionResponse.replace(
-      "</MensagemRetorno>\n  </ListaMensagemRetorno>",
-      "</MensagemRetorno>\n    <MensagemRetorno><Codigo>E160</Codigo><Mensagem>RPS ja informado.</Mensagem></MensagemRetorno>\n  </ListaMensagemRetorno>",
-    );
-    const result = parseGerarNfseResponse({ requestXml, responseXml: multi });
-    expect(result.isOk()).toBe(true);
-    const response = result.unwrap();
-    expect(response.status).toBe("rejected");
-    expect(response.rejections).toHaveLength(2);
-    expect(response.rejections.map((r) => r.code)).toEqual(["E141", "E160"]);
-  });
+  it.effect("multiple MensagemRetorno entries become multiple rejections", () =>
+    Effect.gen(function* () {
+      const multi = rejectionResponse.replace(
+        "</MensagemRetorno>\n  </ListaMensagemRetorno>",
+        "</MensagemRetorno>\n    <MensagemRetorno><Codigo>E160</Codigo><Mensagem>RPS ja informado.</Mensagem></MensagemRetorno>\n  </ListaMensagemRetorno>",
+      );
+      const response = yield* parseGerarNfseResponse({ requestXml, responseXml: multi });
+      expect(response.status).toBe("rejected");
+      expect(response.rejections).toHaveLength(2);
+      expect(response.rejections.map((r) => r.code)).toEqual(["E141", "E160"]);
+    }),
+  );
 
-  test("mensagem genérica de processamento continua rejeição fiscal", () => {
-    const genericProcessing = rejectionResponse.replace(
-      "Inscricao Municipal do prestador nao informada.",
-      "Erro no processamento da declaracao.",
-    );
-    const result = parseGerarNfseResponse({
-      requestXml,
-      responseXml: genericProcessing,
-    });
-    expect(result.isOk()).toBe(true);
-    const response = result.unwrap();
-    expect(response.status).toBe("rejected");
-    expect(response.rejections[0]?.message).toBe("Erro no processamento da declaracao.");
-  });
+  it.effect("mensagem genérica de processamento continua rejeição fiscal", () =>
+    Effect.gen(function* () {
+      const genericProcessing = rejectionResponse.replace(
+        "Inscricao Municipal do prestador nao informada.",
+        "Erro no processamento da declaracao.",
+      );
+      const response = yield* parseGerarNfseResponse({
+        requestXml,
+        responseXml: genericProcessing,
+      });
+      expect(response.status).toBe("rejected");
+      expect(response.rejections[0]?.message).toBe("Erro no processamento da declaracao.");
+    }),
+  );
 
-  test("response without outputXML (for example SOAP Fault) -> technical Result.err", () => {
-    const fault = `<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/"><s:Body><s:Fault><faultstring>Authentication error</faultstring></s:Fault></s:Body></s:Envelope>`;
-    const result = parseGerarNfseResponse({ requestXml, responseXml: fault });
-    expect(result.isErr()).toBe(true);
-  });
+  it.effect("response without outputXML (for example SOAP Fault) -> technical Effect failure", () =>
+    Effect.gen(function* () {
+      const fault = `<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/"><s:Body><s:Fault><faultstring>Authentication error</faultstring></s:Fault></s:Body></s:Envelope>`;
+      const error = yield* Effect.flip(parseGerarNfseResponse({ requestXml, responseXml: fault }));
+      expect(error.code).toBe("saatri.RESPONSE_SHAPE_ERROR");
+      expect(error.schemaName).toBe("GenerateNfseSoapDocument");
+      expect(error.issuePath).toBe("Envelope.Body.GerarNfseResponse");
+      expect(error.issueMessage).toBe("Chave obrigatória ausente no schema.");
+      expect(error.upstreamTag).toBe("MissingKey");
+    }),
+  );
+
+  it.effect("XML de saída fora do schema preserva issue seguro sem serializar input bruto", () =>
+    Effect.gen(function* () {
+      const invalidOutput = `<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/"><s:Body><GerarNfseResponse><outputXML><![CDATA[<GerarNfseResposta><ListaNfse /></GerarNfseResposta>]]></outputXML></GerarNfseResponse></s:Body></s:Envelope>`;
+      const error = yield* Effect.flip(
+        parseGerarNfseResponse({ requestXml, responseXml: invalidOutput }),
+      );
+      expect(error.code).toBe("saatri.PARSE_ERROR");
+      expect(error.schemaName).toBe("GenerateNfseOutputDocument");
+      expect(error.issueMessage).toBeDefined();
+      expect(error.issueMessage).not.toContain("GerarNfseResposta");
+    }),
+  );
 });

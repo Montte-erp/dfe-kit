@@ -13,6 +13,14 @@
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
+    },
+    "./manifest": {
+      "types": "./dist/manifest.d.ts",
+      "import": "./dist/manifest.js"
+    },
+    "./runtime": {
+      "types": "./dist/runtime.d.ts",
+      "import": "./dist/runtime.js"
     }
   },
   "publishConfig": {
@@ -21,16 +29,17 @@
   "scripts": {
     "build": "bunup",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test": "bun test ./__tests__",
+    "test": "vitest run ./__tests__",
     "publint": "publint --strict",
     "publish:npm": "bun run build && bun run publint && npm publish --access public --provenance",
     "publish:npm:dry": "bun run build && bun run publint && npm publish --access public --provenance --dry-run"
   },
   "dependencies": {
-    "better-result": "^2.9.2"
+    "effect": "4.0.0-beta.81"
   },
   "devDependencies": {
-    "@dfe-kit/adapter-saatri": "workspace:*"
+    "@dfe-kit/adapter-saatri": "workspace:*",
+    "@dfe-kit/fiscal": "workspace:*"
   },
   "nx": {
     "tags": [
