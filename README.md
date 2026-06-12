@@ -6,9 +6,11 @@ O DFeKit começa com NFS-e via SAATRI/ABRASF 2.03 e segue evoluindo para NF-e, N
 
 ## Licença
 
-O DFeKit é distribuído sob a **Apache License 2.0**.
+DFeKit é source-available sob a Business Source License 1.1 (`BUSL-1.1`). A licença pública permite desenvolvimento, testes, avaliação, revisão de segurança, modificação e uso não produtivo.
 
-Veja o arquivo [`LICENSE`](./LICENSE).
+Uso em produção ou uso comercial por terceiros exige uma licença separada da Montte. A Montte, como licenciante, pode usar, distribuir e sublicenciar o DFeKit conforme seus próprios contratos.
+
+Na data de mudança indicada no [`LICENSE`](./LICENSE), o código passa para Apache License 2.0. Em caso de conflito, prevalece o arquivo [`LICENSE`](./LICENSE) ou o contrato comercial assinado com a Montte.
 
 ## Pacotes
 
@@ -55,7 +57,7 @@ As APIs públicas retornam valores de `Effect.Effect` com entrada, saída e falh
 
 ```ts
 import { Effect } from "effect";
-import { createJacobinaSaatriProvider } from "@dfe-kit/jacobina-saatri";
+import { createJacobinaSaatriProvider } from "@dfe-kit/jacobina-saatri/runtime";
 
 const provider = createJacobinaSaatriProvider({ ...credentials }, { environment: "homologation" });
 const issued = await Effect.runPromise(provider.issue({ ...input }));

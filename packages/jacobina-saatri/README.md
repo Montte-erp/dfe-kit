@@ -31,11 +31,9 @@ Essas capacidades só devem aparecer no `manifest` depois de prova em homologaç
 
 ## Licença
 
-Este pacote é distribuído sob **Apache License 2.0 (`Apache-2.0`)**.
+Este pacote segue a licença do repositório DFeKit: **Business Source License 1.1 (`BUSL-1.1`)**, com mudança futura para Apache License 2.0 conforme indicado no arquivo [`LICENSE`](../../LICENSE).
 
-A licença permite uso, cópia, modificação, distribuição, sublicenciamento e uso comercial conforme os termos da Apache 2.0.
-
-Veja o arquivo [`LICENSE`](./LICENSE).
+Uso em produção ou uso comercial por terceiros exige licença separada da Montte, salvo contrato específico.
 
 ## Instalação
 
@@ -315,6 +313,10 @@ O pacote exporta constantes de provider:
 - `SAATRI_JACOBINA_HOMOLOGATION_ENDPOINT`;
 - `SAATRI_JACOBINA_PRODUCTION_ENDPOINT`;
 - `jacobinaSaatriManifest`.
+
+## Changelog
+
+Veja [`CHANGELOG.md`](./CHANGELOG.md) para mudanças publicáveis deste pacote.
 
 ## Desenvolvimento
 
