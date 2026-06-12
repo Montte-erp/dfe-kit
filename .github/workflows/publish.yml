@@ -40,6 +40,11 @@ jobs:
       - name: Bun & Nx Setup
         uses: ./.github/actions/setup-bun-nx
 
+      - name: Use npm with trusted publishing support
+        run: |
+          npm install -g npm@latest
+          npm --version
+
       - name: Run checks
         run: bun run check
 
