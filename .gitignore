@@ -1,6 +1,7 @@
 node_modules
 dist
 *.tsbuildinfo
+.astro/
 .nx
 .pi
 bun.lockb

@@ -1,0 +1,12 @@
+---
+import { FileCode } from "@lucide/astro";
+
+const { label = "DFeKit" } = Astro.props;
+---
+
+<a class="inline-flex items-center gap-2 text-sm font-semibold tracking-tight text-white" href="/" aria-label="Início do DFeKit">
+  <span class="grid size-6 place-items-center rounded-md bg-white text-black shadow-sm">
+    <FileCode class="size-3.5" />
+  </span>
+  <span>{label}</span>
+</a>

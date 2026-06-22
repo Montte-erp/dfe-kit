@@ -1,0 +1,14 @@
+---
+interface Props {
+  title?: string;
+  code?: string;
+  class?: string;
+}
+
+const { title = "terminal", code = "", class: className = "sw-code" } = Astro.props as Props;
+---
+
+<div class={className}>
+  <div class="sw-code-tab"><span class="text-foreground">{title}</span></div>
+  <pre class="m-0 overflow-auto p-5 font-mono text-[12px] leading-7 text-neutral-200"><code>{code.trim()}</code></pre>
+</div>

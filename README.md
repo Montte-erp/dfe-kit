@@ -4,6 +4,15 @@ Infraestrutura open-source para documentos fiscais eletrônicos brasileiros.
 
 O DFeKit começa com NFS-e municipal via SAATRI/ABRASF 2.03 e NFS-e Nacional via Sefin Nacional, e segue evoluindo para NF-e, NFC-e, eventos de SEFAZ, adaptadores de prefeitura e trilhas auditáveis de documentos fiscais.
 
+## Docs
+
+```bash
+bun run docs:dev
+bun run docs:build
+```
+
+O site em Astro fica em `docs/` e reúne landing page, instalação, quickstart, providers, capabilities, NFS-e, prefeituras e SEFAZ por UF.
+
 ## Licença
 
 O DFeKit é distribuído sob a **Apache License 2.0 (`Apache-2.0`)**.

@@ -1,0 +1,164 @@
+---
+import { ArrowRight, Blocks, Building2, Check, FileCode, Landmark, Layers, PackageCheck, ReceiptText } from "@lucide/astro";
+import BaseLayout from "../layouts/BaseLayout.astro";
+import Header from "../components/widgets/Header.astro";
+import Footer from "../components/widgets/Footer.astro";
+import WidgetWrapper from "../components/ui/WidgetWrapper.astro";
+import CodeBlock from "../components/CodeBlock.astro";
+import Button from "../components/starwind/Button.astro";
+import Card from "../components/starwind/Card.astro";
+
+const setupCode = `import { createJacobinaSaatriProvider } from "@dfe-kit/jacobina-saatri"
+import { Effect } from "effect"
+
+const provider = createJacobinaSaatriProvider(credentials, {
+  environment: "homologation",
+  signer,
+})
+
+const issued = yield* provider.issue({
+  documentKind: "nfse",
+  issuer,
+  taker,
+  services,
+})`;
+
+const manifestCode = `import { juizDeForaNfseManifest } from "@dfe-kit/juiz-de-fora-nfse"
+import { sefazMgManifest } from "@dfe-kit/sefaz-mg"
+
+console.log(juizDeForaNfseManifest.capabilityMetadata)
+console.log(sefazMgManifest.documentKinds)`;
+
+const flow = [
+  {
+    step: "01",
+    title: "Escolha o package",
+    body: "Prefeitura, portal nacional ou SEFAZ entram por packages separados. A aplicação instala só o município ou UF que usa.",
+  },
+  {
+    step: "02",
+    title: "Injete assinatura e transporte",
+    body: "XML assinado, certificado ICP-Brasil e mTLS ficam fora do DFeKit. O provider recebe hooks Effect-native na borda.",
+  },
+  {
+    step: "03",
+    title: "Leia capabilities",
+    body: "Cada manifest diz o que está suportado, não suportado ou ainda não provado em homologação por município e estado.",
+  },
+];
+
+const packages = [
+  { icon: ReceiptText, name: "@dfe-kit/fiscal", body: "Contrato fiscal, schemas Effect e manifest de provider." },
+  { icon: FileCode, name: "@dfe-kit/xml", body: "Primitivas XML pequenas para escape, encoding e payloads fiscais." },
+  { icon: Building2, name: "@dfe-kit/*-saatri", body: "Um package por prefeitura SAATRI/ABRASF 2.03." },
+  { icon: Landmark, name: "@dfe-kit/juiz-de-fora-nfse", body: "Portal municipal Juiz de Fora-MG ABRASF 2.02." },
+  { icon: Layers, name: "@dfe-kit/sefaz-<uf>", body: "Um package por estado para NF-e e NFC-e modelo 55/65." },
+  { icon: Blocks, name: "adapters/*", body: "Engines privados inlinados nos packages publicados." },
+];
+
+const guarantees = [
+  "Effect v4: falhas técnicas recuperáveis no canal tipado.",
+  "Rejeição fiscal retorna como sucesso de negócio com status rejected.",
+  "Certificado, mTLS e assinatura são responsabilidade explícita da aplicação.",
+  "Sem package único inflado: município, UF e adapter têm fronteira própria.",
+];
+---
+
+<BaseLayout>
+  <Header />
+
+  <main>
+    <section class="border-b border-border">
+      <div class="sw-container grid min-h-[620px] items-center gap-12 py-20 md:grid-cols-[0.9fr_1.1fr] lg:py-24">
+        <div>
+          <p class="mb-5 text-xs font-semibold uppercase tracking-[0.24em] text-primary-accent">Documentos fiscais brasileiros</p>
+          <h1 class="max-w-3xl text-5xl font-semibold leading-[0.95] tracking-[-0.07em] text-foreground md:text-7xl">
+            DFe fiscal para <span class="gradient-text">TypeScript</span>
+          </h1>
+          <p class="mt-6 max-w-xl text-base leading-8 text-muted-foreground">
+            Integre NFS-e municipal, NFS-e Nacional, NF-e e NFC-e com packages por prefeitura e por UF. O contrato fiscal é único; certificados e assinatura ficam na sua borda.
+          </p>
+          <div class="mt-8 flex flex-wrap gap-3">
+            <Button variant="primary" href="/docs/installation"><ReceiptText class="size-4" />Ler documentação</Button>
+            <Button variant="outline" class="font-mono">bun add @dfe-kit/jacobina-saatri</Button>
+          </div>
+        </div>
+
+        <CodeBlock title="provider.ts" code={setupCode} />
+      </div>
+    </section>
+
+    <WidgetWrapper id="how-it-works">
+      <div class="mb-10 max-w-2xl">
+        <p class="text-xs font-semibold uppercase tracking-[0.24em] text-muted-foreground">Como funciona</p>
+        <h2 class="mt-3 text-3xl font-semibold tracking-tight text-foreground md:text-5xl">Uma fronteira fiscal. Vários portais.</h2>
+        <p class="mt-4 leading-7 text-muted-foreground">O core fala em documento fiscal. Adapters traduzem prefeitura, NFS-e Nacional e SEFAZ.</p>
+      </div>
+      <div class="grid gap-4 lg:grid-cols-[0.85fr_1.15fr] lg:items-start">
+        <div class="space-y-3">
+          {flow.map((item) => (
+            <Card size="sm" class="grid gap-3 sm:grid-cols-[3rem_1fr]">
+              <span class="font-mono text-xs text-primary-accent">{item.step}</span>
+              <span>
+                <strong class="block text-base text-foreground">{item.title}</strong>
+                <span class="mt-2 block text-sm leading-7 text-muted-foreground">{item.body}</span>
+              </span>
+            </Card>
+          ))}
+        </div>
+        <CodeBlock title="manifest.ts" code={manifestCode} />
+      </div>
+    </WidgetWrapper>
+
+    <WidgetWrapper id="packages">
+      <div class="mb-10 max-w-2xl">
+        <p class="text-xs font-semibold uppercase tracking-[0.24em] text-muted-foreground">Pacotes</p>
+        <h2 class="mt-3 text-3xl font-semibold tracking-tight text-foreground md:text-5xl">Município por município. Estado por estado.</h2>
+        <p class="mt-4 leading-7 text-muted-foreground">Cada package carrega só o manifesto, endpoints e capabilities do alvo fiscal que ele representa.</p>
+      </div>
+      <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        {packages.map(({ icon: Icon, name, body }) => (
+          <Card>
+            <Icon class="mb-5 size-5 text-primary-accent" />
+            <h3 class="font-mono text-sm font-semibold text-foreground">{name}</h3>
+            <p class="mt-3 text-sm leading-7 text-muted-foreground">{body}</p>
+          </Card>
+        ))}
+      </div>
+    </WidgetWrapper>
+
+    <WidgetWrapper id="guarantees">
+      <div class="grid gap-10 lg:grid-cols-[0.8fr_1.2fr] lg:items-start">
+        <div>
+          <p class="text-xs font-semibold uppercase tracking-[0.24em] text-muted-foreground">Garantias</p>
+          <h2 class="mt-3 text-3xl font-semibold tracking-tight text-foreground md:text-5xl">Sem suporte fiscal inventado.</h2>
+          <p class="mt-4 leading-7 text-muted-foreground">O package declara exatamente o que foi mapeado e o que ainda precisa de homologação real.</p>
+        </div>
+        <div class="grid gap-3">
+          {guarantees.map((item) => (
+            <div class="flex gap-3 rounded-lg border border-border bg-card/60 p-4 text-sm leading-7 text-muted-foreground">
+              <Check class="mt-1 size-4 shrink-0 text-primary-accent" />
+              <span>{item}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </WidgetWrapper>
+
+    <section class="border-t border-border py-24 text-center">
+      <div class="sw-container">
+        <PackageCheck class="mx-auto mb-5 size-7 text-primary-accent" />
+        <h2 class="text-3xl font-semibold tracking-tight text-foreground md:text-5xl">Comece por um município.</h2>
+        <p class="mx-auto mt-5 max-w-xl leading-7 text-muted-foreground">
+          Instale um provider municipal, rode em homologação e só marque suporte fiscal como provado depois do fluxo real.
+        </p>
+        <div class="mt-8 flex justify-center gap-3">
+          <Button variant="primary" href="/docs/installation">Instalar <ArrowRight class="size-4" /></Button>
+          <Button variant="outline" href="/docs">Ler conceitos</Button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <Footer />
+</BaseLayout>
