@@ -59,7 +59,7 @@ A regra de publicação agora é explícita: um package por município e um pack
 
 Juiz de Fora usa emissor municipal próprio ABRASF 2.02. O package lista endpoints, WSDL e capabilities; emissão exige XML assinado, certificado ICP-Brasil/mTLS fora do DFeKit e homologação do contribuinte antes de marcar `issue_nfse` como `supported`.
 
-Os packages estaduais `@dfe-kit/sefaz-<uf>` e o package municipal `@dfe-kit/juiz-de-fora-nfse` são metadata-first: expõem `.` e `./manifest` e não publicam subpath `./runtime` enquanto não houver runtime homologado próprio. Estados SEFAZ constroem manifests pelo catálogo privado de `@dfe-kit/adapter-sefaz`; municípios NFS-e sem runtime próprio continuam delegando manifests ao catálogo de `provider-nfse`.
+Os packages estaduais `@dfe-kit/sefaz-<uf>` e o package municipal `@dfe-kit/juiz-de-fora-nfse` são metadata-first: expõem apenas `.` enquanto não houver runtime homologado próprio. Estados SEFAZ constroem manifests pelo catálogo privado de `@dfe-kit/adapter-sefaz`; municípios NFS-e sem runtime próprio continuam delegando manifests ao catálogo de `provider-nfse`.
 
 ## Forma da API pública (Effect-first)
 
@@ -74,7 +74,7 @@ As APIs públicas retornam valores de `Effect.Effect` com entrada, saída e falh
 
 ```ts
 import { Effect } from "effect";
-import { createJacobinaSaatriProvider } from "@dfe-kit/jacobina-saatri/runtime";
+import { createJacobinaSaatriProvider } from "@dfe-kit/jacobina-saatri";
 
 const provider = createJacobinaSaatriProvider({ ...credentials }, { environment: "homologation" });
 const issued = await Effect.runPromise(provider.issue({ ...input }));

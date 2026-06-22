@@ -1,2 +1,8 @@
-export { SEFAZ_MT_STATE_CODE, sefazMtManifest } from "./manifest";
-export type { FiscalProviderManifest } from "@dfe-kit/fiscal";
+import type { FiscalProviderManifest } from "@dfe-kit/fiscal";
+import type { SefazStateCode } from "@dfe-kit/adapter-sefaz/catalog";
+import { createSefazStateManifest } from "@dfe-kit/adapter-sefaz/catalog";
+
+export const SEFAZ_MT_STATE_CODE: SefazStateCode = "MT";
+
+export const sefazMtManifest: FiscalProviderManifest =
+  createSefazStateManifest(SEFAZ_MT_STATE_CODE);

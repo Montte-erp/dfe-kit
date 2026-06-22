@@ -34,7 +34,23 @@ import {
 import { parseGerarNfseResponse } from "./parse";
 import { createSaatriProvider, createSaatriProviderWithHttpService } from "./provider";
 import type { SaatriProviderWithHttpService } from "./provider";
-import { createSaatriHttpClient, withSaatriFetchHttpClient } from "./runtime";
+
+type RuntimeSaatriHttpClient = {
+  postSoap(args: {
+    readonly endpoint: string;
+    readonly soapAction: string;
+    readonly envelope: string;
+  }): Effect.Effect<string, SaatriProviderError>;
+};
+
+const withSaatriFetchHttpClient = <A, E>(
+  effect: Effect.Effect<A, E, RuntimeSaatriHttpClient>,
+  options: CreateSaatriHttpOptions = {},
+): Effect.Effect<A, E> =>
+  effect.pipe(
+    // effect-boundary: runtime convenience fecha transporte fetch padrão [allow-provide]
+    Effect.provide(createSaatriFetchHttpClientLayer(options)),
+  );
 
 export type ConfiguredSaatriProviderPackage = {
   manifest: FiscalProviderManifest;
@@ -193,14 +209,12 @@ export {
   buildGerarNfseEnvelope,
   configureSaatriManifest,
   createSaatriFetchHttpClientLayer,
-  createSaatriHttpClient,
   createSaatriHttpClientLayer,
   createSaatriProvider,
   createSaatriProviderWithHttpService,
   parseGerarNfseResponse,
   SAATRI_ABRASF_VERSION,
   SOAP_ACTION_GERAR_NFSE,
-  withSaatriFetchHttpClient,
 };
 export { SaatriHttpClient };
 export type { CreateSaatriHttpOptions, GerarNfseSigner };

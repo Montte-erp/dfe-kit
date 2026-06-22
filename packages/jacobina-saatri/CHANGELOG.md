@@ -7,7 +7,7 @@ Todas as mudanças publicáveis de `@dfe-kit/jacobina-saatri` são registradas a
 ### Changed
 
 - Migra o provider Jacobina/SAATRI para um fluxo Effect-native completo, com erros técnicos tipados, HTTP via `Context.Service`/`Layer`, retry Effect-native e observabilidade nativa do Effect.
-- Expõe subpaths explícitos `@dfe-kit/jacobina-saatri/manifest` e `@dfe-kit/jacobina-saatri/runtime` para separar metadados leves de factories de execução.
+- Expõe metadados em `@dfe-kit/jacobina-saatri/manifest` e factories no entrypoint principal, sem barrel `runtime`.
 - Mantém OpenTelemetry opcional e configurável no runtime da aplicação consumidora, sem dependência obrigatória no pacote publicado.
 
 ### Added

@@ -33,7 +33,7 @@ export const requiredEffectSpanFiles = new Map<string, readonly RequiredSpanCall
 ]);
 
 export const allowedEffectProvideSites = new Map<string, readonly string[]>([
-  ["adapters/saatri/src/runtime.ts", ["createSaatriFetchHttpClientLayer(options)"]],
+  ["adapters/saatri/src/index.ts", ["createSaatriFetchHttpClientLayer(options)"]],
 ]);
 
 export const contractSuffixes: readonly string[] = [

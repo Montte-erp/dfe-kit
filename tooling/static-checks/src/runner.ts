@@ -9,10 +9,33 @@ import { checks } from "./rule-set";
 
 const isImportLine = (line: string): boolean => /^\s*import\b/.test(line);
 
+const stripComments = (source: string): string =>
+  source.replace(/\/\*[\s\S]*?\*\//g, "").replace(/(^|\s)\/\/.*$/gm, "$1");
+
+const reexportStatementPattern =
+  /export\s+(?:type\s+)?\{[\s\S]*?\}\s+from\s+["'][^"']+["'];?|export\s+\*\s+from\s+["'][^"']+["'];?/g;
+
+const isBarrelOnlySource = (source: string): boolean => {
+  const withoutComments = stripComments(source).trim();
+  if (withoutComments.length === 0) {
+    return false;
+  }
+
+  return withoutComments.replace(reexportStatementPattern, "").trim().length === 0;
+};
+
 export const runDeclarativeChecks = (): boolean => {
   let failed = false;
   for (const file of roots.flatMap((root) => [...walk(root)])) {
     const source = readFileSync(file, "utf8");
+    if (isBarrelOnlySource(source)) {
+      console.error(`${relative(process.cwd(), file)}:1: barrel-only file`);
+      console.error(
+        "Declarative error handling check failed. Barrel-only files são bloat; mova o conteúdo real para o entrypoint ou remova o subpath.",
+      );
+      failed = true;
+      continue;
+    }
     const requiredSpans = requiredEffectSpanFiles.get(file);
     if (requiredSpans !== undefined) {
       for (const span of requiredSpans) {

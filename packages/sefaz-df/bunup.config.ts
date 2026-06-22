@@ -8,9 +8,9 @@ const base = dfeKitLibBunup([
 ]);
 export default defineConfig({
   ...base,
-  entry: ["src/index.ts", "src/manifest.ts"],
+  entry: ["src/index.ts"],
   dts: {
-    entry: ["src/index.ts", "src/manifest.ts"],
+    entry: ["src/index.ts"],
     resolve: ["@dfe-kit/fiscal", "@dfe-kit/adapter-sefaz", "@dfe-kit/adapter-sefaz/catalog"],
     inferTypes: false,
   },

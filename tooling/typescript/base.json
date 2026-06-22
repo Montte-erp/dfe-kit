@@ -34,7 +34,6 @@
       "@dfe-kit/adapter-saatri": ["adapters/saatri/src/index.ts"],
       "@dfe-kit/adapter-saatri/config": ["adapters/saatri/src/config.ts"],
       "@dfe-kit/adapter-saatri/manifest": ["adapters/saatri/src/manifest.ts"],
-      "@dfe-kit/adapter-saatri/runtime": ["adapters/saatri/src/runtime.ts"],
       "@dfe-kit/adapter-sefaz": ["adapters/sefaz/src/index.ts"],
       "@dfe-kit/adapter-sefaz/catalog": ["adapters/sefaz/src/catalog.ts"],
       "@dfe-kit/adapter-sefaz/manifest": ["adapters/sefaz/src/manifest.ts"],

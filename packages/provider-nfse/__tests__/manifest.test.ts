@@ -38,14 +38,11 @@ describe("nfseNacionalManifest", () => {
     ).toBe("unsupported");
   });
 
-  it("expõe subpaths explícitos para manifest e runtime", () => {
+  it("expõe subpaths explícitos sem runtime barrel", () => {
     expect(packageJson.exports["./manifest"]).toEqual({
       types: "./dist/manifest.d.ts",
       import: "./dist/manifest.js",
     });
-    expect(packageJson.exports["./runtime"]).toEqual({
-      types: "./dist/runtime.d.ts",
-      import: "./dist/runtime.js",
-    });
+    expect(packageJson.exports["./runtime"]).toBeUndefined();
   });
 });

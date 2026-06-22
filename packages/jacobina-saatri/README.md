@@ -57,10 +57,7 @@ Sem wrappers de retorno legados.
 
 ```ts
 import { Effect } from "effect";
-import {
-  createJacobinaSaatriProvider,
-  type SaatriProviderError,
-} from "@dfe-kit/jacobina-saatri/runtime";
+import { createJacobinaSaatriProvider, type SaatriProviderError } from "@dfe-kit/jacobina-saatri";
 
 const provider = createJacobinaSaatriProvider(
   {
@@ -211,7 +208,7 @@ const signer: GerarNfseSigner = (xmlToSign) => {
 
 ## OpenTelemetry opcional
 
-O subpath `@dfe-kit/jacobina-saatri/manifest` não depende de OpenTelemetry e não instancia SDK, exporter, cliente HTTP ou provider configurado. O subpath `@dfe-kit/jacobina-saatri/runtime` expõe as factories de execução.
+O subpath `@dfe-kit/jacobina-saatri/manifest` não depende de OpenTelemetry e não instancia SDK, exporter, cliente HTTP ou provider configurado. As factories de execução ficam no entrypoint principal para evitar barrel `runtime`.
 
 O adapter SAATRI já emite spans, métricas e logs via `effect`:
 
@@ -231,7 +228,7 @@ import * as NodeSdk from "@effect/opentelemetry/NodeSdk";
 import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-http";
 import { BatchSpanProcessor } from "@opentelemetry/sdk-trace-base";
 import { Effect } from "effect";
-import { createJacobinaSaatriProvider } from "@dfe-kit/jacobina-saatri/runtime";
+import { createJacobinaSaatriProvider } from "@dfe-kit/jacobina-saatri";
 
 const OtelLive = NodeSdk.layer(() => ({
   resource: { serviceName: "my-fiscal-service" },
@@ -283,7 +280,7 @@ import {
   createJacobinaSaatriProvider,
   type SaatriCredentials,
   type CreateSaatriPackageProviderOptions,
-} from "@dfe-kit/jacobina-saatri/runtime";
+} from "@dfe-kit/jacobina-saatri";
 
 const credentials: SaatriCredentials = {
   username: process.env.SAATRI_USERNAME!,
@@ -304,8 +301,7 @@ const provider = createJacobinaSaatriProvider(credentials, options);
 Imports recomendados:
 
 ```ts
-import { jacobinaSaatriManifest } from "@dfe-kit/jacobina-saatri/manifest";
-import { createJacobinaSaatriProvider } from "@dfe-kit/jacobina-saatri/runtime";
+import { createJacobinaSaatriProvider, jacobinaSaatriManifest } from "@dfe-kit/jacobina-saatri";
 ```
 
 O pacote exporta constantes de provider:

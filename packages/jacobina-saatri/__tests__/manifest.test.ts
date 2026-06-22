@@ -30,14 +30,11 @@ describe("jacobinaSaatriManifest", () => {
     ).toBe("unverified_in_homologation");
   });
 
-  it("expõe subpaths explícitos para manifest e runtime", () => {
+  it("expõe subpath explícito só para manifest metadata-first", () => {
     expect(packageJson.exports["./manifest"]).toEqual({
       types: "./dist/manifest.d.ts",
       import: "./dist/manifest.js",
     });
-    expect(packageJson.exports["./runtime"]).toEqual({
-      types: "./dist/runtime.d.ts",
-      import: "./dist/runtime.js",
-    });
+    expect(packageJson.exports["./runtime"]).toBeUndefined();
   });
 });
