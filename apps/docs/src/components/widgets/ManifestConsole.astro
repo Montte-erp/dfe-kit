@@ -1,0 +1,61 @@
+---
+// Console do Manifesto — a peça central. Renderiza o capabilityMetadata REAL da Jacobina
+// (importado de src/data/manifests.ts, espelhado do source que ships). Tabs homologation/production
+// dão uma leitura honesta: em produção, só as 2 capabilities supported ficam ativas.
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "../starwind/tabs";
+import SectionHeading from "../SectionHeading.astro";
+import TriLegend from "../TriLegend.astro";
+import ConsoleTable from "../ConsoleTable.astro";
+import { JACOBINA_COUNTS } from "../../data/manifests";
+---
+
+<section id="capabilities" class="border-t border-border py-24 md:py-28">
+  <div class="sw-container">
+    <div class="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
+      <SectionHeading
+        kicker="Capabilities"
+        title="O manifesto é a fonte da verdade."
+        sub="Isto não é um screenshot. É a forma exata do dado que cada package publica — você lê o mesmo objeto em runtime. Hoje a maioria está unverified_in_homologation, porque documento fiscal é irreversível e só marcamos supported depois de provar o fluxo real com o contribuinte."
+      />
+      <div data-reveal class="flex shrink-0 flex-col items-start gap-2 md:items-end">
+        <TriLegend variant="full" class="md:justify-end" />
+        <span class="font-mono text-xs text-muted-foreground">
+          {JACOBINA_COUNTS.supported}/{JACOBINA_COUNTS.total} supported · jacobina-saatri
+        </span>
+      </div>
+    </div>
+
+    <div data-reveal class="mt-10">
+      <Tabs defaultValue="homologation" class="overflow-hidden rounded-2xl border border-border bg-card shadow-lg">
+        <TabsList class="flex h-12 w-full items-center gap-3 rounded-none border-b border-border bg-card p-0 px-4">
+          <span class="flex items-center gap-3">
+            <span class="flex gap-1.5" aria-hidden="true">
+              <span class="size-2.5 rounded-full bg-success/70"></span>
+              <span class="size-2.5 rounded-full bg-warning/70"></span>
+              <span class="size-2.5 rounded-full bg-muted-foreground/40"></span>
+            </span>
+            <span class="font-mono text-xs text-muted-foreground">jacobina-saatri · NFS-e ABRASF 2.03</span>
+          </span>
+          <TabsTrigger
+            value="homologation"
+            class="ml-auto h-7 grow-0 rounded-md border-0 px-3 font-mono text-xs data-[state=active]:bg-secondary data-[state=active]:text-foreground data-[state=active]:shadow-none"
+          >
+            homologation
+          </TabsTrigger>
+          <TabsTrigger
+            value="production"
+            class="h-7 grow-0 rounded-md border-0 px-3 font-mono text-xs data-[state=active]:bg-secondary data-[state=active]:text-foreground data-[state=active]:shadow-none"
+          >
+            production
+          </TabsTrigger>
+        </TabsList>
+        <TabsContent value="homologation" class="mt-0">
+          <ConsoleTable environment="homologation" />
+        </TabsContent>
+        <TabsContent value="production" class="mt-0">
+          <ConsoleTable environment="production" />
+        </TabsContent>
+      </Tabs>
+    </div>
+  </div>
+</section>

@@ -1,0 +1,38 @@
+---
+import { Code } from "astro:components";
+import { Check, Copy } from "@lucide/astro";
+
+interface Props {
+  title?: string;
+  code?: string;
+  lang?: string;
+  class?: string;
+}
+
+const { title = "terminal", code = "", lang = "ts", class: className = "sw-code" } = Astro.props as Props;
+const source = code.trim();
+// vermelho/--error é reservado para rejeição fiscal real — dots usam a gramática tri-state.
+const dots = ["bg-success/70", "bg-warning/70", "bg-muted-foreground/40"];
+---
+
+<div class={className} data-codeblock>
+  <div class="sw-code-tab justify-between">
+    <span class="flex items-center gap-3">
+      <span class="flex gap-1.5">
+        {dots.map((c) => <span class={`size-2.5 rounded-full ${c}`}></span>)}
+      </span>
+      <span class="text-muted-foreground">{title}</span>
+    </span>
+    <button
+      type="button"
+      data-copy
+      data-code={source}
+      aria-label="Copiar código"
+      class="grid size-7 place-items-center rounded-md text-muted-foreground transition hover:bg-secondary hover:text-foreground"
+    >
+      <Copy class="copy-idle size-3.5" />
+      <Check class="copy-done hidden size-3.5 text-success" />
+    </button>
+  </div>
+  <Code code={source} lang={lang as any} theme="vesper" />
+</div>

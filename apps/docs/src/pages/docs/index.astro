@@ -1,0 +1,79 @@
+---
+import DocsLayout from "../../layouts/DocsLayout.astro";
+import { Card } from "../../components/starwind/card";
+import { Alert, AlertDescription, AlertTitle } from "../../components/starwind/alert";
+import { docsNavigation } from "../../config";
+import { CATALOG_STATS } from "../../data/catalog";
+import {
+  Book, Boxes, Building2, Download, Landmark, ListChecks,
+  Map, Plug, Receipt, Rocket, TriangleAlert, Zap,
+} from "@lucide/astro";
+
+const icons: Record<string, any> = {
+  book: Book, download: Download, rocket: Rocket, boxes: Boxes, plug: Plug,
+  "list-checks": ListChecks, zap: Zap, receipt: Receipt, building: Building2,
+  landmark: Landmark, map: Map,
+};
+
+const descriptions: Record<string, string> = {
+  "/docs": "O que o kit entrega e como o modelo de capabilities mantém tudo auditável.",
+  "/docs/installation": "Adicione o package do seu alvo fiscal e o Effect ao projeto.",
+  "/docs/quickstart": "Monte um provider em homologação e emita seu primeiro documento.",
+  "/docs/architecture": "Um package por município ou UF, contratos fiscais compartilhados.",
+  "/docs/providers": "A interface FiscalProvider e como cada provider expõe seu manifest.",
+  "/docs/capabilities": "supported, unsupported e unverified_in_homologation por operação.",
+  "/docs/effect": "Operações fiscais retornam Effect com input, output e erros tipados.",
+  "/docs/nfse": "NFS-e municipal ABRASF e NFS-e Nacional via contratos do kit.",
+  "/docs/municipalities": `${CATALOG_STATS.municipalities} municípios publicados — ${CATALOG_STATS.saatri} via template SAATRI mais Juiz de Fora-MG.`,
+  "/docs/sefaz": "NF-e e NFC-e (modelos 55/65) metadata-first por SEFAZ.",
+  "/docs/states": `${CATALOG_STATS.states} UFs mapeadas como escopo; runtime por UF ainda em aberto.`,
+};
+---
+
+<DocsLayout title="Documentação" description="Documentação do DFeKit — providers fiscais auditáveis, homologação primeiro.">
+  <p class="docs-kicker">Comece aqui</p>
+  <h1>Documentação</h1>
+  <p>
+    DFeKit é infraestrutura open-source para documentos fiscais eletrônicos brasileiros:
+    NFS-e municipal, NFS-e Nacional e um caminho explícito para NF-e e NFC-e por UF.
+    Cada capability é auditável, e a regra é sempre homologação primeiro. Escolha por onde começar.
+  </p>
+
+  <Alert variant="warning" class="not-prose my-6">
+    <AlertTitle><TriangleAlert />Homologação primeiro</AlertTitle>
+    <AlertDescription class="text-muted-foreground">
+      Documentos fiscais são irreversíveis. Rode sempre em <code class="font-mono">homologation</code> e só marque
+      uma capability como suportada depois de provar o fluxo real com o contribuinte.
+    </AlertDescription>
+  </Alert>
+
+  <div class="not-prose mt-12 space-y-10">
+    {docsNavigation.map((group) => (
+      <section>
+        <p data-reveal class="mb-4 text-[11px] font-bold uppercase tracking-[0.16em] text-muted-foreground">{group.title}</p>
+        <div class="grid gap-4 sm:grid-cols-2">
+          {group.links.map((link) => {
+            const Icon = icons[link.icon] ?? Book;
+            return (
+              <Card data-reveal class="group relative p-5 transition hover:ring-primary/40">
+                <div class="flex items-start gap-3">
+                  <span class="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary-accent">
+                    <Icon class="size-[18px]" />
+                  </span>
+                  <div class="min-w-0">
+                    <h3 class="font-heading text-sm font-semibold text-foreground">
+                      <a href={link.href} class="after:absolute after:inset-0">{link.text}</a>
+                    </h3>
+                    <p class="mt-1 text-sm leading-relaxed text-muted-foreground">
+                      {descriptions[link.href] ?? ""}
+                    </p>
+                  </div>
+                </div>
+              </Card>
+            );
+          })}
+        </div>
+      </section>
+    ))}
+  </div>
+</DocsLayout>

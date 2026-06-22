@@ -1,0 +1,83 @@
+---
+// Tabela do Console do Manifesto, gerada do array REAL JACOBINA_CAPABILITIES.
+// A cor do Badge deriva do status real; a contagem da caption é computada — nada hardcoded.
+import {
+  Table, TableHeader, TableBody, TableRow, TableHead, TableCell, TableCaption,
+} from "./starwind/table";
+import { Badge } from "./starwind/badge";
+import {
+  JACOBINA_CAPABILITIES, STATUS_META, countCapabilities,
+  type FiscalEnvironment,
+} from "../data/manifests";
+
+interface Props {
+  environment: FiscalEnvironment;
+}
+const { environment } = Astro.props as Props;
+
+const counts = countCapabilities(JACOBINA_CAPABILITIES);
+const badgeVariant: Record<string, "success" | "warning" | "secondary"> = {
+  supported: "success",
+  unverified_in_homologation: "warning",
+  unsupported: "secondary",
+};
+
+// capabilities exercíveis em produção, derivadas do array real (nunca hardcoded)
+const prodSupported = JACOBINA_CAPABILITIES.filter((r) => r.environments.includes("production")).map(
+  (r) => r.capability,
+);
+const caption =
+  environment === "production"
+    ? `Em produção, só ${prodSupported.join(" e ")} foram exercidos — o resto continua unverified_in_homologation.`
+    : `${counts.supported} supported · ${counts.unverified_in_homologation} unverified_in_homologation · ${counts.unsupported} unsupported — lido de jacobinaSaatriManifest.capabilityMetadata`;
+---
+
+<div class="overflow-x-auto">
+  <Table class="text-sm">
+    <TableHeader>
+      <TableRow>
+        <TableHead class="font-mono text-xs">capability</TableHead>
+        <TableHead class="text-xs">status</TableHead>
+        <TableHead class="hidden text-xs md:table-cell">ambientes</TableHead>
+        <TableHead class="hidden text-xs lg:table-cell">motivo</TableHead>
+      </TableRow>
+    </TableHeader>
+    <TableBody>
+      {JACOBINA_CAPABILITIES.map((row) => {
+        const meta = STATUS_META[row.status];
+        const exercisable = row.environments.includes(environment);
+        const reason = row.requiresCertificateOutsideDFeKit
+          ? `${row.reason} · exige certificado fora do DFeKit`
+          : row.reason;
+        return (
+          <TableRow class={exercisable ? "" : "opacity-55"}>
+            <TableCell class="align-top">
+              <code class="font-mono text-foreground">{row.capability}</code>
+              <span class="mt-1 block max-w-[18rem] text-xs leading-5 text-muted-foreground lg:hidden">{reason}</span>
+            </TableCell>
+            <TableCell class="align-top">
+              <Badge variant={badgeVariant[row.status]} size="sm" class="gap-1.5 font-mono text-[11px]">
+                <span class={`tri-dot ${meta.dot}`}></span>{meta.label}
+              </Badge>
+            </TableCell>
+            <TableCell class="hidden align-top md:table-cell">
+              {row.environments.length === 0 ? (
+                <span class="text-muted-foreground">—</span>
+              ) : (
+                <span class="flex flex-wrap gap-1">
+                  {row.environments.map((env) => (
+                    <Badge variant="outline" size="sm" class="font-mono text-[10px]">{env}</Badge>
+                  ))}
+                </span>
+              )}
+            </TableCell>
+            <TableCell class="hidden max-w-sm align-top lg:table-cell">
+              <span class="block text-muted-foreground">{reason}</span>
+            </TableCell>
+          </TableRow>
+        );
+      })}
+    </TableBody>
+    <TableCaption class="px-4 text-left font-mono text-xs">{caption}</TableCaption>
+  </Table>
+</div>

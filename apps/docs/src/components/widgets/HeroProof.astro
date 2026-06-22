@@ -1,0 +1,110 @@
+---
+// Prova de API — dois blocos de código lado a lado, honestos.
+// Esquerda: emissão Effect-native real (homologação). Direita: ramo sobre o tri-state
+// que se RECUSA a emitir em produção quando unverified_in_homologation. Os três status
+// do switch são exatamente os três que o console do manifesto renderiza.
+import SectionHeading from "../SectionHeading.astro";
+import CodeBlock from "../CodeBlock.astro";
+import { Badge } from "../starwind/badge";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "../starwind/tabs";
+
+const providerCode = `import { createJacobinaSaatriProvider } from "@dfe-kit/jacobina-saatri"
+import { Effect } from "effect"
+
+const provider = createJacobinaSaatriProvider(credentials, {
+  environment: "homologation",
+  signer,
+})
+
+const issued = yield* provider.issue({
+  environment: "homologation",
+  documentKind: "nfse",
+  issuer,
+  customer,
+  services,
+  series: "1",
+  number: "42",
+  issuedAt: new Date().toISOString(),
+})`;
+
+const capabilityCode = `import { jacobinaSaatriManifest } from "@dfe-kit/jacobina-saatri/manifest"
+
+const cap = jacobinaSaatriManifest.capabilityMetadata.find(
+  (c) => c.capability === "issue_nfse",
+)
+
+// só emite quando o manifesto prova suporte
+switch (cap?.status) {
+  case "supported":
+    return yield* provider.issue(input)
+  case "unverified_in_homologation":
+    return yield* Effect.fail(new NaoProvadoEmHomologacao())
+  case "unsupported":
+    return yield* Effect.fail(new ForaDoEscopo())
+}`;
+---
+
+<section id="hero-proof" class="border-t border-border py-24 md:py-28">
+  <div class="sw-container">
+    <SectionHeading
+      align="center"
+      kicker="API"
+      title="Sem mágica. Só Effect tipado."
+      sub="Crie o provider municipal e leia o manifest de capabilities — o mesmo contrato para qualquer prefeitura ou UF. Rejeição fiscal volta como sucesso de negócio (status rejected); só falha técnica entra no canal de erro tipado."
+    />
+
+    <div data-reveal class="mx-auto mt-12 max-w-5xl">
+      <!-- lg: dois blocos lado a lado, mesma altura -->
+      <div class="hidden lg:grid lg:grid-cols-2 lg:gap-4">
+        <div data-reveal style="--reveal-delay:60ms" class="flex flex-col gap-3">
+          <CodeBlock title="provider.ts" code={providerCode} lang="ts" class="sw-code flex h-full flex-col" />
+          <div class="flex items-center gap-2">
+            <Badge variant="warning" size="sm">homologação</Badge>
+            <span class="text-xs text-muted-foreground">emite o documento real no ambiente de teste</span>
+          </div>
+        </div>
+        <div data-reveal style="--reveal-delay:120ms" class="flex flex-col gap-3">
+          <CodeBlock title="capability.ts" code={capabilityCode} lang="ts" class="sw-code flex h-full flex-col" />
+          <div class="flex items-center gap-2">
+            <Badge variant="secondary" size="sm">leitura — não emite</Badge>
+            <span class="text-xs text-muted-foreground">o manifesto decide; em produção, recusa o que não está provado</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- &lt;lg: empilha via Tabs -->
+      <div class="lg:hidden">
+        <Tabs defaultValue="provider">
+          <TabsList class="h-10 w-full justify-start gap-0 rounded-xl border border-border bg-card/60 p-0">
+            <TabsTrigger
+              value="provider"
+              class="h-10 rounded-none border-b-2 border-transparent px-4 font-mono text-xs text-muted-foreground data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-foreground"
+            >
+              provider.ts
+            </TabsTrigger>
+            <TabsTrigger
+              value="capability"
+              class="h-10 rounded-none border-b-2 border-transparent px-4 font-mono text-xs text-muted-foreground data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-foreground"
+            >
+              capability.ts
+            </TabsTrigger>
+          </TabsList>
+          <TabsContent value="provider" class="mt-4">
+            <CodeBlock title="provider.ts" code={providerCode} lang="ts" />
+            <div class="mt-3 flex items-center gap-2">
+              <Badge variant="warning" size="sm">homologação</Badge>
+              <span class="text-xs text-muted-foreground">emite o documento real no ambiente de teste</span>
+            </div>
+          </TabsContent>
+          <TabsContent value="capability" class="mt-4">
+            <CodeBlock title="capability.ts" code={capabilityCode} lang="ts" />
+            <div class="mt-3 flex items-center gap-2">
+              <Badge variant="secondary" size="sm">leitura — não emite</Badge>
+              <span class="text-xs text-muted-foreground">o manifesto decide; em produção, recusa o que não está provado</span>
+            </div>
+          </TabsContent>
+        </Tabs>
+      </div>
+    </div>
+  </div>
+</section>

@@ -6,5 +6,8 @@
   "bin": {
     "check-declarative-errors": "./check-declarative-errors.ts"
   },
-  "type": "module"
+  "type": "module",
+  "scripts": {
+    "test": "vitest run ./src/**/*.test.ts"
+  }
 }

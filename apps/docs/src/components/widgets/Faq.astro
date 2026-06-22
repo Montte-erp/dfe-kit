@@ -1,0 +1,118 @@
+---
+// FAQ — as perguntas duras que um time fiscal faz, respondidas sem hype.
+// Coluna esquerda fixa (sticky) com o cabeçalho; direita um Accordion single.
+import SectionHeading from "../SectionHeading.astro";
+import TriLegend from "../TriLegend.astro";
+import { Button } from "../starwind/button";
+import { Alert, AlertTitle, AlertDescription } from "../starwind/alert";
+import { Info } from "@lucide/astro";
+import {
+  Accordion,
+  AccordionItem,
+  AccordionTrigger,
+  AccordionContent,
+} from "../starwind/accordion";
+import { site } from "../../config";
+---
+
+<section id="faq" class="border-t border-border py-24 md:py-28">
+  <div class="sw-container grid gap-12 lg:grid-cols-[0.7fr_1.3fr] lg:items-start">
+    <div class="lg:sticky lg:top-24">
+      <SectionHeading
+        kicker="Dúvidas"
+        title="Perguntas que um time fiscal faz."
+        sub="Sem rodeio: certificado, homologação, rejeição e o que significa supported aqui dentro."
+      />
+      <div data-reveal class="mt-8">
+        <Button href={site.github} variant="outline" size="sm">
+          Abrir uma discussão no GitHub
+        </Button>
+      </div>
+    </div>
+
+    <div data-reveal>
+      <Accordion type="single" defaultValue="q2">
+        <AccordionItem value="q1">
+          <AccordionTrigger class="text-base font-medium">
+            O DFeKit lida com o certificado ICP-Brasil?
+          </AccordionTrigger>
+          <AccordionContent class="text-muted-foreground leading-7">
+            Não, e isso é proposital. Certificado, mTLS e assinatura do XML ficam na borda da sua
+            aplicação, injetados como hooks Effect-native. O DFeKit nunca toca na sua chave privada.
+          </AccordionContent>
+        </AccordionItem>
+
+        <AccordionItem value="q2">
+          <AccordionTrigger class="text-base font-medium">
+            Por que tanta capability está unverified_in_homologation?
+          </AccordionTrigger>
+          <AccordionContent class="text-muted-foreground leading-7">
+            <p>
+              Porque marcar supported sem provar o fluxo real seria desonesto. Documento fiscal é
+              irreversível; a verificação acontece com o contribuinte, em homologação, capability por
+              capability.
+            </p>
+            <Alert variant="info" class="mt-4">
+              <AlertTitle>
+                <Info class="size-4" />
+                O que cada status significa
+              </AlertTitle>
+              <AlertDescription>
+                <TriLegend variant="full" />
+              </AlertDescription>
+            </Alert>
+          </AccordionContent>
+        </AccordionItem>
+
+        <AccordionItem value="q3">
+          <AccordionTrigger class="text-base font-medium">
+            Posso emitir em produção?
+          </AccordionTrigger>
+          <AccordionContent class="text-muted-foreground leading-7">
+            Sim, mas é uma decisão explícita da sua aplicação. O padrão é homologação; produção exige
+            você liberar conscientemente.
+          </AccordionContent>
+        </AccordionItem>
+
+        <AccordionItem value="q4">
+          <AccordionTrigger class="text-base font-medium">
+            Rejeição da prefeitura quebra meu código?
+          </AccordionTrigger>
+          <AccordionContent class="text-muted-foreground leading-7">
+            Não. Rejeição fiscal volta como sucesso de negócio com status rejected. Só falha técnica
+            vai pro canal de erro tipado do Effect.
+          </AccordionContent>
+        </AccordionItem>
+
+        <AccordionItem value="q5">
+          <AccordionTrigger class="text-base font-medium">
+            Preciso instalar tudo?
+          </AccordionTrigger>
+          <AccordionContent class="text-muted-foreground leading-7">
+            Não. Instale só o package do município ou da UF que você usa.
+          </AccordionContent>
+        </AccordionItem>
+
+        <AccordionItem value="q6">
+          <AccordionTrigger class="text-base font-medium">
+            Funciona sem Effect?
+          </AccordionTrigger>
+          <AccordionContent class="text-muted-foreground leading-7">
+            O contrato é Effect-native por design. Toda API pública retorna Effect.Effect; na borda
+            você roda com Effect.runPromise.
+          </AccordionContent>
+        </AccordionItem>
+
+        <AccordionItem value="q7">
+          <AccordionTrigger class="text-base font-medium">
+            É production-ready?
+          </AccordionTrigger>
+          <AccordionContent class="text-muted-foreground leading-7">
+            O contrato e a arquitetura sim; o suporte fiscal de cada provider é exatamente o que a
+            tabela de capabilities mostra — nem mais, nem menos.
+          </AccordionContent>
+        </AccordionItem>
+      </Accordion>
+    </div>
+  </div>
+</section>

@@ -1,0 +1,25 @@
+---
+// Faixa "Construído sobre" — substitui o strip de logos "trusted by" por PADRÕES REAIS.
+// Sem logos, sem "trusted by", sem contagens. Cada item é um Badge com Tooltip explicativo.
+import { Separator } from "../starwind/separator";
+import { Badge } from "../starwind/badge";
+import { Tooltip, TooltipTrigger, TooltipContent } from "../starwind/tooltip";
+import { BUILT_ON } from "../../data/catalog";
+---
+
+<section class="border-y border-border bg-card/30 py-8">
+  <div data-reveal class="sw-container flex flex-col gap-4 lg:flex-row lg:items-center">
+    <span class="text-xs uppercase tracking-[0.22em] text-muted-foreground">Construído sobre</span>
+    <Separator orientation="vertical" class="hidden h-5 lg:block" />
+    <div class="flex flex-wrap gap-3">
+      {BUILT_ON.map((item) => (
+        <Tooltip>
+          <TooltipTrigger>
+            <Badge variant="secondary" size="md">{item.label}</Badge>
+          </TooltipTrigger>
+          <TooltipContent side="top" class="max-w-64 text-xs">{item.tooltip}</TooltipContent>
+        </Tooltip>
+      ))}
+    </div>
+  </div>
+</section>

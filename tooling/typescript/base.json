@@ -37,10 +37,9 @@
       "@dfe-kit/adapter-sefaz": ["adapters/sefaz/src/index.ts"],
       "@dfe-kit/adapter-sefaz/catalog": ["adapters/sefaz/src/catalog.ts"],
       "@dfe-kit/adapter-sefaz/manifest": ["adapters/sefaz/src/manifest.ts"],
-      "@dfe-kit/provider-nfse": ["packages/provider-nfse/src/index.ts"],
-      "@dfe-kit/provider-nfse/municipal-catalog": [
-        "packages/provider-nfse/src/municipal-catalog.ts"
-      ]
+      "@dfe-kit/adapter-nfse": ["adapters/nfse/src/index.ts"],
+      "@dfe-kit/adapter-nfse/manifest": ["adapters/nfse/src/manifest.ts"],
+      "@dfe-kit/adapter-nfse/municipal-catalog": ["adapters/nfse/src/municipal-catalog.ts"]
     }
   },
   "display": "Default"

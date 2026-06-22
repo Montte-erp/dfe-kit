@@ -1,0 +1,42 @@
+---
+// Legenda tri-state recorrente — a "marca" do DFeKit (success/warning/muted).
+// Aparece no header (tooltip do logo), no herói, no FAQ e fecha no footer.
+import { Tooltip, TooltipTrigger, TooltipContent } from "./starwind/tooltip";
+import { Badge } from "./starwind/badge";
+import { STATUS_META, type CapabilityStatus } from "../data/manifests";
+
+interface Props {
+  /** "full" mostra rótulo + dot; "dots" mostra só os três pontos. */
+  variant?: "full" | "dots";
+  class?: string;
+}
+const { variant = "full", class: className = "" } = Astro.props as Props;
+
+const order: CapabilityStatus[] = ["supported", "unverified_in_homologation", "unsupported"];
+const badgeVariant: Record<string, "success" | "warning" | "secondary"> = {
+  supported: "success",
+  unverified_in_homologation: "warning",
+  unsupported: "secondary",
+};
+---
+
+<div class:list={["flex flex-wrap items-center gap-2 text-xs", className]} role="list" aria-label="Vocabulário de status de capability">
+  {order.map((status) => {
+    const meta = STATUS_META[status];
+    return (
+      <Tooltip role="listitem">
+        <TooltipTrigger>
+          {variant === "full" ? (
+            <Badge variant={badgeVariant[status]} size="sm" class="gap-1.5">
+              <span class={`tri-dot ${meta.dot}`}></span>
+              {meta.label}
+            </Badge>
+          ) : (
+            <span class={`tri-dot ${meta.dot}`} aria-label={meta.label}></span>
+          )}
+        </TooltipTrigger>
+        <TooltipContent class="max-w-56 text-xs">{meta.tooltip}</TooltipContent>
+      </Tooltip>
+    );
+  })}
+</div>

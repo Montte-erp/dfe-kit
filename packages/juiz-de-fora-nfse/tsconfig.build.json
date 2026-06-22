@@ -1,4 +1,14 @@
 {
-  "extends": "./tsconfig.json",
-  "exclude": ["__tests__", "dist", ".cache"]
+  "extends": "../../tooling/typescript/core.json",
+  "compilerOptions": {
+    "composite": false,
+    "declarationMap": false
+  },
+  "include": [
+    "src/**/*.ts",
+    "../../adapters/nfse/src/**/*.ts",
+    "../../core/fiscal/src/**/*.ts",
+    "../../core/xml/src/**/*.ts"
+  ],
+  "exclude": ["src/**/*.test.ts", "src/**/*.spec.ts"]
 }

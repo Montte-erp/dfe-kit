@@ -1,0 +1,49 @@
+---
+// CTA final — espelha o herói (mesmo glow, mesmas install tabs fechando o loop),
+// agora rotacionado pra baixo. Reforça o homologation-first sem inventar suporte.
+import { PackageCheck } from "@lucide/astro";
+import { Button } from "../starwind/button";
+import { Badge } from "../starwind/badge";
+import InstallTabs from "../InstallTabs.astro";
+import TriLegend from "../TriLegend.astro";
+---
+
+<section class="relative overflow-hidden border-t border-border py-24 text-center md:py-28">
+  <div class="glow pointer-events-none absolute inset-x-0 bottom-0 -z-10 h-[24rem] rotate-180"></div>
+
+  <div class="sw-container" data-reveal>
+    <div class="mx-auto grid size-12 place-items-center rounded-xl border border-border text-primary-accent">
+      <PackageCheck class="size-6" />
+    </div>
+
+    <div class="mt-6 flex justify-center">
+      <Badge variant="secondary" size="sm">Homologation-first</Badge>
+    </div>
+
+    <h2 class="mt-6 text-3xl font-semibold tracking-tight md:text-5xl">
+      Comece por um município. Em homologação.
+    </h2>
+
+    <p class="mx-auto mt-5 max-w-xl text-lg leading-8 text-muted-foreground">
+      Instale um provider municipal, rode o fluxo em homologação com o contribuinte e só marque
+      supported depois que ele passar de verdade. Sem atalho, sem suporte inventado.
+    </p>
+
+    <div class="mt-9 flex flex-col items-center justify-center gap-4 sm:flex-row">
+      <Button href="/docs/installation" variant="primary" size="lg">
+        Instalar um município
+      </Button>
+      <Button href="/docs" variant="outline" size="lg">
+        Ler os conceitos
+      </Button>
+    </div>
+
+    <div class="mt-10 flex justify-center">
+      <InstallTabs syncKey="pm" class="mx-auto" />
+    </div>
+
+    <div class="mt-8">
+      <TriLegend variant="full" class="justify-center" />
+    </div>
+  </div>
+</section>

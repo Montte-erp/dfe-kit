@@ -36,16 +36,16 @@
     "effect": "4.0.0-beta.81"
   },
   "devDependencies": {
-    "@dfe-kit/fiscal": "workspace:*",
-    "@dfe-kit/provider-nfse": "workspace:*"
+    "@dfe-kit/adapter-nfse": "workspace:*",
+    "@dfe-kit/fiscal": "workspace:*"
   },
   "nx": {
     "tags": [
       "scope:provider"
     ],
     "implicitDependencies": [
-      "@dfe-kit/fiscal",
-      "@dfe-kit/provider-nfse"
+      "@dfe-kit/adapter-nfse",
+      "@dfe-kit/fiscal"
     ]
   }
 }

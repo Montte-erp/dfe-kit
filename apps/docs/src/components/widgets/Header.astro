@@ -1,0 +1,85 @@
+---
+import { Search } from "@lucide/astro";
+import Logo from "../Logo.astro";
+import GithubIcon from "../GithubIcon.astro";
+import ThemeToggle from "../ThemeToggle.astro";
+import Kbd from "../Kbd.astro";
+import { Button } from "../starwind/button";
+import { Badge } from "../starwind/badge";
+import { Separator } from "../starwind/separator";
+import { Tooltip, TooltipTrigger, TooltipContent } from "../starwind/tooltip";
+import { landingNavigation, site } from "../../config";
+
+interface Props {
+  /** Marca o link ativo quando dentro dos docs. */
+  active?: string;
+}
+const { active } = Astro.props as Props;
+---
+
+<header class="sticky top-0 z-50 w-full border-b border-border bg-background/70 backdrop-blur-xl">
+  <div class="sw-container flex h-14 items-center justify-between gap-4">
+    <!-- ESQUERDA: logo + legenda tri-state + selo -->
+    <div class="flex items-center gap-3">
+      <Tooltip openDelay={120}>
+        <TooltipTrigger>
+          <Logo />
+        </TooltipTrigger>
+        <TooltipContent side="bottom" class="max-w-none">
+          <div class="flex items-center gap-2">
+            <Badge variant="success" size="sm" class="gap-1.5"><span class="tri-dot bg-success"></span>supported</Badge>
+            <Badge variant="warning" size="sm" class="gap-1.5"><span class="tri-dot bg-warning"></span>unverified</Badge>
+            <Badge variant="secondary" size="sm" class="gap-1.5"><span class="tri-dot bg-muted-foreground"></span>unsupported</Badge>
+          </div>
+        </TooltipContent>
+      </Tooltip>
+      <Badge variant="secondary" size="sm" class="hidden font-mono text-[11px] sm:inline-flex">homologation-first</Badge>
+    </div>
+
+    <!-- CENTRO: navegação -->
+    <nav class="hidden items-center gap-1 lg:flex" aria-label="Navegação principal">
+      {landingNavigation.map((link) => (
+        <Button
+          href={link.href}
+          variant="ghost"
+          size="sm"
+          class={active === link.text ? "text-foreground" : "text-muted-foreground"}
+        >
+          {link.text}
+        </Button>
+      ))}
+    </nav>
+
+    <!-- DIREITA: busca + tema + github -->
+    <div class="flex items-center gap-2">
+      <Button
+        type="button"
+        data-cmd-open
+        variant="outline"
+        size="sm"
+        aria-label="Buscar nos docs e pacotes"
+        class="group hidden h-9 w-56 justify-start gap-2 px-3 font-normal text-muted-foreground hover:border-primary/40 md:inline-flex"
+      >
+        <Search class="size-4" />
+        <span class="flex-1 text-left">Buscar nos docs e pacotes</span>
+        <Kbd class="group-hover:text-primary-accent">⌘K</Kbd>
+      </Button>
+      <Button data-cmd-open variant="ghost" size="icon-sm" aria-label="Buscar" class="md:hidden">
+        <Search class="size-4" />
+      </Button>
+
+      <Separator orientation="vertical" class="hidden h-5 md:block" />
+
+      <ThemeToggle />
+
+      <Tooltip openDelay={120}>
+        <TooltipTrigger>
+          <Button href={site.github} variant="ghost" size="icon-sm" aria-label="GitHub">
+            <GithubIcon class="size-4" />
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent>Ver no GitHub</TooltipContent>
+      </Tooltip>
+    </div>
+  </div>
+</header>

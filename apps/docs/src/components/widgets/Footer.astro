@@ -1,0 +1,88 @@
+---
+// Footer sóbrio — nav real, licença e a legenda tri-state como assinatura final da marca.
+import Logo from "../Logo.astro";
+import GithubIcon from "../GithubIcon.astro";
+import TriLegend from "../TriLegend.astro";
+import { Badge } from "../starwind/badge";
+import { Button } from "../starwind/button";
+import { Separator } from "../starwind/separator";
+import { Tooltip, TooltipTrigger, TooltipContent } from "../starwind/tooltip";
+import { site } from "../../config";
+
+const columns = [
+  {
+    title: "Documentação",
+    links: [
+      { text: "Introdução", href: "/docs" },
+      { text: "Instalação", href: "/docs/installation" },
+      { text: "Capabilities", href: "/docs/capabilities" },
+      { text: "Execução Effect", href: "/docs/effect" },
+    ],
+  },
+  {
+    title: "Pacotes",
+    links: [
+      { text: "Núcleo", href: "/#packages" },
+      { text: "Municípios", href: "/#packages" },
+      { text: "Estados", href: "/#packages" },
+    ],
+  },
+  {
+    title: "Projeto",
+    links: [
+      { text: "GitHub", href: site.github },
+      { text: "Licença Apache-2.0", href: site.github },
+      { text: "Capabilities", href: "/#capabilities" },
+    ],
+  },
+];
+---
+
+<footer class="border-t border-border py-16">
+  <div class="sw-container">
+    <div class="grid gap-10 md:grid-cols-[1.5fr_repeat(3,1fr)]">
+      <div class="space-y-4">
+        <Logo />
+        <p class="max-w-xs text-sm leading-6 text-muted-foreground">
+          Infraestrutura Effect-native para documentos fiscais eletrônicos brasileiros.
+        </p>
+        <p class="max-w-xs text-xs leading-5 text-muted-foreground/80">
+          Capabilities auditáveis. Homologação-first. Sem suporte fiscal inventado.
+        </p>
+        <Badge variant="secondary" size="sm" class="font-mono">Apache-2.0</Badge>
+      </div>
+
+      {columns.map((col) => (
+        <div>
+          <p class="mb-4 text-xs font-semibold uppercase tracking-[0.18em] text-foreground">{col.title}</p>
+          <ul class="space-y-2.5">
+            {col.links.map((link) => (
+              <li>
+                <a class="text-sm text-muted-foreground transition hover:text-foreground" href={link.href}>{link.text}</a>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ))}
+    </div>
+
+    <Separator class="my-10" />
+
+    <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <span class="text-xs text-muted-foreground">
+        © 2026 DFeKit · Apache-2.0 · feito em pt-BR
+      </span>
+      <div class="flex items-center gap-4">
+        <TriLegend variant="dots" />
+        <Tooltip>
+          <TooltipTrigger>
+            <Button href={site.github} variant="ghost" size="icon-sm" aria-label="DFeKit no GitHub">
+              <GithubIcon class="size-4" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent side="top">Montte-erp/dfe-kit no GitHub</TooltipContent>
+        </Tooltip>
+      </div>
+    </div>
+  </div>
+</footer>

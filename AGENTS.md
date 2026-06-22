@@ -74,8 +74,8 @@ Essas skills locais complementam este AGENTS.md. Se uma skill local e este arqui
 core/fiscal                 @dfe-kit/fiscal             fiscal adapter contract + Effect schemas
 core/xml                    @dfe-kit/xml                generic XML escaping/encoding primitives
 adapters/saatri             @dfe-kit/adapter-saatri     reusable SAATRI/ABRASF 2.03 adapter engine
+adapters/nfse               @dfe-kit/adapter-nfse       reusable NFS-e Nacional + municipal catalog adapter engine
 packages/provider-saatri    @dfe-kit/provider-saatri    SAATRI discovery/catalog helpers
-packages/provider-nfse      @dfe-kit/provider-nfse      NFS-e Nacional + municipal catalog helpers
 packages/provider-sefaz     @dfe-kit/provider-sefaz     generic SEFAZ NF-e/NFC-e base provider
 packages/*-saatri           @dfe-kit/*-saatri           one provider package per SAATRI municipality
 packages/*-nfse             @dfe-kit/*-nfse             one provider package per municipal NFS-e portal

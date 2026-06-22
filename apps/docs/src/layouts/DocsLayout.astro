@@ -1,0 +1,161 @@
+---
+import {
+  Book, Boxes, Building2, Download, Landmark, ListChecks,
+  Map, Plug, Receipt, Rocket, Zap,
+} from "@lucide/astro";
+import BaseLayout from "./BaseLayout.astro";
+import Header from "../components/widgets/Header.astro";
+import {
+  Breadcrumb, BreadcrumbList, BreadcrumbItem, BreadcrumbLink,
+  BreadcrumbPage, BreadcrumbSeparator,
+} from "../components/starwind/breadcrumb";
+import {
+  Accordion, AccordionItem, AccordionTrigger, AccordionContent,
+} from "../components/starwind/accordion";
+import { docsNavigation } from "../config";
+
+interface Props {
+  title?: string;
+  description?: string;
+}
+
+const { title = "Documentação", description = "Documentação do DFeKit." } = Astro.props;
+const path = Astro.url.pathname.replace(/\/$/, "") || "/";
+
+const icons: Record<string, any> = {
+  book: Book, download: Download, rocket: Rocket, boxes: Boxes, plug: Plug,
+  "list-checks": ListChecks, zap: Zap, receipt: Receipt, building: Building2,
+  landmark: Landmark, map: Map,
+};
+
+const current = docsNavigation.flatMap((g) => g.links).find((l) => l.href.replace(/\/$/, "") === path);
+---
+
+<BaseLayout title={`${title} | DFeKit`} description={description}>
+  <Header active="Documentação" />
+
+  <!-- NAV MOBILE (colapsável, < lg) -->
+  <div class="sw-container lg:hidden">
+    <Accordion type="single" class="border-b border-border">
+      <AccordionItem value="docs-nav">
+        <AccordionTrigger class="py-4 text-sm font-medium">Navegação da documentação</AccordionTrigger>
+        <AccordionContent>
+          <nav aria-label="Navegação da documentação (mobile)" class="space-y-5 pb-2">
+            {docsNavigation.map((group) => (
+              <div>
+                <p class="mb-1.5 text-[11px] font-bold uppercase tracking-[0.16em] text-muted-foreground">{group.title}</p>
+                <div class="space-y-0.5">
+                  {group.links.map((link) => {
+                    const active = path === link.href.replace(/\/$/, "");
+                    const Icon = icons[link.icon] ?? Book;
+                    return (
+                      <a
+                        href={link.href}
+                        aria-current={active ? "page" : undefined}
+                        class={`flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition ${active ? "bg-primary/15 font-medium text-foreground" : "text-muted-foreground hover:bg-accent/10 hover:text-foreground"}`}
+                      >
+                        <Icon class={`size-4 ${active ? "text-primary-accent" : ""}`} />
+                        <span>{link.text}</span>
+                      </a>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+          </nav>
+        </AccordionContent>
+      </AccordionItem>
+    </Accordion>
+  </div>
+
+  <div class="sw-container grid gap-10 lg:grid-cols-[15rem_minmax(0,1fr)] xl:grid-cols-[15rem_minmax(0,46rem)_13rem]">
+    <!-- SIDEBAR -->
+    <aside class="hidden border-r border-border py-10 pr-4 lg:block">
+      <div class="sticky top-24">
+        <nav aria-label="Navegação da documentação" class="space-y-7">
+          {docsNavigation.map((group) => (
+            <div>
+              <p class="mb-2.5 px-3 text-[11px] font-bold uppercase tracking-[0.16em] text-muted-foreground">{group.title}</p>
+              <div class="space-y-0.5">
+                {group.links.map((link) => {
+                  const active = path === link.href.replace(/\/$/, "");
+                  const Icon = icons[link.icon] ?? Book;
+                  return (
+                    <a
+                      href={link.href}
+                      aria-current={active ? "page" : undefined}
+                      class={`flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition ${active ? "bg-primary/15 font-medium text-foreground" : "text-muted-foreground hover:bg-accent/10 hover:text-foreground"}`}
+                    >
+                      <Icon class={`size-4 ${active ? "text-primary-accent" : ""}`} />
+                      <span>{link.text}</span>
+                    </a>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
+        </nav>
+      </div>
+    </aside>
+
+    <!-- CONTENT -->
+    <main class="min-w-0 py-10 lg:py-14">
+      <Breadcrumb class="mb-6 text-xs">
+        <BreadcrumbList>
+          <BreadcrumbItem>
+            <BreadcrumbLink href="/docs">Docs</BreadcrumbLink>
+          </BreadcrumbItem>
+          {current ? (
+            <>
+              <BreadcrumbSeparator />
+              <BreadcrumbItem>
+                <BreadcrumbPage>{current.text}</BreadcrumbPage>
+              </BreadcrumbItem>
+            </>
+          ) : null}
+        </BreadcrumbList>
+      </Breadcrumb>
+      <article class="sw-prose">
+        <slot />
+      </article>
+    </main>
+
+    <!-- TOC -->
+    <aside class="hidden py-14 pl-2 xl:block">
+      <div class="sticky top-24">
+        <p class="mb-3 text-[11px] font-bold uppercase tracking-[0.16em] text-muted-foreground">Nesta página</p>
+        <nav data-toc class="space-y-1 border-l border-border text-sm"></nav>
+      </div>
+    </aside>
+  </div>
+
+  <script>
+    const tocEl = document.querySelector<HTMLElement>("[data-toc]");
+    const headings = Array.from(document.querySelectorAll<HTMLElement>(".sw-prose h2[id], .sw-prose h3[id]"));
+    if (tocEl && headings.length) {
+      for (const h of headings) {
+        const a = document.createElement("a");
+        a.href = `#${h.id}`;
+        a.textContent = h.textContent;
+        a.dataset.tocLink = h.id;
+        a.className = `block border-l-2 border-transparent py-1 transition hover:text-foreground ${h.tagName === "H3" ? "pl-6 text-muted-foreground/80" : "pl-4 text-muted-foreground"}`;
+        tocEl.appendChild(a);
+      }
+      const links = new Map(headings.map((h) => [h.id, tocEl.querySelector<HTMLElement>(`[data-toc-link="${h.id}"]`)]));
+      const setActive = (id: string) => {
+        for (const [hid, link] of links) {
+          const on = hid === id;
+          link?.classList.toggle("border-primary", on);
+          link?.classList.toggle("text-foreground", on);
+        }
+      };
+      const io = new IntersectionObserver(
+        (entries) => {
+          for (const e of entries) if (e.isIntersecting) setActive((e.target as HTMLElement).id);
+        },
+        { rootMargin: "-80px 0px -70% 0px" },
+      );
+      for (const h of headings) io.observe(h);
+    }
+  </script>
+</BaseLayout>

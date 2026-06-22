@@ -1,0 +1,28 @@
+---
+// Cabeçalho de seção padronizado: kicker (Badge) + h2 + subcopy.
+// Garante o mesmo ritmo tipográfico em todas as seções da landing.
+import { Badge } from "./starwind/badge";
+
+interface Props {
+  kicker: string;
+  title: string;
+  sub?: string;
+  align?: "left" | "center";
+  class?: string;
+}
+const { kicker, title, sub, align = "left", class: className = "" } = Astro.props as Props;
+const isCenter = align === "center";
+---
+
+<div
+  data-reveal
+  class:list={[
+    "max-w-2xl",
+    isCenter && "mx-auto text-center",
+    className,
+  ]}
+>
+  <Badge variant="secondary" size="sm" class="uppercase tracking-[0.16em] text-[11px]">{kicker}</Badge>
+  <h2 class="mt-4 text-3xl font-semibold tracking-tight text-balance md:text-5xl">{title}</h2>
+  {sub && <p class:list={["mt-4 leading-7 text-muted-foreground", isCenter && "mx-auto"]}>{sub}</p>}
+</div>

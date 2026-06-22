@@ -1,0 +1,188 @@
+---
+// ⌘K command palette — Dialog Starwind (substitui o SearchModal raw).
+// Montado uma vez no BaseLayout. Abre via evento 'dialog:open' no wrapper #command-palette,
+// disparado pelo atalho ⌘K/Ctrl+K e por qualquer botão [data-cmd-open] (header).
+import { Search, FileText, Package, CornerDownLeft } from "@lucide/astro";
+import { Dialog, DialogContent } from "./starwind/dialog";
+import { Badge } from "./starwind/badge";
+import { Separator } from "./starwind/separator";
+import Kbd from "./Kbd.astro";
+import { searchIndex } from "../config";
+
+const groupOrder = ["Comece aqui", "Conceitos", "Documentos fiscais", "Pacotes"];
+const groups = groupOrder
+  .map((title) => ({ title, items: searchIndex.filter((i) => i.group === title) }))
+  .filter((g) => g.items.length > 0);
+
+const statusBadge: Record<string, "success" | "warning" | "secondary"> = {
+  supported: "success",
+  "metadata-first": "warning",
+};
+
+// índice corrido para ids estáveis de option (aria-activedescendant)
+let cmdIndex = 0;
+---
+
+<Dialog id="command-palette">
+  <DialogContent class="top-[12vh] max-w-xl translate-y-0 p-0 [&_[data-dialog-close]]:hidden" animationDuration={150}>
+    <h2 class="sr-only">Buscar nos docs e pacotes</h2>
+
+    <!-- barra de busca -->
+    <div class="flex items-center gap-3 border-b border-border px-4">
+      <Search class="size-4 shrink-0 text-muted-foreground" />
+      <input
+        data-cmd-input
+        type="text"
+        placeholder="Buscar nos docs e pacotes…"
+        autocomplete="off"
+        spellcheck="false"
+        role="combobox"
+        aria-expanded="true"
+        aria-controls="cmd-listbox"
+        aria-autocomplete="list"
+        aria-label="Buscar nos docs e pacotes"
+        class="h-12 w-full border-0 bg-transparent text-sm text-foreground outline-none placeholder:text-muted-foreground"
+      />
+      <Kbd>ESC</Kbd>
+    </div>
+
+    <!-- resultados -->
+    <div id="cmd-listbox" role="listbox" aria-label="Resultados" data-cmd-results class="max-h-[min(60vh,24rem)] overflow-y-auto p-2">
+      {groups.map((group) => (
+        <div data-cmd-group data-group-title={group.title} role="group" aria-label={group.title}>
+          <p class="px-3 pb-1 pt-3 text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+            {group.title}
+          </p>
+          {group.items.map((item) => (
+            <a
+              href={item.href}
+              id={`cmd-opt-${cmdIndex++}`}
+              role="option"
+              aria-selected="false"
+              data-cmd-item
+              data-text={`${item.text} ${item.group} ${item.badge ?? ""}`.toLowerCase()}
+              class="group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-muted-foreground transition hover:bg-card aria-selected:bg-card aria-selected:text-foreground aria-selected:ring-1 aria-selected:ring-primary/40"
+            >
+              {item.group === "Pacotes" ? <Package class="size-4 shrink-0 text-primary-accent" /> : <FileText class="size-4 shrink-0" />}
+              <span class="flex-1 truncate font-medium text-foreground/90">{item.text}</span>
+              {item.badge ? (
+                <Badge variant={statusBadge[item.status ?? ""] ?? "secondary"} size="sm" class="font-mono text-[10px]">
+                  {item.badge}
+                </Badge>
+              ) : (
+                <span class="text-[11px] uppercase tracking-wider text-muted-foreground/60">{item.group}</span>
+              )}
+            </a>
+          ))}
+        </div>
+      ))}
+      <p data-cmd-empty class="hidden px-3 py-10 text-center text-sm text-muted-foreground">
+        Nada encontrado — tente o nome de um município ou UF.
+      </p>
+    </div>
+
+    <Separator />
+    <div class="flex items-center gap-4 px-4 py-2.5 text-[11px] text-muted-foreground">
+      <span class="flex items-center gap-1.5"><Kbd><CornerDownLeft class="size-3" /></Kbd> abrir</span>
+      <span class="flex items-center gap-1.5"><Kbd>↑</Kbd><Kbd>↓</Kbd> navegar</span>
+      <span class="flex items-center gap-1.5"><Kbd>esc</Kbd> fechar</span>
+    </div>
+  </DialogContent>
+</Dialog>
+
+<script>
+  const wrapper = document.getElementById("command-palette");
+  const input = document.querySelector<HTMLInputElement>("[data-cmd-input]");
+  const results = document.querySelector<HTMLElement>("[data-cmd-results]");
+  const items = Array.from(document.querySelectorAll<HTMLAnchorElement>("[data-cmd-item]"));
+  const groupsEls = Array.from(document.querySelectorAll<HTMLElement>("[data-cmd-group]"));
+  const empty = document.querySelector<HTMLElement>("[data-cmd-empty]");
+  let activeIndex = -1;
+
+  const visibleItems = () => items.filter((el) => !el.hidden);
+
+  const setActive = (idx: number) => {
+    const vis = visibleItems();
+    for (const el of items) el.setAttribute("aria-selected", "false");
+    if (vis.length === 0) {
+      activeIndex = -1;
+      input?.removeAttribute("aria-activedescendant");
+      return;
+    }
+    activeIndex = ((idx % vis.length) + vis.length) % vis.length;
+    const el = vis[activeIndex];
+    el.setAttribute("aria-selected", "true");
+    input?.setAttribute("aria-activedescendant", el.id);
+    el.scrollIntoView({ block: "nearest" });
+  };
+
+  const filter = (q: string) => {
+    const query = q.toLowerCase().trim();
+    let visible = 0;
+    for (const el of items) {
+      const match = (el.dataset.text ?? "").includes(query);
+      el.hidden = !match;
+      if (match) visible++;
+    }
+    for (const g of groupsEls) {
+      const anyVisible = Array.from(g.querySelectorAll<HTMLElement>("[data-cmd-item]")).some((el) => !el.hidden);
+      g.hidden = !anyVisible;
+    }
+    empty?.classList.toggle("hidden", visible > 0);
+    setActive(0);
+  };
+
+  const open = () => {
+    wrapper?.dispatchEvent(new Event("dialog:open"));
+    window.setTimeout(() => {
+      if (input) {
+        input.value = "";
+        filter("");
+        input.focus();
+      }
+    }, 60);
+  };
+  const close = () => wrapper?.dispatchEvent(new Event("dialog:close"));
+
+  for (const btn of document.querySelectorAll("[data-cmd-open]")) {
+    btn.addEventListener("click", (e) => {
+      e.preventDefault();
+      open();
+    });
+  }
+
+  input?.addEventListener("input", () => filter(input.value));
+
+  document.addEventListener("keydown", (e) => {
+    if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
+      e.preventDefault();
+      wrapper?.querySelector("dialog")?.open ? close() : open();
+    }
+  });
+
+  // navegação por teclado dentro do palette
+  input?.addEventListener("keydown", (e) => {
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      setActive(activeIndex + 1);
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      setActive(activeIndex - 1);
+    } else if (e.key === "Enter") {
+      const vis = visibleItems();
+      const el = vis[activeIndex] ?? vis[0];
+      if (el) {
+        e.preventDefault();
+        window.location.href = el.href;
+      }
+    }
+  });
+
+  results?.addEventListener("mousemove", (e) => {
+    const item = (e.target as HTMLElement).closest<HTMLAnchorElement>("[data-cmd-item]");
+    if (item && !item.hidden) {
+      const idx = visibleItems().indexOf(item);
+      if (idx !== -1) setActive(idx);
+    }
+  });
+</script>

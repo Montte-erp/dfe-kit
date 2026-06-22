@@ -1,0 +1,53 @@
+---
+// Garantias — a seção que substitui depoimentos: prova de honestidade, não hype.
+// Coluna esquerda: SectionHeading. Coluna direita: três Alert (success / warning / info),
+// sendo o "warning" o herói (o que NÃO afirmamos) — maior contraste conceitual.
+import { ShieldCheck, TriangleAlert, Info } from "@lucide/astro";
+import { Alert, AlertTitle, AlertDescription } from "../starwind/alert";
+import SectionHeading from "../SectionHeading.astro";
+---
+
+<section id="guarantees" class="border-t border-border py-24 md:py-28">
+  <div class="sw-container grid gap-10 lg:grid-cols-[0.8fr_1.2fr]">
+    <SectionHeading
+      kicker="Garantias"
+      title="Sem suporte fiscal inventado."
+      sub="Documento fiscal é irreversível. Então o package só marca uma capability como provada depois do fluxo real em homologação com o contribuinte."
+    />
+
+    <div class="space-y-4">
+      <Alert variant="success" data-reveal style="--reveal-delay:0ms">
+        <AlertTitle>
+          <ShieldCheck class="size-4" />
+          O que garantimos
+        </AlertTitle>
+        <AlertDescription>
+          Toda capability supported foi exercida no fluxo real. Falha técnica vai para o canal de
+          erro tipado; rejeição fiscal volta como status rejected.
+        </AlertDescription>
+      </Alert>
+
+      <Alert variant="warning" data-reveal style="--reveal-delay:60ms">
+        <AlertTitle>
+          <TriangleAlert class="size-4" />
+          O que não afirmamos
+        </AlertTitle>
+        <AlertDescription>
+          A maioria das capabilities hoje é unverified_in_homologation. Isso aparece no manifesto,
+          não escondido em letra miúda.
+        </AlertDescription>
+      </Alert>
+
+      <Alert variant="info" data-reveal style="--reveal-delay:120ms">
+        <AlertTitle>
+          <Info class="size-4" />
+          Onde fica a borda
+        </AlertTitle>
+        <AlertDescription>
+          Certificado ICP-Brasil, mTLS e XML assinado vivem fora do DFeKit, injetados como hooks
+          Effect-native na borda da sua app — o kit nunca lê sua chave privada.
+        </AlertDescription>
+      </Alert>
+    </div>
+  </div>
+</section>

@@ -8,6 +8,31 @@ const hasLegacyDependency = (line: string): boolean =>
 const hasMandatoryOtelDependency = (line: string): boolean =>
   /"@(?:effect\/opentelemetry|opentelemetry\/[^"/]+)"\s*:/.test(line);
 
+const publishedProviderPackagePattern =
+  /@dfe-kit\/(?:provider-(?:nfse|saatri|sefaz)|sefaz-[a-z]{2}|(?!adapter-)[a-z0-9-]+-(?:saatri|nfse))(?=$|[/"'])/;
+
+const hasWorkspaceImportOrRequire = (line: string): boolean =>
+  /\bfrom\s+["']@dfe-kit\/|\bimport\(\s*["']@dfe-kit\/|\brequire\(\s*["']@dfe-kit\//.test(line);
+
+const hasWorkspacePackageDependency = (line: string): boolean =>
+  /^\s*["@']@dfe-kit\/[^"']+["']\s*:/.test(line);
+
+export const hasPublishedProviderLayerDependency = (line: string, path: string): boolean => {
+  if (!/^(?:core|adapters|packages)\//.test(path)) {
+    return false;
+  }
+
+  if (!publishedProviderPackagePattern.test(line)) {
+    return false;
+  }
+
+  return (
+    hasWorkspaceImportOrRequire(line) ||
+    hasWorkspacePackageDependency(line) ||
+    path.endsWith("/bunup.config.ts")
+  );
+};
+
 export const dependencyChecks: readonly Check[] = [
   {
     message:
@@ -21,6 +46,12 @@ export const dependencyChecks: readonly Check[] = [
     test: ({ line, path }) =>
       /^(?:adapters|packages)\/[^/]+\/package\.json$/.test(path) &&
       hasMandatoryOtelDependency(line),
+    ignoreImportLine: false,
+  },
+  {
+    message:
+      "Packages publicados não devem depender de outros packages publicados; mova código compartilhado para adapters/* ou core/* e inline via bunup.",
+    test: ({ line, path }) => hasPublishedProviderLayerDependency(line, path),
     ignoreImportLine: false,
   },
 ];

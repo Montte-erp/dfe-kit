@@ -1,0 +1,268 @@
+---
+import DocsLayout from "../../layouts/DocsLayout.astro";
+import CodeBlock from "../../components/CodeBlock.astro";
+import ConsoleTable from "../../components/ConsoleTable.astro";
+import { Alert, AlertDescription, AlertTitle } from "../../components/starwind/alert";
+import { Badge } from "../../components/starwind/badge";
+import { STATE_PACKAGES } from "../../data/catalog";
+import { Info } from "@lucide/astro";
+
+type DocPage = {
+  slug: string;
+  title: string;
+  description: string;
+  kicker: string;
+  install: string;
+  createProvider: string;
+  capabilities: string;
+  signer: string;
+  validate: string;
+  codeTitle: string;
+  code: string;
+};
+
+export function getStaticPaths() {
+  const pages: readonly DocPage[] = [
+    {
+      slug: "quickstart",
+      title: "Primeiro uso",
+      description: "Emita em homologação usando um provider municipal e Effect.",
+      kicker: "Comece aqui",
+      install: "Instale o package do município ou UF usado pela aplicação.",
+      createProvider: "Crie o provider server-side com credentials, environment e signer. Não construa provider em código client.",
+      capabilities: "Leia provider.manifest.capabilityMetadata antes de acionar emissão, cancelamento ou consulta.",
+      signer: "O signer recebe XML sem assinatura e retorna XML assinado. Ele pode usar A1, A3, HSM ou serviço interno.",
+      validate: "Valide com typecheck, testes do package e homologação real do contribuinte.",
+      codeTitle: "quickstart.ts",
+      code: `const provider = createJacobinaSaatriProvider(credentials, {
+  environment: "homologation",
+  signer,
+})
+
+const result = yield* provider.issue(input)`,
+    },
+    {
+      slug: "architecture",
+      title: "Arquitetura",
+      description: "Core fiscal pequeno, adapters privados e packages publicados por alvo fiscal.",
+      kicker: "Conceitos",
+      install: "Aplicações instalam packages publicados em packages/*. Core e adapters privados são inlinados no bundle final.",
+      createProvider: "A factory pública cria FiscalProvider. O contrato expõe manifest e issue(input).",
+      capabilities: "Capabilities vivem no manifest público para tornar suporte fiscal auditável antes do runtime.",
+      signer: "Assinatura e transporte certificado são dependências externas injetadas por hook ou Layer.",
+      validate: "O repositório valida erros declarativos, lint, formato, typecheck, testes e DTS sem warnings.",
+      codeTitle: "shape.ts",
+      code: `type FiscalProvider = {
+  readonly manifest: FiscalProviderManifest
+  issue(input: IssueFiscalDocumentInput): Effect.Effect<
+    IssueFiscalDocumentResponse,
+    FiscalProviderError
+  >
+}`,
+    },
+    {
+      slug: "providers",
+      title: "Providers",
+      description: "Um provider representa um portal fiscal, município, agregador nacional ou UF.",
+      kicker: "Conceitos",
+      install: "Escolha o provider pelo alvo fiscal: SAATRI municipal, Juiz de Fora NFS-e ou SEFAZ da UF.",
+      createProvider: "Providers municipais runtime-first aceitam credentials e options. Providers metadata-first expõem manifest até homologação própria.",
+      capabilities: "Capability unsupported significa fluxo incompatível. unverified_in_homologation significa mapeado, mas não provado em homologação DFeKit.",
+      signer: "Providers nunca manejam certificado diretamente. Eles declaram requiresSigner e requiresCertificateOutsideDFeKit.",
+      validate: "Adicione teste de manifest e teste de shape sempre que criar novo município ou UF.",
+      codeTitle: "manifest.ts",
+      code: `import { jacobinaSaatriManifest } from "@dfe-kit/jacobina-saatri"
+
+for (const capability of jacobinaSaatriManifest.capabilityMetadata) {
+  console.log(capability.capability, capability.status)
+}`,
+    },
+    {
+      slug: "capabilities",
+      title: "Capabilities",
+      description: "A tabela de capacidades evita suporte fiscal implícito.",
+      kicker: "Conceitos",
+      install: "Toda capability vem do catálogo fiscal, não de strings soltas por adapter.",
+      createProvider: "O manifest lista documentKinds, environments e capabilityMetadata do provider.",
+      capabilities: "Status aceitos: supported, unsupported e unverified_in_homologation. Use reason para explicar o limite.",
+      signer: "Campos requiresSigner e requiresCertificateOutsideDFeKit deixam a responsabilidade operacional explícita.",
+      validate: "Testes devem falhar se uma prefeitura declara emissão suportada sem homologação provada.",
+      codeTitle: "capability.ts",
+      code: `{
+  capability: "issue_nfse",
+  status: "unverified_in_homologation",
+  requiresSigner: true,
+  requiresCertificateOutsideDFeKit: true,
+}`,
+    },
+    {
+      slug: "effect",
+      title: "Execução Effect",
+      description: "Falhas técnicas ficam no canal de erro; rejeição fiscal é resultado de negócio.",
+      kicker: "Conceitos",
+      install: "Todos os providers públicos retornam Effect.Effect em operações fiscais.",
+      createProvider: "Use Layer quando a aplicação quiser injetar FiscalProviderService em workflows maiores.",
+      capabilities: "Capability ausente deve falhar tipada. Não use fallback silencioso para operação fiscal obrigatória.",
+      signer: "Adapte Promise/IO com Effect.tryPromise e erro tipado no catch declarativo.",
+      validate: "Teste sucesso autorizado, rejeição fiscal e falhas técnicas recuperáveis separadamente.",
+      codeTitle: "effect.ts",
+      code: `const issued = yield* provider.issue(input).pipe(
+  Effect.catchTag("SaatriProviderError", (error) =>
+    Effect.fail(error)
+  )
+)`,
+    },
+    {
+      slug: "nfse",
+      title: "NFS-e",
+      description: "NFS-e municipal entra por package por prefeitura; NFS-e Nacional fica em adapter privado até existir alvo fiscal próprio.",
+      kicker: "Documentos fiscais",
+      install: "Use @dfe-kit/*-saatri para prefeituras SAATRI ou @dfe-kit/juiz-de-fora-nfse para Juiz de Fora-MG.",
+      createProvider: "Cada prefeitura mantém endpoints, código IBGE, layout e capabilities próprios.",
+      capabilities: "Emissão, consulta, lote RPS, cancelamento e substituição podem ter status diferentes por portal.",
+      signer: "NFS-e exige XML assinado em fluxos de emissão, lote, cancelamento e substituição.",
+      validate: "Só promova para supported depois de homologar com contribuinte e preservar XML bruto/protocolo.",
+      codeTitle: "nfse.ts",
+      code: `import { juizDeForaNfseManifest } from "@dfe-kit/juiz-de-fora-nfse"
+
+console.log(juizDeForaNfseManifest.environments)
+console.log(juizDeForaNfseManifest.capabilities)`,
+    },
+    {
+      slug: "municipalities",
+      title: "Prefeituras",
+      description: "Packages municipais separam Jacobina, Juiz de Fora e demais portais.",
+      kicker: "Documentos fiscais",
+      install: "Instale um package por prefeitura: @dfe-kit/jacobina-saatri, @dfe-kit/juiz-de-fora-nfse e similares.",
+      createProvider: "SAATRI usa ABRASF 2.03. Juiz de Fora usa portal municipal ABRASF 2.02 metadata-first.",
+      capabilities: "O município define capabilityMetadata próprio, com endpoints de homologação e produção quando mapeados.",
+      signer: "O DFeKit não guarda certificado municipal; a aplicação injeta assinatura e transporte mTLS.",
+      validate: "Teste manifest por município e mantenha código IBGE, WSDL e endpoints auditáveis.",
+      codeTitle: "municipal.ts",
+      code: `import { JUIZ_DE_FORA_NFSE_PORTAL } from "@dfe-kit/juiz-de-fora-nfse"
+
+console.log(JUIZ_DE_FORA_NFSE_PORTAL.providerName)
+console.log(JUIZ_DE_FORA_NFSE_PORTAL.cityCode)`,
+    },
+    {
+      slug: "sefaz",
+      title: "NF-e e NFC-e",
+      description: "SEFAZ é organizada por UF para modelos 55 e 65.",
+      kicker: "Documentos fiscais",
+      install: "Use @dfe-kit/sefaz-mg, @dfe-kit/sefaz-sp ou o package da UF da aplicação.",
+      createProvider: "Packages estaduais são metadata-first até haver runtime homologado próprio por UF.",
+      capabilities: "issue_nfe e issue_nfce começam como unverified_in_homologation até homologação real.",
+      signer: "Assinatura XML, QR Code CSC, contingência e mTLS continuam na borda da aplicação até suporte runtime provado.",
+      validate: "Teste manifesto da UF, documentKinds e ausência de suporte NFS-e em packages SEFAZ.",
+      codeTitle: "sefaz.ts",
+      code: `import { sefazMgManifest } from "@dfe-kit/sefaz-mg"
+
+console.log(sefazMgManifest.documentKinds)
+console.log(sefazMgManifest.capabilityMetadata)`,
+    },
+    {
+      slug: "states",
+      title: "Estados",
+      description: "Cada UF tem um package @dfe-kit/sefaz-<uf>.",
+      kicker: "Documentos fiscais",
+      install: "Instale somente a UF que você precisa integrar.",
+      createProvider: "A UF carrega manifest próprio com nome da SEFAZ, modelos fiscais e requisitos operacionais.",
+      capabilities: "SEFAZ por UF declara NF-e/NFC-e e explicitamente não declara NFS-e municipal.",
+      signer: "Certificado e endpoints podem variar por UF; mantenha configuração fora do pacote publicado.",
+      validate: "Ao adicionar estado, confira sigla, nome, modelos 55/65 e capabilityMetadata.",
+      codeTitle: "states.ts",
+      code: `import { sefazMgManifest } from "@dfe-kit/sefaz-mg"
+
+console.log(sefazMgManifest.name)
+console.log(sefazMgManifest.documentKinds)`,
+    },
+  ];
+
+  return pages.map((page) => ({
+    params: { slug: page.slug },
+    props: page,
+  }));
+}
+
+const page = Astro.props as DocPage;
+---
+
+<DocsLayout title={page.title} description={page.description}>
+  <p class="docs-kicker">{page.kicker}</p>
+  <h1>{page.title}</h1>
+  <p>{page.description}</p>
+
+  <h2 id="install">Instalar</h2>
+  <p>{page.install}</p>
+
+  <CodeBlock title={page.codeTitle} code={page.code} />
+
+  <h2 id="create-provider">Criar provider</h2>
+  <p>{page.createProvider}</p>
+
+  <h2 id="capabilities">Capabilities</h2>
+  <p>{page.capabilities}</p>
+
+  {page.slug === "capabilities" && (
+    <>
+      <p>
+        Esta é a tabela real lida de
+        {" "}
+        <code class="font-mono">jacobinaSaatriManifest.capabilityMetadata</code> — cada linha
+        carrega status, ambientes e motivo verificados.
+      </p>
+      <div class="not-prose my-8 overflow-hidden rounded-xl border border-border">
+        <ConsoleTable environment="homologation" />
+      </div>
+      <Alert variant="info" class="not-prose my-6">
+        <AlertTitle><Info />Mesma fonte do console</AlertTitle>
+        <AlertDescription class="text-muted-foreground">
+          Esta tabela alimenta o console do manifesto na landing. Capability e status
+          vêm do mesmo array — nada é hardcoded por página.
+        </AlertDescription>
+      </Alert>
+    </>
+  )}
+
+  {page.slug === "municipalities" && (
+    <Alert variant="info" class="not-prose my-6">
+      <AlertTitle><Info />Metadata-first</AlertTitle>
+      <AlertDescription class="text-muted-foreground">
+        Cada prefeitura expõe manifest auditável antes do runtime. A prova SAATRI é a
+        homologação real do contribuinte — não promova capability para
+        <code class="font-mono">supported</code> sem ela.
+      </AlertDescription>
+    </Alert>
+  )}
+
+  {page.slug === "states" && (
+    <>
+      <div class="not-prose my-6 flex flex-wrap gap-2">
+        {STATE_PACKAGES.map((pkg) => (
+          <Badge variant="outline" size="sm" class="gap-1.5">
+            <span class="font-mono">{pkg.uf}</span>
+            <span class="text-muted-foreground">{pkg.state}</span>
+          </Badge>
+        ))}
+      </div>
+      <Alert variant="info" class="not-prose my-6">
+        <AlertTitle><Info />Escopo endereçável</AlertTitle>
+        <AlertDescription class="text-muted-foreground">
+          {STATE_PACKAGES.length} UFs é escopo endereçável; runtime homologado por UF em aberto. Os packages
+          SEFAZ são metadata-first até haver runtime próprio provado por UF.
+        </AlertDescription>
+      </Alert>
+    </>
+  )}
+
+  <h2 id="signer">Assinatura</h2>
+  <p>{page.signer}</p>
+
+  <h2 id="validate">Validar</h2>
+  <p>{page.validate}</p>
+
+  <div class="next-prev">
+    <a href="/docs/installation">← Instalação</a>
+    <a href="/">Início →</a>
+  </div>
+</DocsLayout>

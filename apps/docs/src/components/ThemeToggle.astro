@@ -1,0 +1,21 @@
+---
+import { Moon, Sun } from "@lucide/astro";
+import { Button } from "./starwind/button";
+---
+
+<Button type="button" data-theme-toggle variant="ghost" size="icon-sm" aria-label="Alternar tema">
+  <Sun class="hidden size-4 dark:block" />
+  <Moon class="size-4 dark:hidden" />
+</Button>
+
+<script>
+  const apply = (theme: string) => {
+    document.documentElement.classList.toggle("dark", theme === "dark");
+    localStorage.setItem("theme", theme);
+  };
+  for (const btn of document.querySelectorAll("[data-theme-toggle]")) {
+    btn.addEventListener("click", () => {
+      apply(document.documentElement.classList.contains("dark") ? "light" : "dark");
+    });
+  }
+</script>

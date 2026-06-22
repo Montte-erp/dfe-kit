@@ -11,7 +11,7 @@ bun run docs:dev
 bun run docs:build
 ```
 
-O site em Astro fica em `docs/` e reúne landing page, instalação, quickstart, providers, capabilities, NFS-e, prefeituras e SEFAZ por UF.
+O site em Astro fica em `apps/docs/` e reúne landing page, instalação, quickstart, providers, capabilities, NFS-e, prefeituras e SEFAZ por UF.
 
 ## Licença
 
@@ -26,8 +26,8 @@ Veja o arquivo [`LICENSE`](./LICENSE).
 @dfe-kit/xml                    primitivas de escape/encoding XML
 @dfe-kit/adapter-saatri         motor SAATRI/ABRASF 2.03 reutilizável
 @dfe-kit/adapter-sefaz          motor SEFAZ NF-e/NFC-e Effect-native reutilizável
+@dfe-kit/adapter-nfse          motor NFS-e Nacional + catálogo municipal reutilizável
 @dfe-kit/provider-saatri        catálogo SAATRI para descoberta e geração de packages
-@dfe-kit/provider-nfse          NFS-e Nacional + catálogo municipal NFS-e
 @dfe-kit/<municipio>-saatri     um package por prefeitura SAATRI
 @dfe-kit/juiz-de-fora-nfse      package municipal NFS-e Juiz de Fora-MG
 @dfe-kit/sefaz-<uf>             um package por estado para NF-e/NFC-e
@@ -48,7 +48,7 @@ Pacotes planejados:
 
 ## Alvos por município e estado
 
-A regra de publicação agora é explícita: um package por município e um package por UF. Os packages agregadores (`provider-saatri`, `provider-nfse`) ficam como base técnica/catálogo quando agregam municípios; SEFAZ usa direto o adapter privado `@dfe-kit/adapter-sefaz`, sem fachada intermediária.
+A regra de publicação é explícita: um package por município e um package por UF. Código compartilhado fica em adapters privados (`adapter-saatri`, `adapter-nfse`, `adapter-sefaz`) e é inlinado nos packages publicados; sem façade pública agregadora para NFS-e.
 
 ```text
 @dfe-kit/jacobina-saatri                    Jacobina-BA                 2917508
@@ -68,7 +68,7 @@ A regra de publicação agora é explícita: um package por município e um pack
 
 Juiz de Fora usa emissor municipal próprio ABRASF 2.02. O package lista endpoints, WSDL e capabilities; emissão exige XML assinado, certificado ICP-Brasil/mTLS fora do DFeKit e homologação do contribuinte antes de marcar `issue_nfse` como `supported`.
 
-Os packages estaduais `@dfe-kit/sefaz-<uf>` e o package municipal `@dfe-kit/juiz-de-fora-nfse` são metadata-first: expõem apenas `.` enquanto não houver runtime homologado próprio. Estados SEFAZ constroem manifests pelo catálogo privado de `@dfe-kit/adapter-sefaz`; municípios NFS-e sem runtime próprio continuam delegando manifests ao catálogo de `provider-nfse`.
+Os packages estaduais `@dfe-kit/sefaz-<uf>` e o package municipal `@dfe-kit/juiz-de-fora-nfse` são metadata-first: expõem apenas `.` enquanto não houver runtime homologado próprio. Estados SEFAZ constroem manifests pelo catálogo privado de `@dfe-kit/adapter-sefaz`; municípios NFS-e sem runtime próprio constroem manifests pelo catálogo privado de `@dfe-kit/adapter-nfse`.
 
 ## Forma da API pública (Effect-first)
 

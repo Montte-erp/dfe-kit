@@ -2,11 +2,11 @@ import type { FiscalProviderManifest } from "@dfe-kit/fiscal";
 import {
   createNfseMunicipalPortalManifestByProviderId,
   getNfseMunicipalPortalByProviderId,
-} from "@dfe-kit/provider-nfse/municipal-catalog";
+} from "@dfe-kit/adapter-nfse/municipal-catalog";
 import type {
   NfseMunicipalPortalDescriptor,
   NfseMunicipalPortalId,
-} from "@dfe-kit/provider-nfse/municipal-catalog";
+} from "@dfe-kit/adapter-nfse/municipal-catalog";
 
 export type JuizDeForaNfsePortal = NfseMunicipalPortalDescriptor;
 

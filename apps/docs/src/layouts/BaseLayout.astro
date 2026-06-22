@@ -1,0 +1,85 @@
+---
+import "../styles/starwind.css";
+import { site } from "../config";
+import CommandPalette from "../components/CommandPalette.astro";
+
+interface Props {
+  title?: string;
+  description?: string;
+}
+
+const { title = site.title, description = site.description } = Astro.props;
+---
+
+<!doctype html>
+<html lang="pt-BR" class="dark scroll-smooth">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content={description} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:type" content="website" />
+    <meta name="theme-color" content="#1d1a16" />
+    <title>{title}</title>
+    <script is:inline>
+      const stored = localStorage.getItem("theme");
+      const dark = stored ? stored === "dark" : true;
+      document.documentElement.classList.toggle("dark", dark);
+    </script>
+  </head>
+  <body>
+    <slot />
+
+    <CommandPalette />
+
+    <div class="sr-only" aria-live="polite" data-copy-live></div>
+
+    <script>
+      // scroll-reveal
+      const els = document.querySelectorAll("[data-reveal]");
+      if (els.length) {
+        const io = new IntersectionObserver(
+          (entries) => {
+            for (const entry of entries) {
+              if (entry.isIntersecting) {
+                entry.target.classList.add("is-visible");
+                io.unobserve(entry.target);
+              }
+            }
+          },
+          { rootMargin: "0px 0px -10% 0px" },
+        );
+        for (const el of els) io.observe(el);
+      }
+
+      // copiar-para-clipboard global: qualquer [data-copy][data-code]
+      const bindCopy = () => {
+        for (const btn of document.querySelectorAll<HTMLElement>("[data-copy]")) {
+          if (btn.dataset.copyBound) continue;
+          btn.dataset.copyBound = "true";
+          btn.addEventListener("click", async () => {
+            try {
+              await navigator.clipboard.writeText(btn.dataset.code ?? "");
+            } catch {
+              return;
+            }
+            const idle = btn.querySelector(".copy-idle");
+            const done = btn.querySelector(".copy-done");
+            idle?.classList.add("hidden");
+            done?.classList.remove("hidden");
+            const live = document.querySelector("[data-copy-live]");
+            if (live) live.textContent = "Comando copiado";
+            window.setTimeout(() => {
+              idle?.classList.remove("hidden");
+              done?.classList.add("hidden");
+              if (live) live.textContent = "";
+            }, 1400);
+          });
+        }
+      };
+      bindCopy();
+      document.addEventListener("astro:after-swap", bindCopy);
+    </script>
+  </body>
+</html>

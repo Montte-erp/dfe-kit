@@ -1,0 +1,76 @@
+---
+// Homologação-first — reenquadra "tanta coisa unverified" como postura de engenharia
+// séria diante da irreversibilidade fiscal. Três cards numerados 01/02/03 + Alert warning.
+// Esta unidade É DONA do único uso permitido de Lora (font-serif) na página.
+import { TriangleAlert } from "@lucide/astro";
+import { Card } from "../starwind/card";
+import { Badge } from "../starwind/badge";
+import { Alert, AlertTitle, AlertDescription } from "../starwind/alert";
+import SectionHeading from "../SectionHeading.astro";
+
+const steps = [
+  {
+    n: "01",
+    title: "Mapeie",
+    body:
+      "O package declara endpoints, schemas e o estado inicial de cada capability — quase sempre unverified_in_homologation.",
+  },
+  {
+    n: "02",
+    title: "Prove em homologação",
+    body:
+      "Rode o fluxo real no ambiente de homologação da prefeitura ou SEFAZ, com o contribuinte, até passar.",
+  },
+  {
+    n: "03",
+    title: "Marque supported",
+    body:
+      "Só então a capability vira supported no manifesto — e aparece verde na tabela.",
+  },
+] as const;
+---
+
+<section id="homologation" class="border-t border-border py-24 md:py-28">
+  <div class="sw-container">
+    <SectionHeading
+      align="center"
+      kicker="Homologação-first"
+      title="Documento fiscal é irreversível. A gente respeita isso."
+      sub="Por padrão, nada é emitido em produção. Uma capability só vira supported depois de provarmos o fluxo real em homologação com o contribuinte."
+    />
+
+    <div class="mt-12 grid gap-4 md:grid-cols-3">
+      {
+        steps.map((step, i) => (
+          <Card
+            data-reveal
+            style={`--reveal-delay:${i * 60}ms`}
+            class="flex flex-col p-6 transition hover:ring-primary/40"
+          >
+            <span class="font-mono text-sm text-primary-accent">{step.n}</span>
+            <h3 class="mt-4 font-semibold">{step.title}</h3>
+            <p class="mt-2 leading-7 text-muted-foreground">{step.body}</p>
+            <div class="mt-6 flex items-center gap-2 border-t border-border pt-4">
+              <span class="font-mono text-xs text-muted-foreground">→</span>
+              <Badge variant="success" size="sm" class="gap-1.5">
+                <span class="tri-dot bg-success"></span>
+                supported
+              </Badge>
+            </div>
+          </Card>
+        ))
+      }
+    </div>
+
+    <Alert variant="warning" data-reveal class="mt-8">
+      <AlertTitle>
+        <TriangleAlert class="size-4" />
+        NFS-e em produção é <span class="font-serif italic">definitivo</span>.
+      </AlertTitle>
+      <AlertDescription>
+        Emissão real não tem desfazer simples. O DFeKit não emite em produção por padrão; a
+        liberação é uma decisão explícita da sua aplicação.
+      </AlertDescription>
+    </Alert>
+  </div>
+</section>

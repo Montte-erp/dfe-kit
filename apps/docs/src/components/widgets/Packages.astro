@@ -1,0 +1,114 @@
+---
+// Pacotes — o catálogo como heat-map honesto.
+// Núcleo (contratos) · Municípios (12, prova real onde existe) · Estados (27 UFs, metadata-first).
+// Badge success sólido = capability provada (SAATRI 2/13); Badge outline = UF endereçável sem runtime
+// homologado. A ressalva metadata-first é texto VISÍVEL (Alert), nunca só tooltip.
+import { Building2, Info } from "@lucide/astro";
+import { Card } from "../starwind/card";
+import { Badge } from "../starwind/badge";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "../starwind/tabs";
+import { Alert, AlertTitle, AlertDescription } from "../starwind/alert";
+import SectionHeading from "../SectionHeading.astro";
+import { CORE_PACKAGES, MUNICIPALITY_PACKAGES, STATE_PACKAGES, CATALOG_STATS } from "../../data/catalog";
+import { JACOBINA_COUNTS } from "../../data/manifests";
+---
+
+<section id="packages" class="border-t border-border py-24 md:py-28">
+  <div class="sw-container">
+    <SectionHeading
+      kicker="Pacotes"
+      title="Município por município. Estado por estado."
+      sub="Cada package carrega só o manifesto, endpoints e capabilities do alvo fiscal que representa. A sua aplicação instala exatamente a prefeitura ou a UF que usa — nada de mega-package."
+    />
+
+    <Tabs defaultValue="municipios" class="mt-10">
+      <TabsList class="h-11 w-full justify-start gap-1 rounded-xl border border-border bg-card/60 p-1 sm:w-fit">
+        <TabsTrigger value="nucleo" class="rounded-lg px-4 font-mono text-xs text-muted-foreground data-[state=active]:text-foreground">
+          Núcleo
+        </TabsTrigger>
+        <TabsTrigger value="municipios" class="rounded-lg px-4 font-mono text-xs text-muted-foreground data-[state=active]:text-foreground">
+          Municípios
+        </TabsTrigger>
+        <TabsTrigger value="estados" class="rounded-lg px-4 font-mono text-xs text-muted-foreground data-[state=active]:text-foreground">
+          Estados
+        </TabsTrigger>
+      </TabsList>
+
+      <!-- Núcleo: contratos e primitivas compartilhadas -->
+      <TabsContent value="nucleo" class="mt-8">
+        <div class="grid gap-4 lg:grid-cols-2">
+          {CORE_PACKAGES.map((pkg, i) => (
+            <Card
+              data-reveal
+              style={`--reveal-delay:${i * 60}ms`}
+              class="p-6 transition hover:ring-primary/40"
+            >
+              <p class="font-mono text-sm font-semibold text-foreground">{pkg.name}</p>
+              <p class="mt-2 text-sm leading-6 text-muted-foreground">{pkg.summary}</p>
+            </Card>
+          ))}
+        </div>
+      </TabsContent>
+
+      <!-- Municípios: NFS-e por prefeitura, prova real onde existe -->
+      <TabsContent value="municipios" class="mt-8">
+        <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {MUNICIPALITY_PACKAGES.map((pkg, i) => (
+            <Card
+              data-reveal
+              style={`--reveal-delay:${i * 60}ms`}
+              class="flex flex-col gap-3 p-6 transition hover:ring-primary/40"
+            >
+              <div class="flex items-start justify-between gap-3">
+                <p class="font-mono text-sm font-semibold text-foreground">{pkg.name}</p>
+                <Building2 class="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+              </div>
+              <p class="text-xs text-muted-foreground">
+                {pkg.city} · {pkg.uf}
+              </p>
+              <div class="mt-auto flex flex-col gap-2 pt-1">
+                <div class="flex items-center justify-between gap-3">
+                  <span class="text-xs text-muted-foreground">{pkg.standard}</span>
+                  {pkg.metadataFirst ? (
+                    <Badge variant="warning" size="sm" class="font-mono">metadata-first</Badge>
+                  ) : (
+                    <Badge variant="success" size="sm" class="font-mono">{pkg.supportSummary}</Badge>
+                  )}
+                </div>
+                {!pkg.metadataFirst && (
+                  <p class="font-mono text-[11px] leading-5 text-muted-foreground">
+                    {JACOBINA_COUNTS.supported} supported · {JACOBINA_COUNTS.unverified_in_homologation} unverified
+                    · {JACOBINA_COUNTS.unsupported} unsupported
+                  </p>
+                )}
+              </div>
+            </Card>
+          ))}
+        </div>
+      </TabsContent>
+
+      <!-- Estados: 27 UFs SEFAZ, escopo endereçável (metadata-first) -->
+      <TabsContent value="estados" class="mt-8">
+        <div data-reveal class="flex flex-wrap gap-2">
+          {STATE_PACKAGES.map((pkg) => (
+            <Badge variant="outline" size="sm" class="gap-1.5">
+              <span class="font-mono">{pkg.uf}</span>
+              <span class="text-muted-foreground">{pkg.state}</span>
+            </Badge>
+          ))}
+        </div>
+
+        <Alert variant="info" class="mt-6" data-reveal>
+          <AlertTitle>
+            <Info />
+            metadata-first
+          </AlertTitle>
+          <AlertDescription>
+            Os {CATALOG_STATS.states} packages @dfe-kit/sefaz-&lt;uf&gt; expõem manifesto e endpoints; o runtime
+            homologado por UF ainda está em aberto. {CATALOG_STATS.states} UFs é escopo endereçável, não cobertura entregue.
+          </AlertDescription>
+        </Alert>
+      </TabsContent>
+    </Tabs>
+  </div>
+</section>

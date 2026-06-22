@@ -1,0 +1,131 @@
+---
+// Features bento — centro visual da landing. Bento assimétrico numerado 01–06
+// (ritmo better-auth, estética hairline). O card 02 demonstra literalmente o
+// vocabulário tri-state renderizando o TriLegend; o card 05 mostra a borda
+// explícita (app → hook → provider) onde certificado/assinatura ficam FORA do kit.
+import { Zap, ShieldCheck, Building2, Landmark, Layers, Blocks } from "@lucide/astro";
+import { Card } from "../starwind/card";
+import SectionHeading from "../SectionHeading.astro";
+import TriLegend from "../TriLegend.astro";
+---
+
+<section id="features" class="border-t border-border py-24 md:py-28">
+  <div class="sw-container">
+    <SectionHeading
+      kicker="Arquitetura"
+      title="Seis garantias, todas verificáveis."
+      sub="O core fala em documento fiscal. Os adapters traduzem prefeitura, NFS-e Nacional e SEFAZ. Cada capability é declarada — supported, unverified_in_homologation ou unsupported."
+    />
+
+    <div class="mt-12 grid auto-rows-[minmax(13rem,auto)] gap-4 md:grid-cols-3">
+      <!-- 01 · wide -->
+      <Card
+        class="p-6 transition hover:ring-primary/40 md:col-span-2"
+        data-reveal
+        style={`--reveal-delay:0ms`}
+      >
+        <div class="flex items-start justify-between">
+          <span class="font-mono text-sm text-primary-accent">01</span>
+          <Zap class="size-5 text-muted-foreground" />
+        </div>
+        <h3 class="mt-4 font-semibold">Effect-native</h3>
+        <p class="mt-2 text-sm leading-7 text-muted-foreground">
+          Toda operação retorna <code class="font-mono text-foreground">Effect.Effect</code> com entrada, saída e
+          falhas tipadas.
+        </p>
+        <p class="mt-4 font-mono text-xs leading-6 text-muted-foreground">
+          <span class="text-foreground">issue(input)</span>: Effect.Effect&lt;Response, FiscalProviderError&gt;
+        </p>
+      </Card>
+
+      <!-- 02 · tall (vocabulário tri-state ao vivo) -->
+      <Card
+        class="flex flex-col p-6 transition hover:ring-primary/40 md:row-span-2"
+        data-reveal
+        style={`--reveal-delay:60ms`}
+      >
+        <div class="flex items-start justify-between">
+          <span class="font-mono text-sm text-primary-accent">02</span>
+          <ShieldCheck class="size-5 text-muted-foreground" />
+        </div>
+        <h3 class="mt-4 font-semibold">Capabilities auditáveis</h3>
+        <p class="mt-2 text-sm leading-7 text-muted-foreground">
+          O manifesto declara cada estado com motivo. Nada de suporte inventado.
+        </p>
+        <TriLegend variant="full" class="mt-6 flex-col items-start gap-2" />
+      </Card>
+
+      <!-- 03 · 1x1 -->
+      <Card
+        class="p-6 transition hover:ring-primary/40"
+        data-reveal
+        style={`--reveal-delay:120ms`}
+      >
+        <div class="flex items-start justify-between">
+          <span class="font-mono text-sm text-primary-accent">03</span>
+          <Building2 class="size-5 text-muted-foreground" />
+        </div>
+        <h3 class="mt-4 font-semibold">Por município</h3>
+        <p class="mt-2 text-sm leading-7 text-muted-foreground">
+          Um package por prefeitura SAATRI/ABRASF. A app instala só a cidade que usa.
+        </p>
+      </Card>
+
+      <!-- 04 · 1x1 -->
+      <Card
+        class="p-6 transition hover:ring-primary/40"
+        data-reveal
+        style={`--reveal-delay:180ms`}
+      >
+        <div class="flex items-start justify-between">
+          <span class="font-mono text-sm text-primary-accent">04</span>
+          <Landmark class="size-5 text-muted-foreground" />
+        </div>
+        <h3 class="mt-4 font-semibold">Por UF</h3>
+        <p class="mt-2 text-sm leading-7 text-muted-foreground">
+          <code class="font-mono text-foreground">@dfe-kit/sefaz-&lt;uf&gt;</code> para NF-e e NFC-e modelo 55/65,
+          metadata-first até runtime homologado.
+        </p>
+      </Card>
+
+      <!-- 05 · wide (diagrama de borda app → hook → provider) -->
+      <Card
+        class="p-6 transition hover:ring-primary/40 md:col-span-2"
+        data-reveal
+        style={`--reveal-delay:240ms`}
+      >
+        <div class="flex items-start justify-between">
+          <span class="font-mono text-sm text-primary-accent">05</span>
+          <Layers class="size-5 text-muted-foreground" />
+        </div>
+        <h3 class="mt-4 font-semibold">Borda explícita</h3>
+        <p class="mt-2 text-sm leading-7 text-muted-foreground">
+          Certificado ICP-Brasil, mTLS e XML assinado ficam fora do DFeKit, injetados por hook.
+        </p>
+        <div class="mt-4 flex flex-wrap items-center gap-2 font-mono text-xs">
+          <span class="rounded-md bg-secondary px-2.5 py-1 text-foreground">app</span>
+          <span class="text-primary-accent" aria-hidden="true">→</span>
+          <span class="rounded-md bg-secondary px-2.5 py-1 text-foreground">hook (assina · mTLS)</span>
+          <span class="text-primary-accent" aria-hidden="true">→</span>
+          <span class="rounded-md bg-secondary px-2.5 py-1 text-foreground">provider</span>
+        </div>
+      </Card>
+
+      <!-- 06 · 1x1 -->
+      <Card
+        class="p-6 transition hover:ring-primary/40"
+        data-reveal
+        style={`--reveal-delay:300ms`}
+      >
+        <div class="flex items-start justify-between">
+          <span class="font-mono text-sm text-primary-accent">06</span>
+          <Blocks class="size-5 text-muted-foreground" />
+        </div>
+        <h3 class="mt-4 font-semibold">Adapters reutilizáveis</h3>
+        <p class="mt-2 text-sm leading-7 text-muted-foreground">
+          Engines SAATRI e SEFAZ inlinados nos packages publicados.
+        </p>
+      </Card>
+    </div>
+  </div>
+</section>

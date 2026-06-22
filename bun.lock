@@ -16,6 +16,15 @@
         "vitest": "^3",
       },
     },
+    "adapters/nfse": {
+      "name": "@dfe-kit/adapter-nfse",
+      "version": "0.0.0",
+      "dependencies": {
+        "@dfe-kit/fiscal": "workspace:*",
+        "@dfe-kit/xml": "workspace:*",
+        "effect": "4.0.0-beta.81",
+      },
+    },
     "adapters/saatri": {
       "name": "@dfe-kit/adapter-saatri",
       "version": "0.0.0",
@@ -36,22 +45,16 @@
         "effect": "4.0.0-beta.81",
       },
     },
-    "core/fiscal": {
-      "name": "@dfe-kit/fiscal",
-      "version": "0.0.0",
-      "dependencies": {
-        "effect": "4.0.0-beta.81",
-      },
-    },
-    "core/xml": {
-      "name": "@dfe-kit/xml",
-      "version": "0.0.0",
-    },
-    "docs": {
+    "apps/docs": {
       "name": "@dfe-kit/docs",
       "version": "0.0.0",
       "dependencies": {
+        "@fontsource-variable/geist": "^5.2.9",
+        "@fontsource-variable/geist-mono": "^5.2.8",
+        "@fontsource-variable/lora": "^5.2.8",
+        "@fontsource-variable/plus-jakarta-sans": "^5.2.8",
         "@fontsource-variable/sora": "^5.2.8",
+        "@fontsource/ibm-plex-mono": "^5.2.7",
         "@lucide/astro": "^1.21.0",
         "@tailwindcss/forms": "^0.5.11",
         "@tailwindcss/vite": "^4.3.1",
@@ -64,8 +67,20 @@
       },
       "devDependencies": {
         "@astrojs/check": "^0.9.9",
+        "@tabler/icons": "^3.44.0",
         "@tailwindcss/typography": "^0.5.20",
       },
+    },
+    "core/fiscal": {
+      "name": "@dfe-kit/fiscal",
+      "version": "0.0.0",
+      "dependencies": {
+        "effect": "4.0.0-beta.81",
+      },
+    },
+    "core/xml": {
+      "name": "@dfe-kit/xml",
+      "version": "0.0.0",
     },
     "packages/amargosa-saatri": {
       "name": "@dfe-kit/amargosa-saatri",
@@ -129,8 +144,8 @@
         "effect": "4.0.0-beta.81",
       },
       "devDependencies": {
+        "@dfe-kit/adapter-nfse": "workspace:*",
         "@dfe-kit/fiscal": "workspace:*",
-        "@dfe-kit/provider-nfse": "workspace:*",
       },
     },
     "packages/morro-do-chapeu-saatri": {
@@ -153,17 +168,6 @@
       "devDependencies": {
         "@dfe-kit/adapter-saatri": "workspace:*",
         "@dfe-kit/fiscal": "workspace:*",
-      },
-    },
-    "packages/provider-nfse": {
-      "name": "@dfe-kit/provider-nfse",
-      "version": "0.1.0",
-      "dependencies": {
-        "effect": "4.0.0-beta.81",
-      },
-      "devDependencies": {
-        "@dfe-kit/fiscal": "workspace:*",
-        "@dfe-kit/xml": "workspace:*",
       },
     },
     "packages/provider-saatri": {
@@ -573,6 +577,8 @@
 
     "@clack/prompts": ["@clack/prompts@1.6.0", "", { "dependencies": { "@clack/core": "1.4.2", "fast-string-width": "^3.0.2", "fast-wrap-ansi": "^0.2.0", "sisteransi": "^1.0.5" } }, "sha512-EYlRokl8szrP9Z25qT5aepMdBjzBvHF9ZEhzIiUBc9guz/T31EqRgvD0QSgZcpE93xiwrr+OkB4nz0BZyF6fSA=="],
 
+    "@dfe-kit/adapter-nfse": ["@dfe-kit/adapter-nfse@workspace:adapters/nfse"],
+
     "@dfe-kit/adapter-saatri": ["@dfe-kit/adapter-saatri@workspace:adapters/saatri"],
 
     "@dfe-kit/adapter-sefaz": ["@dfe-kit/adapter-sefaz@workspace:adapters/sefaz"],
@@ -581,7 +587,7 @@
 
     "@dfe-kit/boavista-saatri": ["@dfe-kit/boavista-saatri@workspace:packages/boavista-saatri"],
 
-    "@dfe-kit/docs": ["@dfe-kit/docs@workspace:docs"],
+    "@dfe-kit/docs": ["@dfe-kit/docs@workspace:apps/docs"],
 
     "@dfe-kit/fiscal": ["@dfe-kit/fiscal@workspace:core/fiscal"],
 
@@ -596,8 +602,6 @@
     "@dfe-kit/morro-do-chapeu-saatri": ["@dfe-kit/morro-do-chapeu-saatri@workspace:packages/morro-do-chapeu-saatri"],
 
     "@dfe-kit/pojuca-saatri": ["@dfe-kit/pojuca-saatri@workspace:packages/pojuca-saatri"],
-
-    "@dfe-kit/provider-nfse": ["@dfe-kit/provider-nfse@workspace:packages/provider-nfse"],
 
     "@dfe-kit/provider-saatri": ["@dfe-kit/provider-saatri@workspace:packages/provider-saatri"],
 
@@ -739,7 +743,17 @@
 
     "@esbuild/win32-x64": ["@esbuild/win32-x64@0.27.7", "", { "os": "win32", "cpu": "x64" }, "sha512-56hiAJPhwQ1R4i+21FVF7V8kSD5zZTdHcVuRFMW0hn753vVfQN8xlx4uOPT4xoGH0Z/oVATuR82AiqSTDIpaHg=="],
 
+    "@fontsource-variable/geist": ["@fontsource-variable/geist@5.2.9", "", {}, "sha512-TP+QSBG3wxKGPE33CbMy/L0Nu3qvJ6Fy81Yc4LnQ95xH+i+cfEp8fyU8/kfV14YwszxIFPhnoMTbjL71waVpyQ=="],
+
+    "@fontsource-variable/geist-mono": ["@fontsource-variable/geist-mono@5.2.8", "", {}, "sha512-KI5bj+hkkRiHttYHmccotUZ80ZuZyai+RwI1d7UId0clkx/jXxlo8qYK8j54WzmpBjtMoEMPyllV7faDcj+6RA=="],
+
+    "@fontsource-variable/lora": ["@fontsource-variable/lora@5.2.8", "", {}, "sha512-cxjTJ9BbOWIzusewR4UMBLVePvTSWV6dtNaNsCkF/oKoyA68fJGWfaYCILOOP1BObE4dmjfZ3xo6m9hdHhtYhg=="],
+
+    "@fontsource-variable/plus-jakarta-sans": ["@fontsource-variable/plus-jakarta-sans@5.2.8", "", {}, "sha512-iQecBizIdZxezODNHzOn4SvvRMrZL/S8k4MEXGDynCmUrImVW0VmX+tIAMqnADwH4haXlHSXqMgU6+kcfBQJdw=="],
+
     "@fontsource-variable/sora": ["@fontsource-variable/sora@5.2.8", "", {}, "sha512-sP+ILTfi5r3cqmMBntI4ooQNxFI+LyHyD5hcPbWwwL4uh4kKFAkOz0w2veCXjz18fKRdva6OG0dY+5yQ02f30w=="],
+
+    "@fontsource/ibm-plex-mono": ["@fontsource/ibm-plex-mono@5.2.7", "", {}, "sha512-MKAb8qV+CaiMQn2B0dIi1OV3565NYzp3WN5b4oT6LTkk+F0jR6j0ZN+5BKJiIhffDC3rtBULsYZE65+0018z9w=="],
 
     "@img/colour": ["@img/colour@1.1.0", "", {}, "sha512-Td76q7j57o/tLVdgS746cYARfSyxk8iEfRxewL9h4OMzYhbW4TAcppl0mT4eyqXddh6L/jwoM75mo7ixa/pCeQ=="],
 
@@ -1086,6 +1100,8 @@
     "@shikijs/vscode-textmate": ["@shikijs/vscode-textmate@10.0.2", "", {}, "sha512-83yeghZ2xxin3Nj8z1NMd/NCuca+gsYXswywDy5bHvwlWL8tpTQmzGeUuHd9FC3E/SBEMvzJRwWEOz5gGes9Qg=="],
 
     "@standard-schema/spec": ["@standard-schema/spec@1.1.0", "", {}, "sha512-l2aFy5jALhniG5HgqrD6jXLi/rUWrKvqN/qJx6yoJsgKhblVd+iqqU4RCXavm/jPityDo5TCvKMnpjKnOriy0w=="],
+
+    "@tabler/icons": ["@tabler/icons@3.44.0", "", {}, "sha512-Wn0AOZG9sg0L+bjfMqq4eNhC6pQjIrk94LvvWYNYkY8KH8wC3YILRzQlrnVJc4FUeMxH/AK97QsYCX35H3LndA=="],
 
     "@tailwindcss/forms": ["@tailwindcss/forms@0.5.11", "", { "dependencies": { "mini-svg-data-uri": "^1.2.3" }, "peerDependencies": { "tailwindcss": ">=3.0.0 || >= 3.0.0-alpha.1 || >= 4.0.0-alpha.20 || >= 4.0.0-beta.1" } }, "sha512-h9wegbZDPurxG22xZSoWtdzc41/OlNEUQERNqI/0fOwa2aVlWGu7C35E/x6LDyD3lgtztFSSjKZyuVM0hxhbgA=="],
 
