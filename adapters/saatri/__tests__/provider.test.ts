@@ -23,7 +23,7 @@ const credentials: SaatriCredentials = {
 const config: SaatriEnvironmentConfig = {
   environment: "homologation",
   endpoint: "https://example-saatri.test/nfse.svc",
-  cityCode: "2917706",
+  cityCode: "2917508",
 };
 
 const input: IssueFiscalDocumentInput = {
@@ -40,7 +40,7 @@ const input: IssueFiscalDocumentInput = {
       street: "Rua Teste",
       number: "100",
       district: "Centro",
-      cityCode: "2917706",
+      cityCode: "2917508",
       city: "Jacobina",
       state: "BA",
       postalCode: "44700000",
@@ -54,7 +54,7 @@ const input: IssueFiscalDocumentInput = {
       street: "Rua Cliente",
       number: "200",
       district: "Centro",
-      cityCode: "2917706",
+      cityCode: "2917508",
       city: "Jacobina",
       state: "BA",
       postalCode: "44700000",
@@ -77,7 +77,7 @@ describe("createSaatriProvider", () => {
       const decoded = Schema.decodeUnknownEffect(saatriEnvironmentConfigSchema)({
         environment: "homologation",
         endpoint: "https://example.test/nfse.svc",
-        cityCode: "2917706",
+        cityCode: "2917508",
       });
 
       const exit = yield* Effect.exit(decoded);

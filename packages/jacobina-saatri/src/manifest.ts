@@ -27,12 +27,12 @@ type JacobinaSaatriProviderConfig = {
 const JacobinaSaatriIdentityValue: JacobinaSaatriIdentity = {
   providerId: "jacobina-saatri",
   providerName: "SAATRI Jacobina-BA (NFS-e ABRASF 2.03)",
-  cityCode: "2917706",
+  cityCode: "2917508",
 } satisfies Record<string, string>;
 
 const JacobinaSaatriEndpointValue: JacobinaSaatriEndpoints = {
-  homologation: "https://homologa-homologa-jacobina.saatri.com.br/servicos/nfse.svc",
-  production: "https://homologa-jacobina.saatri.com.br/servicos/nfse.svc",
+  homologation: "https://homologa-jacobina.saatri.com.br/servicos/nfse.svc",
+  production: "https://jacobina.saatri.com.br/servicos/nfse.svc",
 } satisfies Record<string, string>;
 
 export const SAATRI_JACOBINA_HOMOLOGATION_ENDPOINT: string =

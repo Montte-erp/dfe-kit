@@ -1,0 +1,27 @@
+export {
+  createSaoDesiderioSaatriProvider,
+  createSaoDesiderioSaatriProviderLayer,
+  createSaoDesiderioSaatriProviderWithHttpService,
+  SAO_DESIDERIO_CITY_CODE,
+  SAO_DESIDERIO_SAATRI_PROVIDER_CONFIG,
+  saoDesiderioSaatriManifest,
+  SAATRI_ABRASF_VERSION,
+  SAATRI_SAO_DESIDERIO_HOMOLOGATION_ENDPOINT,
+  SAATRI_SAO_DESIDERIO_PRODUCTION_ENDPOINT,
+} from "./index";
+export type {
+  CreateSaatriPackageProviderOptions,
+  FiscalProvider,
+  FiscalProviderManifest,
+  GerarNfseSigner,
+  SaatriCredentials,
+  SaatriEnvironmentConfig,
+  SaatriEvent,
+  SaatriEventName,
+  SaatriEventSink,
+  SaatriProviderError,
+  SaatriProviderErrorCode,
+  SaatriProviderPackageConfig,
+  SaatriProviderWithHttpService,
+  SaatriSoapHeader,
+} from "./index";

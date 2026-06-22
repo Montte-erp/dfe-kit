@@ -15,7 +15,7 @@ const credentials: SaatriCredentials = {
 const config: SaatriEnvironmentConfig = {
   environment: "homologation",
   endpoint: "https://homologa-jacobina.saatri.com.br/Servicos/nfse.svc",
-  cityCode: "2917706",
+  cityCode: "2917508",
 };
 
 const sampleInput: IssueFiscalDocumentInput = {
@@ -32,7 +32,7 @@ const sampleInput: IssueFiscalDocumentInput = {
       street: "Rua Teste",
       number: "100",
       district: "Centro",
-      cityCode: "2917706",
+      cityCode: "2917508",
       city: "Jacobina",
       state: "BA",
       postalCode: "44700000",
@@ -46,7 +46,7 @@ const sampleInput: IssueFiscalDocumentInput = {
       street: "Rua Cliente",
       number: "200",
       district: "Centro",
-      cityCode: "2917706",
+      cityCode: "2917508",
       city: "Jacobina",
       state: "BA",
       postalCode: "44700000",

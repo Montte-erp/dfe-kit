@@ -1,4 +1,4 @@
-import type { IssueFiscalDocumentInput } from "@dfe-kit/fiscal";
+import type { IssueFiscalDocumentInput, ServiceItem } from "@dfe-kit/fiscal";
 import { escapeXmlText } from "@dfe-kit/xml";
 import dayjs from "dayjs";
 import { Effect, Redacted, Schema } from "effect";
@@ -42,6 +42,10 @@ export const SOAP_ACTION_GERAR_NFSE = "http://nfse.abrasf.org.br/Infse/GerarNfse
 const CABECALHO_INNER = `<cabecalho xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="http://www.abrasf.org.br/nfse.xsd" versao="${SAATRI_CABECALHO_VERSION}"><versaoDados>${SAATRI_ABRASF_VERSION}</versaoDados></cabecalho>`;
 
 const SAATRI_SERVICE_DESCRIPTION_SEPARATOR = " | ";
+
+export type GerarNfseIssuePayload = IssueFiscalDocumentInput & {
+  readonly services: readonly ServiceItem[];
+};
 
 type BuildGerarNfseEnvelopeOptionsInput = {
   readonly signer?: unknown | undefined;
@@ -96,7 +100,7 @@ const sumMoneyValues = (amounts: readonly string[]): string => {
  *   OptanteSimplesNacional=2 (nao optante), IncentivoFiscal=2 (nao), Status=1.
  */
 const buildGerarNfseEnvio = (
-  input: IssueFiscalDocumentInput,
+  input: GerarNfseIssuePayload,
   credentials: SaatriCredentials,
   config: SaatriEnvironmentConfig,
 ): Effect.Effect<string, SaatriProviderError> =>
@@ -187,7 +191,7 @@ const wrapEnvelope = (dados: string, credentials: SaatriCredentials): string => 
  * pode falhar no canal de erro do Effect — nesse caso o erro tecnico e propagado.
  */
 export const buildGerarNfseEnvelope = (
-  input: IssueFiscalDocumentInput,
+  input: GerarNfseIssuePayload,
   credentials: SaatriCredentials,
   config: SaatriEnvironmentConfig,
   opts: BuildGerarNfseEnvelopeOptions = {},

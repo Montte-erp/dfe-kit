@@ -347,6 +347,27 @@ export const serviceItemSchema: Schema.Decoder<ServiceItem> = Schema.Struct({
   taxable: Schema.Boolean,
 });
 
+export type ProductItem = {
+  readonly description: string;
+  readonly cfop: string;
+  readonly ncm: string;
+  readonly quantity: string;
+  readonly unit: string;
+  readonly unitAmount: string;
+  readonly totalAmount: string;
+  readonly taxable: boolean;
+};
+export const productItemSchema: Schema.Decoder<ProductItem> = Schema.Struct({
+  description: nonEmptyString,
+  cfop: Schema.String.check(Schema.isPattern(/^\d{4}$/)),
+  ncm: Schema.String.check(Schema.isPattern(/^\d{8}$/)),
+  quantity: Schema.String.check(Schema.isPattern(/^\d+(\.\d{1,4})?$/)),
+  unit: nonEmptyString,
+  unitAmount: money,
+  totalAmount: money,
+  taxable: Schema.Boolean,
+});
+
 export type FiscalDocumentRef = {
   readonly documentKind: FiscalDocumentKindValue;
   readonly providerId: string;
@@ -451,7 +472,8 @@ export type IssueFiscalDocumentInput = {
   readonly documentKind: FiscalDocumentKindValue;
   readonly issuer: TaxParty;
   readonly customer: TaxParty;
-  readonly services: readonly ServiceItem[];
+  readonly services?: readonly ServiceItem[] | undefined;
+  readonly products?: readonly ProductItem[] | undefined;
   readonly series: string;
   readonly number: string;
   readonly issuedAt: string;
@@ -462,8 +484,19 @@ export const issueFiscalDocumentInputSchema: Schema.Decoder<IssueFiscalDocumentI
     documentKind: fiscalDocumentKindSchema,
     issuer: taxPartySchema,
     customer: taxPartySchema,
-    services: Schema.Array(serviceItemSchema).check(Schema.isMinLength(1)),
+    services: Schema.optional(Schema.Array(serviceItemSchema).check(Schema.isMinLength(1))),
+    products: Schema.optional(Schema.Array(productItemSchema).check(Schema.isMinLength(1))),
     series: nonEmptyString,
     number: nonEmptyString,
     issuedAt: isoDateTime,
-  });
+  }).check(
+    Schema.makeFilter(
+      (input) =>
+        input.documentKind === FiscalDocumentKindValue.nfse
+          ? input.services !== undefined
+          : input.products !== undefined,
+      {
+        expected: "NFS-e deve informar services[]; NF-e/NFC-e devem informar products[].",
+      },
+    ),
+  );

@@ -1,4 +1,4 @@
-import type { Effect } from "effect";
+import { Context, type Effect } from "effect";
 import {
   fiscalAddressSchema,
   fiscalArtifactKindSchema,
@@ -16,6 +16,7 @@ import {
   issueFiscalDocumentInputSchema,
   issueFiscalDocumentResponseSchema,
   providerResponseSchema,
+  productItemSchema,
   serviceItemSchema,
   taxPartySchema,
 } from "./schemas";
@@ -80,6 +81,7 @@ export type FiscalAddress = (typeof fiscalAddressSchema)["Type"];
 export type TaxParty = (typeof taxPartySchema)["Type"];
 
 export type ServiceItem = (typeof serviceItemSchema)["Type"];
+export type ProductItem = (typeof productItemSchema)["Type"];
 
 export type FiscalDocumentRef = (typeof fiscalDocumentRefSchema)["Type"];
 
@@ -103,3 +105,6 @@ export type FiscalProvider = {
     input: IssueFiscalDocumentInput,
   ): Effect.Effect<IssueFiscalDocumentResponse, FiscalProviderError>;
 };
+
+export const FiscalProviderService: Context.Service<FiscalProvider, FiscalProvider> =
+  Context.Service<FiscalProvider>("dfe-kit/fiscal/FiscalProvider");

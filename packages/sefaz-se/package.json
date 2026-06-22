@@ -1,0 +1,55 @@
+{
+  "name": "@dfe-kit/sefaz-se",
+  "version": "0.1.0",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Montte-erp/dfe-kit.git",
+    "directory": "packages/sefaz-se"
+  },
+  "files": [
+    "dist",
+    "CHANGELOG.md"
+  ],
+  "type": "module",
+  "sideEffects": false,
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./manifest": {
+      "types": "./dist/manifest.d.ts",
+      "import": "./dist/manifest.js"
+    }
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "bunup",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run ./__tests__",
+    "publint": "publint --strict",
+    "publish:npm": "bun run build && bun run publint && npm publish --access public --provenance",
+    "publish:npm:dry": "bun run build && bun run publint && npm publish --access public --provenance --dry-run"
+  },
+  "dependencies": {
+    "effect": "4.0.0-beta.81"
+  },
+  "devDependencies": {
+    "@dfe-kit/adapter-sefaz": "workspace:*",
+    "@dfe-kit/fiscal": "workspace:*"
+  },
+  "nx": {
+    "tags": [
+      "scope:provider"
+    ],
+    "implicitDependencies": [
+      "@dfe-kit/adapter-sefaz",
+      "@dfe-kit/fiscal"
+    ]
+  }
+}

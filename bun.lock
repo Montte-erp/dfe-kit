@@ -27,6 +27,15 @@
         "fast-xml-parser": "^4.5.6",
       },
     },
+    "adapters/sefaz": {
+      "name": "@dfe-kit/adapter-sefaz",
+      "version": "0.0.0",
+      "dependencies": {
+        "@dfe-kit/fiscal": "workspace:*",
+        "@dfe-kit/xml": "workspace:*",
+        "effect": "4.0.0-beta.81",
+      },
+    },
     "core/fiscal": {
       "name": "@dfe-kit/fiscal",
       "version": "0.0.0",
@@ -38,8 +47,448 @@
       "name": "@dfe-kit/xml",
       "version": "0.0.0",
     },
+    "packages/amargosa-saatri": {
+      "name": "@dfe-kit/amargosa-saatri",
+      "version": "0.1.0",
+      "dependencies": {
+        "effect": "4.0.0-beta.81",
+      },
+      "devDependencies": {
+        "@dfe-kit/adapter-saatri": "workspace:*",
+        "@dfe-kit/fiscal": "workspace:*",
+      },
+    },
+    "packages/boavista-saatri": {
+      "name": "@dfe-kit/boavista-saatri",
+      "version": "0.1.0",
+      "dependencies": {
+        "effect": "4.0.0-beta.81",
+      },
+      "devDependencies": {
+        "@dfe-kit/adapter-saatri": "workspace:*",
+        "@dfe-kit/fiscal": "workspace:*",
+      },
+    },
+    "packages/ipira-saatri": {
+      "name": "@dfe-kit/ipira-saatri",
+      "version": "0.1.0",
+      "dependencies": {
+        "effect": "4.0.0-beta.81",
+      },
+      "devDependencies": {
+        "@dfe-kit/adapter-saatri": "workspace:*",
+        "@dfe-kit/fiscal": "workspace:*",
+      },
+    },
+    "packages/itaberaba-saatri": {
+      "name": "@dfe-kit/itaberaba-saatri",
+      "version": "0.1.0",
+      "dependencies": {
+        "effect": "4.0.0-beta.81",
+      },
+      "devDependencies": {
+        "@dfe-kit/adapter-saatri": "workspace:*",
+        "@dfe-kit/fiscal": "workspace:*",
+      },
+    },
     "packages/jacobina-saatri": {
       "name": "@dfe-kit/jacobina-saatri",
+      "version": "0.1.1",
+      "dependencies": {
+        "effect": "4.0.0-beta.81",
+      },
+      "devDependencies": {
+        "@dfe-kit/adapter-saatri": "workspace:*",
+        "@dfe-kit/fiscal": "workspace:*",
+      },
+    },
+    "packages/juiz-de-fora-nfse": {
+      "name": "@dfe-kit/juiz-de-fora-nfse",
+      "version": "0.1.0",
+      "dependencies": {
+        "effect": "4.0.0-beta.81",
+      },
+      "devDependencies": {
+        "@dfe-kit/fiscal": "workspace:*",
+        "@dfe-kit/provider-nfse": "workspace:*",
+      },
+    },
+    "packages/morro-do-chapeu-saatri": {
+      "name": "@dfe-kit/morro-do-chapeu-saatri",
+      "version": "0.1.0",
+      "dependencies": {
+        "effect": "4.0.0-beta.81",
+      },
+      "devDependencies": {
+        "@dfe-kit/adapter-saatri": "workspace:*",
+        "@dfe-kit/fiscal": "workspace:*",
+      },
+    },
+    "packages/pojuca-saatri": {
+      "name": "@dfe-kit/pojuca-saatri",
+      "version": "0.1.0",
+      "dependencies": {
+        "effect": "4.0.0-beta.81",
+      },
+      "devDependencies": {
+        "@dfe-kit/adapter-saatri": "workspace:*",
+        "@dfe-kit/fiscal": "workspace:*",
+      },
+    },
+    "packages/provider-nfse": {
+      "name": "@dfe-kit/provider-nfse",
+      "version": "0.1.0",
+      "dependencies": {
+        "effect": "4.0.0-beta.81",
+      },
+      "devDependencies": {
+        "@dfe-kit/fiscal": "workspace:*",
+        "@dfe-kit/xml": "workspace:*",
+      },
+    },
+    "packages/provider-saatri": {
+      "name": "@dfe-kit/provider-saatri",
+      "version": "0.0.0",
+      "dependencies": {
+        "effect": "4.0.0-beta.81",
+      },
+      "devDependencies": {
+        "@dfe-kit/adapter-saatri": "workspace:*",
+        "@dfe-kit/fiscal": "workspace:*",
+      },
+    },
+    "packages/sao-desiderio-saatri": {
+      "name": "@dfe-kit/sao-desiderio-saatri",
+      "version": "0.1.0",
+      "dependencies": {
+        "effect": "4.0.0-beta.81",
+      },
+      "devDependencies": {
+        "@dfe-kit/adapter-saatri": "workspace:*",
+        "@dfe-kit/fiscal": "workspace:*",
+      },
+    },
+    "packages/sao-francisco-do-conde-saatri": {
+      "name": "@dfe-kit/sao-francisco-do-conde-saatri",
+      "version": "0.1.0",
+      "dependencies": {
+        "effect": "4.0.0-beta.81",
+      },
+      "devDependencies": {
+        "@dfe-kit/adapter-saatri": "workspace:*",
+        "@dfe-kit/fiscal": "workspace:*",
+      },
+    },
+    "packages/sefaz-ac": {
+      "name": "@dfe-kit/sefaz-ac",
+      "version": "0.1.0",
+      "dependencies": {
+        "effect": "4.0.0-beta.81",
+      },
+      "devDependencies": {
+        "@dfe-kit/adapter-sefaz": "workspace:*",
+        "@dfe-kit/fiscal": "workspace:*",
+      },
+    },
+    "packages/sefaz-al": {
+      "name": "@dfe-kit/sefaz-al",
+      "version": "0.1.0",
+      "dependencies": {
+        "effect": "4.0.0-beta.81",
+      },
+      "devDependencies": {
+        "@dfe-kit/adapter-sefaz": "workspace:*",
+        "@dfe-kit/fiscal": "workspace:*",
+      },
+    },
+    "packages/sefaz-am": {
+      "name": "@dfe-kit/sefaz-am",
+      "version": "0.1.0",
+      "dependencies": {
+        "effect": "4.0.0-beta.81",
+      },
+      "devDependencies": {
+        "@dfe-kit/adapter-sefaz": "workspace:*",
+        "@dfe-kit/fiscal": "workspace:*",
+      },
+    },
+    "packages/sefaz-ap": {
+      "name": "@dfe-kit/sefaz-ap",
+      "version": "0.1.0",
+      "dependencies": {
+        "effect": "4.0.0-beta.81",
+      },
+      "devDependencies": {
+        "@dfe-kit/adapter-sefaz": "workspace:*",
+        "@dfe-kit/fiscal": "workspace:*",
+      },
+    },
+    "packages/sefaz-ba": {
+      "name": "@dfe-kit/sefaz-ba",
+      "version": "0.1.0",
+      "dependencies": {
+        "effect": "4.0.0-beta.81",
+      },
+      "devDependencies": {
+        "@dfe-kit/adapter-sefaz": "workspace:*",
+        "@dfe-kit/fiscal": "workspace:*",
+      },
+    },
+    "packages/sefaz-ce": {
+      "name": "@dfe-kit/sefaz-ce",
+      "version": "0.1.0",
+      "dependencies": {
+        "effect": "4.0.0-beta.81",
+      },
+      "devDependencies": {
+        "@dfe-kit/adapter-sefaz": "workspace:*",
+        "@dfe-kit/fiscal": "workspace:*",
+      },
+    },
+    "packages/sefaz-df": {
+      "name": "@dfe-kit/sefaz-df",
+      "version": "0.1.0",
+      "dependencies": {
+        "effect": "4.0.0-beta.81",
+      },
+      "devDependencies": {
+        "@dfe-kit/adapter-sefaz": "workspace:*",
+        "@dfe-kit/fiscal": "workspace:*",
+      },
+    },
+    "packages/sefaz-es": {
+      "name": "@dfe-kit/sefaz-es",
+      "version": "0.1.0",
+      "dependencies": {
+        "effect": "4.0.0-beta.81",
+      },
+      "devDependencies": {
+        "@dfe-kit/adapter-sefaz": "workspace:*",
+        "@dfe-kit/fiscal": "workspace:*",
+      },
+    },
+    "packages/sefaz-go": {
+      "name": "@dfe-kit/sefaz-go",
+      "version": "0.1.0",
+      "dependencies": {
+        "effect": "4.0.0-beta.81",
+      },
+      "devDependencies": {
+        "@dfe-kit/adapter-sefaz": "workspace:*",
+        "@dfe-kit/fiscal": "workspace:*",
+      },
+    },
+    "packages/sefaz-ma": {
+      "name": "@dfe-kit/sefaz-ma",
+      "version": "0.1.0",
+      "dependencies": {
+        "effect": "4.0.0-beta.81",
+      },
+      "devDependencies": {
+        "@dfe-kit/adapter-sefaz": "workspace:*",
+        "@dfe-kit/fiscal": "workspace:*",
+      },
+    },
+    "packages/sefaz-mg": {
+      "name": "@dfe-kit/sefaz-mg",
+      "version": "0.1.0",
+      "dependencies": {
+        "effect": "4.0.0-beta.81",
+      },
+      "devDependencies": {
+        "@dfe-kit/adapter-sefaz": "workspace:*",
+        "@dfe-kit/fiscal": "workspace:*",
+      },
+    },
+    "packages/sefaz-ms": {
+      "name": "@dfe-kit/sefaz-ms",
+      "version": "0.1.0",
+      "dependencies": {
+        "effect": "4.0.0-beta.81",
+      },
+      "devDependencies": {
+        "@dfe-kit/adapter-sefaz": "workspace:*",
+        "@dfe-kit/fiscal": "workspace:*",
+      },
+    },
+    "packages/sefaz-mt": {
+      "name": "@dfe-kit/sefaz-mt",
+      "version": "0.1.0",
+      "dependencies": {
+        "effect": "4.0.0-beta.81",
+      },
+      "devDependencies": {
+        "@dfe-kit/adapter-sefaz": "workspace:*",
+        "@dfe-kit/fiscal": "workspace:*",
+      },
+    },
+    "packages/sefaz-pa": {
+      "name": "@dfe-kit/sefaz-pa",
+      "version": "0.1.0",
+      "dependencies": {
+        "effect": "4.0.0-beta.81",
+      },
+      "devDependencies": {
+        "@dfe-kit/adapter-sefaz": "workspace:*",
+        "@dfe-kit/fiscal": "workspace:*",
+      },
+    },
+    "packages/sefaz-pb": {
+      "name": "@dfe-kit/sefaz-pb",
+      "version": "0.1.0",
+      "dependencies": {
+        "effect": "4.0.0-beta.81",
+      },
+      "devDependencies": {
+        "@dfe-kit/adapter-sefaz": "workspace:*",
+        "@dfe-kit/fiscal": "workspace:*",
+      },
+    },
+    "packages/sefaz-pe": {
+      "name": "@dfe-kit/sefaz-pe",
+      "version": "0.1.0",
+      "dependencies": {
+        "effect": "4.0.0-beta.81",
+      },
+      "devDependencies": {
+        "@dfe-kit/adapter-sefaz": "workspace:*",
+        "@dfe-kit/fiscal": "workspace:*",
+      },
+    },
+    "packages/sefaz-pi": {
+      "name": "@dfe-kit/sefaz-pi",
+      "version": "0.1.0",
+      "dependencies": {
+        "effect": "4.0.0-beta.81",
+      },
+      "devDependencies": {
+        "@dfe-kit/adapter-sefaz": "workspace:*",
+        "@dfe-kit/fiscal": "workspace:*",
+      },
+    },
+    "packages/sefaz-pr": {
+      "name": "@dfe-kit/sefaz-pr",
+      "version": "0.1.0",
+      "dependencies": {
+        "effect": "4.0.0-beta.81",
+      },
+      "devDependencies": {
+        "@dfe-kit/adapter-sefaz": "workspace:*",
+        "@dfe-kit/fiscal": "workspace:*",
+      },
+    },
+    "packages/sefaz-rj": {
+      "name": "@dfe-kit/sefaz-rj",
+      "version": "0.1.0",
+      "dependencies": {
+        "effect": "4.0.0-beta.81",
+      },
+      "devDependencies": {
+        "@dfe-kit/adapter-sefaz": "workspace:*",
+        "@dfe-kit/fiscal": "workspace:*",
+      },
+    },
+    "packages/sefaz-rn": {
+      "name": "@dfe-kit/sefaz-rn",
+      "version": "0.1.0",
+      "dependencies": {
+        "effect": "4.0.0-beta.81",
+      },
+      "devDependencies": {
+        "@dfe-kit/adapter-sefaz": "workspace:*",
+        "@dfe-kit/fiscal": "workspace:*",
+      },
+    },
+    "packages/sefaz-ro": {
+      "name": "@dfe-kit/sefaz-ro",
+      "version": "0.1.0",
+      "dependencies": {
+        "effect": "4.0.0-beta.81",
+      },
+      "devDependencies": {
+        "@dfe-kit/adapter-sefaz": "workspace:*",
+        "@dfe-kit/fiscal": "workspace:*",
+      },
+    },
+    "packages/sefaz-rr": {
+      "name": "@dfe-kit/sefaz-rr",
+      "version": "0.1.0",
+      "dependencies": {
+        "effect": "4.0.0-beta.81",
+      },
+      "devDependencies": {
+        "@dfe-kit/adapter-sefaz": "workspace:*",
+        "@dfe-kit/fiscal": "workspace:*",
+      },
+    },
+    "packages/sefaz-rs": {
+      "name": "@dfe-kit/sefaz-rs",
+      "version": "0.1.0",
+      "dependencies": {
+        "effect": "4.0.0-beta.81",
+      },
+      "devDependencies": {
+        "@dfe-kit/adapter-sefaz": "workspace:*",
+        "@dfe-kit/fiscal": "workspace:*",
+      },
+    },
+    "packages/sefaz-sc": {
+      "name": "@dfe-kit/sefaz-sc",
+      "version": "0.1.0",
+      "dependencies": {
+        "effect": "4.0.0-beta.81",
+      },
+      "devDependencies": {
+        "@dfe-kit/adapter-sefaz": "workspace:*",
+        "@dfe-kit/fiscal": "workspace:*",
+      },
+    },
+    "packages/sefaz-se": {
+      "name": "@dfe-kit/sefaz-se",
+      "version": "0.1.0",
+      "dependencies": {
+        "effect": "4.0.0-beta.81",
+      },
+      "devDependencies": {
+        "@dfe-kit/adapter-sefaz": "workspace:*",
+        "@dfe-kit/fiscal": "workspace:*",
+      },
+    },
+    "packages/sefaz-sp": {
+      "name": "@dfe-kit/sefaz-sp",
+      "version": "0.1.0",
+      "dependencies": {
+        "effect": "4.0.0-beta.81",
+      },
+      "devDependencies": {
+        "@dfe-kit/adapter-sefaz": "workspace:*",
+        "@dfe-kit/fiscal": "workspace:*",
+      },
+    },
+    "packages/sefaz-to": {
+      "name": "@dfe-kit/sefaz-to",
+      "version": "0.1.0",
+      "dependencies": {
+        "effect": "4.0.0-beta.81",
+      },
+      "devDependencies": {
+        "@dfe-kit/adapter-sefaz": "workspace:*",
+        "@dfe-kit/fiscal": "workspace:*",
+      },
+    },
+    "packages/sento-se-saatri": {
+      "name": "@dfe-kit/sento-se-saatri",
+      "version": "0.1.0",
+      "dependencies": {
+        "effect": "4.0.0-beta.81",
+      },
+      "devDependencies": {
+        "@dfe-kit/adapter-saatri": "workspace:*",
+        "@dfe-kit/fiscal": "workspace:*",
+      },
+    },
+    "packages/serra-do-ramalho-saatri": {
+      "name": "@dfe-kit/serra-do-ramalho-saatri",
       "version": "0.1.0",
       "dependencies": {
         "effect": "4.0.0-beta.81",
@@ -84,9 +533,91 @@
 
     "@dfe-kit/adapter-saatri": ["@dfe-kit/adapter-saatri@workspace:adapters/saatri"],
 
+    "@dfe-kit/adapter-sefaz": ["@dfe-kit/adapter-sefaz@workspace:adapters/sefaz"],
+
+    "@dfe-kit/amargosa-saatri": ["@dfe-kit/amargosa-saatri@workspace:packages/amargosa-saatri"],
+
+    "@dfe-kit/boavista-saatri": ["@dfe-kit/boavista-saatri@workspace:packages/boavista-saatri"],
+
     "@dfe-kit/fiscal": ["@dfe-kit/fiscal@workspace:core/fiscal"],
 
+    "@dfe-kit/ipira-saatri": ["@dfe-kit/ipira-saatri@workspace:packages/ipira-saatri"],
+
+    "@dfe-kit/itaberaba-saatri": ["@dfe-kit/itaberaba-saatri@workspace:packages/itaberaba-saatri"],
+
     "@dfe-kit/jacobina-saatri": ["@dfe-kit/jacobina-saatri@workspace:packages/jacobina-saatri"],
+
+    "@dfe-kit/juiz-de-fora-nfse": ["@dfe-kit/juiz-de-fora-nfse@workspace:packages/juiz-de-fora-nfse"],
+
+    "@dfe-kit/morro-do-chapeu-saatri": ["@dfe-kit/morro-do-chapeu-saatri@workspace:packages/morro-do-chapeu-saatri"],
+
+    "@dfe-kit/pojuca-saatri": ["@dfe-kit/pojuca-saatri@workspace:packages/pojuca-saatri"],
+
+    "@dfe-kit/provider-nfse": ["@dfe-kit/provider-nfse@workspace:packages/provider-nfse"],
+
+    "@dfe-kit/provider-saatri": ["@dfe-kit/provider-saatri@workspace:packages/provider-saatri"],
+
+    "@dfe-kit/sao-desiderio-saatri": ["@dfe-kit/sao-desiderio-saatri@workspace:packages/sao-desiderio-saatri"],
+
+    "@dfe-kit/sao-francisco-do-conde-saatri": ["@dfe-kit/sao-francisco-do-conde-saatri@workspace:packages/sao-francisco-do-conde-saatri"],
+
+    "@dfe-kit/sefaz-ac": ["@dfe-kit/sefaz-ac@workspace:packages/sefaz-ac"],
+
+    "@dfe-kit/sefaz-al": ["@dfe-kit/sefaz-al@workspace:packages/sefaz-al"],
+
+    "@dfe-kit/sefaz-am": ["@dfe-kit/sefaz-am@workspace:packages/sefaz-am"],
+
+    "@dfe-kit/sefaz-ap": ["@dfe-kit/sefaz-ap@workspace:packages/sefaz-ap"],
+
+    "@dfe-kit/sefaz-ba": ["@dfe-kit/sefaz-ba@workspace:packages/sefaz-ba"],
+
+    "@dfe-kit/sefaz-ce": ["@dfe-kit/sefaz-ce@workspace:packages/sefaz-ce"],
+
+    "@dfe-kit/sefaz-df": ["@dfe-kit/sefaz-df@workspace:packages/sefaz-df"],
+
+    "@dfe-kit/sefaz-es": ["@dfe-kit/sefaz-es@workspace:packages/sefaz-es"],
+
+    "@dfe-kit/sefaz-go": ["@dfe-kit/sefaz-go@workspace:packages/sefaz-go"],
+
+    "@dfe-kit/sefaz-ma": ["@dfe-kit/sefaz-ma@workspace:packages/sefaz-ma"],
+
+    "@dfe-kit/sefaz-mg": ["@dfe-kit/sefaz-mg@workspace:packages/sefaz-mg"],
+
+    "@dfe-kit/sefaz-ms": ["@dfe-kit/sefaz-ms@workspace:packages/sefaz-ms"],
+
+    "@dfe-kit/sefaz-mt": ["@dfe-kit/sefaz-mt@workspace:packages/sefaz-mt"],
+
+    "@dfe-kit/sefaz-pa": ["@dfe-kit/sefaz-pa@workspace:packages/sefaz-pa"],
+
+    "@dfe-kit/sefaz-pb": ["@dfe-kit/sefaz-pb@workspace:packages/sefaz-pb"],
+
+    "@dfe-kit/sefaz-pe": ["@dfe-kit/sefaz-pe@workspace:packages/sefaz-pe"],
+
+    "@dfe-kit/sefaz-pi": ["@dfe-kit/sefaz-pi@workspace:packages/sefaz-pi"],
+
+    "@dfe-kit/sefaz-pr": ["@dfe-kit/sefaz-pr@workspace:packages/sefaz-pr"],
+
+    "@dfe-kit/sefaz-rj": ["@dfe-kit/sefaz-rj@workspace:packages/sefaz-rj"],
+
+    "@dfe-kit/sefaz-rn": ["@dfe-kit/sefaz-rn@workspace:packages/sefaz-rn"],
+
+    "@dfe-kit/sefaz-ro": ["@dfe-kit/sefaz-ro@workspace:packages/sefaz-ro"],
+
+    "@dfe-kit/sefaz-rr": ["@dfe-kit/sefaz-rr@workspace:packages/sefaz-rr"],
+
+    "@dfe-kit/sefaz-rs": ["@dfe-kit/sefaz-rs@workspace:packages/sefaz-rs"],
+
+    "@dfe-kit/sefaz-sc": ["@dfe-kit/sefaz-sc@workspace:packages/sefaz-sc"],
+
+    "@dfe-kit/sefaz-se": ["@dfe-kit/sefaz-se@workspace:packages/sefaz-se"],
+
+    "@dfe-kit/sefaz-sp": ["@dfe-kit/sefaz-sp@workspace:packages/sefaz-sp"],
+
+    "@dfe-kit/sefaz-to": ["@dfe-kit/sefaz-to@workspace:packages/sefaz-to"],
+
+    "@dfe-kit/sento-se-saatri": ["@dfe-kit/sento-se-saatri@workspace:packages/sento-se-saatri"],
+
+    "@dfe-kit/serra-do-ramalho-saatri": ["@dfe-kit/serra-do-ramalho-saatri@workspace:packages/serra-do-ramalho-saatri"],
 
     "@dfe-kit/xml": ["@dfe-kit/xml@workspace:core/xml"],
 

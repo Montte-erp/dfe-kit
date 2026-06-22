@@ -15,6 +15,10 @@
     "./schemas": {
       "types": "./dist/schemas.d.ts",
       "import": "./dist/schemas.js"
+    },
+    "./effect-error-metadata": {
+      "types": "./dist/effect-error-metadata.d.ts",
+      "import": "./dist/effect-error-metadata.js"
     }
   },
   "scripts": {

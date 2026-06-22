@@ -1,0 +1,51 @@
+{
+  "name": "@dfe-kit/provider-saatri",
+  "version": "0.0.0",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Montte-erp/dfe-kit.git",
+    "directory": "packages/provider-saatri"
+  },
+  "files": [
+    "dist"
+  ],
+  "type": "module",
+  "sideEffects": false,
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./catalog": {
+      "types": "./dist/catalog.d.ts",
+      "import": "./dist/catalog.js"
+    },
+    "./runtime": {
+      "types": "./dist/runtime.d.ts",
+      "import": "./dist/runtime.js"
+    }
+  },
+  "scripts": {
+    "build": "bunup",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run ./__tests__",
+    "publint": "publint --strict",
+    "publish:npm": "bun publish --access public",
+    "publish:npm:dry": "bun publish --access public --dry-run"
+  },
+  "dependencies": {
+    "effect": "4.0.0-beta.81"
+  },
+  "devDependencies": {
+    "@dfe-kit/adapter-saatri": "workspace:*",
+    "@dfe-kit/fiscal": "workspace:*"
+  },
+  "nx": {
+    "tags": [
+      "scope:provider"
+    ]
+  }
+}

@@ -2,6 +2,7 @@ import { describe, expect, it } from "@effect/vitest";
 import packageJson from "../package.json";
 import {
   jacobinaSaatriManifest,
+  JACOBINA_CITY_CODE,
   SAATRI_JACOBINA_HOMOLOGATION_ENDPOINT,
   SAATRI_JACOBINA_PRODUCTION_ENDPOINT,
 } from "../src/manifest";
@@ -9,11 +10,15 @@ import {
 describe("jacobinaSaatriManifest", () => {
   it("usa endpoints Jacobina informados pelo manual SAATRI", () => {
     expect(SAATRI_JACOBINA_HOMOLOGATION_ENDPOINT).toBe(
-      "https://homologa-homologa-jacobina.saatri.com.br/servicos/nfse.svc",
-    );
-    expect(SAATRI_JACOBINA_PRODUCTION_ENDPOINT).toBe(
       "https://homologa-jacobina.saatri.com.br/servicos/nfse.svc",
     );
+    expect(SAATRI_JACOBINA_PRODUCTION_ENDPOINT).toBe(
+      "https://jacobina.saatri.com.br/servicos/nfse.svc",
+    );
+  });
+
+  it("usa código IBGE correto de Jacobina-BA", () => {
+    expect(JACOBINA_CITY_CODE).toBe("2917508");
   });
 
   it("declara somente capacidade comprovada e mantém catálogo não fingido", () => {

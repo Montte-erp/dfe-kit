@@ -27,7 +27,7 @@
     },
     "typecheck": {
       "cache": true,
-      "dependsOn": ["^typecheck"],
+      "dependsOn": ["^build", "^typecheck"],
       "inputs": ["default", "^default"],
       "outputs": ["{projectRoot}/.cache/tsbuildinfo.json"]
     },

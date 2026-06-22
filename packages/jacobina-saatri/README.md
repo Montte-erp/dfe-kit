@@ -89,7 +89,7 @@ const issued = await Effect.runPromise(
         street: "Rua Exemplo",
         number: "100",
         district: "Centro",
-        cityCode: "2917706",
+        cityCode: "2917508",
         city: "Jacobina",
         state: "BA",
         postalCode: "44700000",
@@ -103,7 +103,7 @@ const issued = await Effect.runPromise(
         street: "Rua Cliente",
         number: "200",
         district: "Centro",
-        cityCode: "2917706",
+        cityCode: "2917508",
         city: "Jacobina",
         state: "BA",
         postalCode: "44700000",
@@ -138,8 +138,8 @@ if (providerResponse.status === "rejected") {
 
 ## Endpoints SAATRI Jacobina
 
-- homologação: `https://homologa-homologa-jacobina.saatri.com.br/servicos/nfse.svc`
-- produção: `https://homologa-jacobina.saatri.com.br/servicos/nfse.svc`
+- homologação: `https://homologa-jacobina.saatri.com.br/servicos/nfse.svc`
+- produção: `https://jacobina.saatri.com.br/servicos/nfse.svc`
 - WSDL: acrescente `?wsdl`
 - limite XML informado: 512 KB
 

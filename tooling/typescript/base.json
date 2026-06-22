@@ -28,12 +28,20 @@
     "baseUrl": "../..",
     "paths": {
       "@dfe-kit/fiscal": ["core/fiscal/src/index.ts"],
+      "@dfe-kit/fiscal/effect-error-metadata": ["core/fiscal/src/effect-error-metadata.ts"],
       "@dfe-kit/fiscal/schemas": ["core/fiscal/src/schemas.ts"],
       "@dfe-kit/xml": ["core/xml/src/index.ts"],
       "@dfe-kit/adapter-saatri": ["adapters/saatri/src/index.ts"],
       "@dfe-kit/adapter-saatri/config": ["adapters/saatri/src/config.ts"],
       "@dfe-kit/adapter-saatri/manifest": ["adapters/saatri/src/manifest.ts"],
-      "@dfe-kit/adapter-saatri/runtime": ["adapters/saatri/src/runtime.ts"]
+      "@dfe-kit/adapter-saatri/runtime": ["adapters/saatri/src/runtime.ts"],
+      "@dfe-kit/adapter-sefaz": ["adapters/sefaz/src/index.ts"],
+      "@dfe-kit/adapter-sefaz/catalog": ["adapters/sefaz/src/catalog.ts"],
+      "@dfe-kit/adapter-sefaz/manifest": ["adapters/sefaz/src/manifest.ts"],
+      "@dfe-kit/provider-nfse": ["packages/provider-nfse/src/index.ts"],
+      "@dfe-kit/provider-nfse/municipal-catalog": [
+        "packages/provider-nfse/src/municipal-catalog.ts"
+      ]
     }
   },
   "display": "Default"

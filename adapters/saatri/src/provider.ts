@@ -13,7 +13,11 @@ import type {
 } from "@dfe-kit/fiscal";
 import { encodeUtf8, getUtf8ByteLength, XML_MEDIA_TYPE } from "@dfe-kit/xml";
 import { Effect, Metric } from "effect";
-import { buildGerarNfseEnvelope, SOAP_ACTION_GERAR_NFSE } from "./envelope";
+import {
+  buildGerarNfseEnvelope,
+  SOAP_ACTION_GERAR_NFSE,
+  type GerarNfseIssuePayload,
+} from "./envelope";
 import { SaatriHttpClient as SaatriHttpClientService, type SaatriHttpClient } from "./http";
 import { parseGerarNfseResponse } from "./parse";
 import {
@@ -79,10 +83,26 @@ const xmlArtifact = (xml: string): FiscalArtifact => ({
   bytes: encodeUtf8(xml),
 });
 
+const isGerarNfseIssuePayload = (input: IssueFiscalDocumentInput): input is GerarNfseIssuePayload =>
+  input.documentKind === FiscalDocumentKindValue.nfse && input.services !== undefined;
+
 const validateSaatriIssueInput = (
   input: IssueFiscalDocumentInput,
-): Effect.Effect<readonly FiscalRejection[], never> =>
-  Effect.sync(() => {
+): Effect.Effect<
+  { readonly input: GerarNfseIssuePayload; readonly rejections: readonly FiscalRejection[] },
+  SaatriProviderError
+> => {
+  if (!isGerarNfseIssuePayload(input)) {
+    return Effect.fail(
+      new SaatriProviderError({
+        code: SaatriProviderErrorCodeValue.invalidInput,
+        retryable: false,
+        reason: "SAATRI aceita apenas NFS-e com services[] preenchido.",
+      }),
+    );
+  }
+
+  return Effect.sync(() => {
     const firstInvalidServiceList = input.services.find(
       (service) => service.serviceListCode.length > 8,
     );
@@ -93,8 +113,9 @@ const validateSaatriIssueInput = (
       firstInvalidServiceList === undefined ? [] : [SaatriFiscalRejection.serviceListCodeMaxLength];
     const nbsRejection: readonly FiscalRejection[] =
       firstMissingNbs === undefined ? [] : [SaatriFiscalRejection.nbsRequired2026];
-    return [...serviceListRejection, ...nbsRejection];
+    return { input, rejections: [...serviceListRejection, ...nbsRejection] };
   });
+};
 
 export type SaatriProviderDeps = {
   readonly manifest: FiscalProviderManifest;
@@ -181,6 +202,8 @@ export const createSaatriProvider = (deps: SaatriProviderDeps): SaatriProvider =
           );
         }
 
+        const validation = yield* validateSaatriIssueInput(input);
+
         yield* emit(
           eventSink,
           SaatriEventNameValue.envelopeBuildStarted,
@@ -189,7 +212,9 @@ export const createSaatriProvider = (deps: SaatriProviderDeps): SaatriProvider =
           config,
           correlationId,
         );
-        const envelope = yield* buildGerarNfseEnvelope(input, credentials, config, { signer }).pipe(
+        const envelope = yield* buildGerarNfseEnvelope(validation.input, credentials, config, {
+          signer,
+        }).pipe(
           Effect.withSpan(SaatriSpanNameValue.envelopeBuild, { attributes: spanAttributes }),
           Effect.tapError(() =>
             emit(
@@ -228,8 +253,7 @@ export const createSaatriProvider = (deps: SaatriProviderDeps): SaatriProvider =
           );
         }
 
-        const validationRejections = yield* validateSaatriIssueInput(input);
-        if (validationRejections.length > 0) {
+        if (validation.rejections.length > 0) {
           yield* emit(
             eventSink,
             SaatriEventNameValue.fiscalRejected,
@@ -242,7 +266,7 @@ export const createSaatriProvider = (deps: SaatriProviderDeps): SaatriProvider =
             documentRef,
             providerResponse: {
               status: FiscalDocumentStatusValue.rejected,
-              rejections: validationRejections,
+              rejections: validation.rejections,
               artifacts: [xmlArtifact(envelope)],
             },
           };

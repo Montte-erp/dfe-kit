@@ -5,7 +5,8 @@ const ansiPattern = new RegExp(`${escapeCharacter}\\[[0-9;]*m`, "g");
 const dtsWarningPattern = /\bTS90\d+\b/g;
 const genericWarningPattern =
   /(?:^|\s)(?:warn|warning|dts\s+warn|declaration\s+warning|▲ \[WARNING\]|⚠)/i;
-const neutralWarningPattern = /check-dts-warnings|DTS warning check failed/i;
+const neutralWarningPattern =
+  /check-dts-warnings|DTS warning check failed|NO_COLOR.+FORCE_COLOR|node --trace-warnings/i;
 
 const separatorIndex = process.argv.indexOf("--");
 const command =

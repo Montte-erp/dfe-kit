@@ -71,10 +71,15 @@ Essas skills locais complementam este AGENTS.md. Se uma skill local e este arqui
 ## Packages
 
 ```text
-core/fiscal               @dfe-kit/fiscal            fiscal adapter contract + Effect schemas
-core/xml                  @dfe-kit/xml               generic XML escaping/encoding primitives
-adapters/saatri           @dfe-kit/adapter-saatri    reusable SAATRI/ABRASF 2.03 adapter engine
-packages/jacobina-saatri  @dfe-kit/jacobina-saatri   Jacobina-BA provider package
+core/fiscal                 @dfe-kit/fiscal             fiscal adapter contract + Effect schemas
+core/xml                    @dfe-kit/xml                generic XML escaping/encoding primitives
+adapters/saatri             @dfe-kit/adapter-saatri     reusable SAATRI/ABRASF 2.03 adapter engine
+packages/provider-saatri    @dfe-kit/provider-saatri    SAATRI discovery/catalog helpers
+packages/provider-nfse      @dfe-kit/provider-nfse      NFS-e Nacional + municipal catalog helpers
+packages/provider-sefaz     @dfe-kit/provider-sefaz     generic SEFAZ NF-e/NFC-e base provider
+packages/*-saatri           @dfe-kit/*-saatri           one provider package per SAATRI municipality
+packages/*-nfse             @dfe-kit/*-nfse             one provider package per municipal NFS-e portal
+packages/sefaz-*            @dfe-kit/sefaz-*            one provider package per SEFAZ state
 ```
 
 Provider packages live in `packages/*` and are the only intended published artifacts. Core and adapter packages are private and inlined into published provider bundles.
