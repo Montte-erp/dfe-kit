@@ -5,6 +5,10 @@ export type SafeCauseMetadata = {
   readonly upstreamCode?: string | undefined;
 };
 
+export const safeCauseMetadataSchema: Schema.Decoder<SafeCauseMetadata> = Schema.Struct({
+  upstreamTag: Schema.optional(Schema.String),
+  upstreamCode: Schema.optional(Schema.String),
+});
 const firstStringField = (input: unknown, field: string): string | undefined => {
   if (typeof input !== "object" || input === null) {
     return undefined;
@@ -24,6 +28,12 @@ export type SchemaIssueMetadata = {
   readonly issueMessage: string;
   readonly upstreamTag: string;
 };
+
+export const schemaIssueMetadataSchema: Schema.Decoder<SchemaIssueMetadata> = Schema.Struct({
+  issuePath: Schema.optional(Schema.String),
+  issueMessage: Schema.String,
+  upstreamTag: Schema.String,
+});
 
 const formatIssuePath = (path: ReadonlyArray<PropertyKey>): string | undefined =>
   path.length === 0 ? undefined : path.map((segment) => String(segment)).join(".");

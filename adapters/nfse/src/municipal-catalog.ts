@@ -5,22 +5,39 @@ import {
   FiscalProviderCapabilityValue,
 } from "@dfe-kit/fiscal";
 import type {
-  BrazilianStateCode,
   FiscalEnvironment,
   FiscalProviderCapabilityMetadata,
   FiscalProviderManifest,
 } from "@dfe-kit/fiscal";
+import { fiscalProviderCapabilityMetadataSchema } from "@dfe-kit/fiscal/schemas";
+import { Schema } from "effect";
 
-export type NfseMunicipalPortalState = Extract<BrazilianStateCode, "MG">;
+const endpointUrl = Schema.String.check(Schema.isPattern(/^https:\/\/.+/));
+
+export type NfseMunicipalPortalState = "MG";
+export const nfseMunicipalPortalStateSchema: Schema.Decoder<NfseMunicipalPortalState> =
+  Schema.Literal("MG");
+
 export type NfseMunicipalPortalFamily = "pjf-abrasf-2.02";
+export const nfseMunicipalPortalFamilySchema: Schema.Decoder<NfseMunicipalPortalFamily> =
+  Schema.Literal("pjf-abrasf-2.02");
 
 export type NfseMunicipalPortalEndpoints = {
   readonly homologation: string;
   readonly production: string;
 };
+export const nfseMunicipalPortalEndpointsSchema: Schema.Decoder<NfseMunicipalPortalEndpoints> =
+  Schema.Struct({
+    homologation: endpointUrl,
+    production: endpointUrl,
+  });
+
+export type NfseMunicipalPortalId = "juiz-de-fora-mg-nfse";
+export const nfseMunicipalPortalIdSchema: Schema.Decoder<NfseMunicipalPortalId> =
+  Schema.Literal("juiz-de-fora-mg-nfse");
 
 export type NfseMunicipalPortalDescriptor = {
-  readonly providerId: string;
+  readonly providerId: NfseMunicipalPortalId;
   readonly providerName: string;
   readonly cityCode: string;
   readonly cityName: string;
@@ -34,11 +51,28 @@ export type NfseMunicipalPortalDescriptor = {
   readonly maxRpsPerBatch: number;
   readonly requiresCertificateOutsideDFeKit: true;
   readonly requiresSigner: true;
-  readonly sourceUrls: readonly string[];
-  readonly capabilityMetadata?: readonly FiscalProviderCapabilityMetadata[] | undefined;
+  readonly sourceUrls: ReadonlyArray<string>;
+  readonly capabilityMetadata?: ReadonlyArray<FiscalProviderCapabilityMetadata> | undefined;
 };
-
-export type NfseMunicipalPortalId = "juiz-de-fora-mg-nfse";
+export const nfseMunicipalPortalDescriptorSchema: Schema.Decoder<NfseMunicipalPortalDescriptor> =
+  Schema.Struct({
+    providerId: nfseMunicipalPortalIdSchema,
+    providerName: Schema.NonEmptyString,
+    cityCode: Schema.String.check(Schema.isPattern(/^\d{7}$/)),
+    cityName: Schema.NonEmptyString,
+    state: nfseMunicipalPortalStateSchema,
+    family: nfseMunicipalPortalFamilySchema,
+    layoutVersion: Schema.NonEmptyString,
+    portalUrl: endpointUrl,
+    endpoints: nfseMunicipalPortalEndpointsSchema,
+    wsdl: nfseMunicipalPortalEndpointsSchema,
+    maxXmlBytes: Schema.Number.check(Schema.isInt(), Schema.isGreaterThan(0)),
+    maxRpsPerBatch: Schema.Number.check(Schema.isInt(), Schema.isGreaterThan(0)),
+    requiresCertificateOutsideDFeKit: Schema.Literal(true),
+    requiresSigner: Schema.Literal(true),
+    sourceUrls: Schema.Array(endpointUrl),
+    capabilityMetadata: Schema.optional(Schema.Array(fiscalProviderCapabilityMetadataSchema)),
+  });
 
 const commonMunicipalCapabilityMetadata: readonly FiscalProviderCapabilityMetadata[] = [
   {

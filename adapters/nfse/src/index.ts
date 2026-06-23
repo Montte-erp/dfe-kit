@@ -3,6 +3,7 @@ import type {
   IssueFiscalDocumentInput,
   IssueFiscalDocumentResponse,
 } from "@dfe-kit/fiscal";
+import { schemaErrorMetadata } from "@dfe-kit/fiscal/effect-error-metadata";
 import { Effect, Schema } from "effect";
 import {
   assertNfseNacionalDpsBuilder,
@@ -13,7 +14,6 @@ import {
   NfseNacionalProviderErrorCodeValue,
   NfseNacionalSchemaNameValue,
   nfseNacionalEnvironmentConfigSchema,
-  schemaErrorMetadata,
 } from "./config";
 import type { CreateNfseNacionalProviderOptions } from "./config";
 import { NfseNacionalHttpClientService } from "./http";
@@ -33,6 +33,11 @@ import {
   nfseMunicipalPortalCatalog,
   nfseMunicipalPortalByProviderId,
   nfseMunicipalPortalStates,
+  nfseMunicipalPortalDescriptorSchema,
+  nfseMunicipalPortalEndpointsSchema,
+  nfseMunicipalPortalFamilySchema,
+  nfseMunicipalPortalIdSchema,
+  nfseMunicipalPortalStateSchema,
 } from "./municipal-catalog";
 import { createNfseNacionalProvider as createConfiguredNfseNacionalProvider } from "./provider";
 import type { NfseNacionalProviderWithHttpService } from "./provider";
@@ -133,10 +138,16 @@ export {
   nfseMunicipalPortalCatalog,
   nfseMunicipalPortalByProviderId,
   nfseMunicipalPortalStates,
+  nfseMunicipalPortalDescriptorSchema,
+  nfseMunicipalPortalEndpointsSchema,
+  nfseMunicipalPortalFamilySchema,
+  nfseMunicipalPortalIdSchema,
+  nfseMunicipalPortalStateSchema,
 };
 export {
   createNfseNacionalHttpClientConfigLayer,
   createNfseNacionalHttpClientLayer,
+  createNfseNacionalFetchHttpClientLayer,
   createNfseNacionalHttpClientLayerFromClient,
   NfseNacionalHttpClientService,
 } from "./http";

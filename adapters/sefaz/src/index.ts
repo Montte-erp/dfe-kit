@@ -4,6 +4,7 @@ import type {
   IssueFiscalDocumentInput,
   IssueFiscalDocumentResponse,
 } from "@dfe-kit/fiscal";
+import { schemaErrorMetadata } from "@dfe-kit/fiscal/effect-error-metadata";
 import { Effect, Layer, Schema } from "effect";
 import {
   assertSefazSignedRequestXmlBuilder,
@@ -14,7 +15,6 @@ import {
   SefazProviderErrorCodeValue,
   SefazSchemaNameValue,
   sefazEnvironmentConfigSchema,
-  schemaErrorMetadata,
 } from "./config";
 import type { CreateSefazProviderOptions } from "./config";
 import { createSefazFetchHttpClientLayer, SefazHttpClientService } from "./http";
@@ -165,6 +165,10 @@ export {
   getSefazStatePortalsByDocumentKind,
   sefazStatePortalByState,
   sefazStatePortalCatalog,
+  sefazStateCodeSchema,
+  sefazStateDocumentKindSchema,
+  sefazStatePortalDescriptorSchema,
+  sefazStatePortalStatusSchema,
 } from "./catalog";
 export {
   createSefazFetchHttpClientLayer,

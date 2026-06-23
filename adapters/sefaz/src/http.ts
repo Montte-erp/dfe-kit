@@ -1,7 +1,7 @@
+import { safeCauseMetadata } from "@dfe-kit/fiscal/effect-error-metadata";
 import { Context, Duration, Effect, Layer, Match, Schema, Schedule } from "effect";
 import { FetchHttpClient, HttpBody, HttpClient, HttpClientResponse } from "effect/unstable/http";
 import {
-  safeCauseMetadata,
   SefazOperationValue,
   SefazPhaseValue,
   SefazProviderError,

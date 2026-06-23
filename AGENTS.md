@@ -37,6 +37,7 @@ Essas skills locais complementam este AGENTS.md. Se uma skill local e este arqui
 - No barrel files that only re-export. Entry points must provide real package configuration or meaningful public API.
 - Avoid `types.ts`. Keep schemas, `Schema.TaggedErrorClass` error catalogs, and provider config together in `config.ts` when they belong to the same adapter/package.
 - Generic validation should stay local to the domain package until at least two real consumers justify extracting a utility package.
+- NFS-e Nacional e catálogos municipais reutilizáveis pertencem a `adapters/nfse`; `packages/*-nfse` ficam finos, por município/portal, sem pacote público agregador monolítico.
 
 ## Validation
 
@@ -45,7 +46,7 @@ Essas skills locais complementam este AGENTS.md. Se uma skill local e este arqui
   - no `runSync`/`runPromise`/`runFork` in library internals
   - no legacy result/error wrappers
   - no `as` casts, including `as const`; literal catalogs must come from `Schema.Literals([...])`
-  - no manual interfaces for config/data contracts when `Schema` can derive the exported type
+  - no manual interfaces for config/data contracts when `Schema` can derive the exported type; if isolated DTS needs an explicit annotation, keep it next to the schema boundary and still validate through `Schema`
   - no `instanceof`/`throw new Error` patterns
 - XML primitives live in `core/xml`.
 - Date handling uses `dayjs`.

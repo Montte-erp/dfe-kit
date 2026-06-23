@@ -1,12 +1,12 @@
+import { safeCauseMetadata } from "@dfe-kit/fiscal/effect-error-metadata";
 import { Context, Duration, Effect, Layer, Match, Schema, Schedule } from "effect";
-import { HttpBody, HttpClient, HttpClientResponse } from "effect/unstable/http";
+import { FetchHttpClient, HttpBody, HttpClient, HttpClientResponse } from "effect/unstable/http";
 import {
   NfseNacionalOperationValue,
   NfseNacionalPhaseValue,
   NfseNacionalProviderError,
   NfseNacionalProviderErrorCodeValue,
   NfseNacionalUpstreamTagValue,
-  safeCauseMetadata,
 } from "./config";
 
 const DPS_XML_CONTENT_TYPE = "application/xml; charset=utf-8";
@@ -22,7 +22,6 @@ export type NfseNacionalHttpResponse = {
   readonly status: number;
   readonly body: string;
 };
-
 export const nfseNacionalHttpResponseSchema: Schema.Decoder<NfseNacionalHttpResponse> =
   defineHttpSchema(
     Schema.Struct({
@@ -49,14 +48,6 @@ export type CreateNfseNacionalHttpOptions = {
   readonly retryBaseMillis?: number | undefined;
   readonly retryableStatus?: ReadonlySet<number> | undefined;
 };
-
-type NfseNacionalHttpConfig = {
-  readonly timeout: Duration.Duration;
-  readonly maxRetries: number;
-  readonly retryBase: Duration.Duration;
-  readonly retryableStatus: ReadonlySet<number>;
-};
-
 export const createNfseNacionalHttpOptionsSchema: Schema.Decoder<CreateNfseNacionalHttpOptions> =
   Schema.Struct({
     timeoutMs: Schema.optional(Schema.Number.check(Schema.isInt(), Schema.isGreaterThan(0))),
@@ -64,6 +55,13 @@ export const createNfseNacionalHttpOptionsSchema: Schema.Decoder<CreateNfseNacio
     retryBaseMillis: Schema.optional(Schema.Number.check(Schema.isInt(), Schema.isGreaterThan(0))),
     retryableStatus: Schema.optional(Schema.ReadonlySet(httpStatusSchema)),
   });
+
+type NfseNacionalHttpConfig = {
+  readonly timeout: Duration.Duration;
+  readonly maxRetries: number;
+  readonly retryBase: Duration.Duration;
+  readonly retryableStatus: ReadonlySet<number>;
+};
 
 const NfseNacionalHttpClientRuntimeConfig: Context.Service<
   NfseNacionalHttpConfig,
@@ -202,3 +200,8 @@ export const createNfseNacionalHttpClientLayer = (
   Layer.effect(NfseNacionalHttpClientService, makeNfseNacionalHttpClient).pipe(
     Layer.provide(createNfseNacionalHttpClientConfigLayer(options)),
   );
+
+export const createNfseNacionalFetchHttpClientLayer = (
+  options: CreateNfseNacionalHttpOptions = {},
+): Layer.Layer<NfseNacionalHttpClient> =>
+  createNfseNacionalHttpClientLayer(options).pipe(Layer.provide(FetchHttpClient.layer));

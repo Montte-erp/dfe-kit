@@ -4,31 +4,44 @@ import {
   FiscalProviderCapabilityStatusValue,
   FiscalProviderCapabilityValue,
 } from "@dfe-kit/fiscal";
-import type {
-  BrazilianStateCode,
-  FiscalDocumentKind,
-  FiscalProviderCapabilityMetadata,
-  FiscalProviderCapabilityStatus,
-  FiscalProviderManifest,
-} from "@dfe-kit/fiscal";
+import type { FiscalProviderCapabilityMetadata, FiscalProviderManifest } from "@dfe-kit/fiscal";
+import { brazilianStateCodeSchema } from "@dfe-kit/fiscal/schemas";
+import { Schema } from "effect";
 
-export type SefazStateCode = BrazilianStateCode;
-export type SefazStateDocumentKind = Extract<FiscalDocumentKind, "nfe" | "nfce">;
-export type SefazStatePortalStatus = Extract<
-  FiscalProviderCapabilityStatus,
-  "unverified_in_homologation"
->;
+export type SefazStateCode = (typeof brazilianStateCodeSchema)["Type"];
+export const sefazStateCodeSchema: Schema.Decoder<SefazStateCode> = brazilianStateCodeSchema;
+
+export type SefazStateDocumentKind = "nfe" | "nfce";
+export const sefazStateDocumentKindSchema: Schema.Decoder<SefazStateDocumentKind> = Schema.Literals(
+  ["nfe", "nfce"],
+);
+
+export type SefazStatePortalStatus = "unverified_in_homologation";
+export const sefazStatePortalStatusSchema: Schema.Decoder<SefazStatePortalStatus> = Schema.Literal(
+  "unverified_in_homologation",
+);
 
 export type SefazStatePortalDescriptor = {
   readonly state: SefazStateCode;
   readonly stateName: string;
   readonly portalName: string;
-  readonly documentKinds: readonly SefazStateDocumentKind[];
+  readonly documentKinds: ReadonlyArray<SefazStateDocumentKind>;
   readonly integrationStatus: SefazStatePortalStatus;
   readonly requiresEndpointConfiguration: true;
   readonly requiresSigner: true;
   readonly requiresCertificateOutsideDFeKit: true;
 };
+export const sefazStatePortalDescriptorSchema: Schema.Decoder<SefazStatePortalDescriptor> =
+  Schema.Struct({
+    state: sefazStateCodeSchema,
+    stateName: Schema.NonEmptyString,
+    portalName: Schema.NonEmptyString,
+    documentKinds: Schema.Array(sefazStateDocumentKindSchema),
+    integrationStatus: sefazStatePortalStatusSchema,
+    requiresEndpointConfiguration: Schema.Literal(true),
+    requiresSigner: Schema.Literal(true),
+    requiresCertificateOutsideDFeKit: Schema.Literal(true),
+  });
 
 const stateDocumentKinds: readonly SefazStateDocumentKind[] = [
   FiscalDocumentKindValue.nfe,

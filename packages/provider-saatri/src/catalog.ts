@@ -1,14 +1,14 @@
-import type { BrazilianStateCode, FiscalProviderManifest } from "@dfe-kit/fiscal";
-import type { SaatriProviderPackageConfig } from "@dfe-kit/adapter-saatri/manifest";
+import type { FiscalProviderManifest } from "@dfe-kit/fiscal";
+import {
+  saatriProviderPackageConfigSchema,
+  type SaatriProviderPackageConfig,
+} from "@dfe-kit/adapter-saatri/manifest";
 import { configureSaatriManifest } from "@dfe-kit/adapter-saatri/manifest";
+import { Schema } from "effect";
 
-export type SaatriMunicipalityState = Extract<BrazilianStateCode, "BA" | "RR">;
-
-export type SaatriMunicipalityDescriptor = {
-  readonly config: SaatriProviderPackageConfig;
-  readonly state: SaatriMunicipalityState;
-  readonly cityName: string;
-};
+export type SaatriMunicipalityState = "BA" | "RR";
+export const saatriMunicipalityStateSchema: Schema.Decoder<SaatriMunicipalityState> =
+  Schema.Literals(["BA", "RR"]);
 
 export type SaatriMunicipalityId =
   | "boavista-saatri"
@@ -21,6 +21,30 @@ export type SaatriMunicipalityId =
   | "sento-se-saatri"
   | "serra-do-ramalho-saatri"
   | "morro-do-chapeu-saatri";
+export const saatriMunicipalityIdSchema: Schema.Decoder<SaatriMunicipalityId> = Schema.Literals([
+  "boavista-saatri",
+  "itaberaba-saatri",
+  "ipira-saatri",
+  "sao-francisco-do-conde-saatri",
+  "pojuca-saatri",
+  "sao-desiderio-saatri",
+  "amargosa-saatri",
+  "sento-se-saatri",
+  "serra-do-ramalho-saatri",
+  "morro-do-chapeu-saatri",
+]);
+
+export type SaatriMunicipalityDescriptor = {
+  readonly config: SaatriProviderPackageConfig;
+  readonly state: SaatriMunicipalityState;
+  readonly cityName: string;
+};
+export const saatriMunicipalityDescriptorSchema: Schema.Decoder<SaatriMunicipalityDescriptor> =
+  Schema.Struct({
+    config: saatriProviderPackageConfigSchema,
+    state: saatriMunicipalityStateSchema,
+    cityName: Schema.NonEmptyString,
+  });
 
 export const saatriMunicipalityStates: readonly SaatriMunicipalityState[] = ["RR", "BA"];
 

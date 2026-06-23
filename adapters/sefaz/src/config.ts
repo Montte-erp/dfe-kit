@@ -1,5 +1,4 @@
 import type { FiscalProviderError, IssueFiscalDocumentInput } from "@dfe-kit/fiscal";
-import { safeCauseMetadata, schemaErrorMetadata } from "@dfe-kit/fiscal/effect-error-metadata";
 import { fiscalEnvironmentSchema } from "@dfe-kit/fiscal/schemas";
 import { Effect, Schema } from "effect";
 
@@ -330,5 +329,3 @@ export const assertSefazSignedRequestXmlBuilder = (
           schemaName: SefazSchemaNameValue.providerOptions,
         }),
       );
-
-export { safeCauseMetadata, schemaErrorMetadata };

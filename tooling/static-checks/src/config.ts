@@ -1,17 +1,13 @@
-import { statSync } from "node:fs";
+import { existsSync, statSync } from "node:fs";
 import type { RequiredSpanCall } from "./model";
 
 export const checkedExtensions = new Set([".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs"]);
 
 export const skippedSegments = new Set(["dist", "node_modules", "outputs", "docs", "__tests__"]);
 export const skippedSuffixes = new Set([".d.ts", ".tsbuildinfo", "README.md"]);
-export const roots = ["core", "packages", "adapters"].filter((path) => {
-  try {
-    return statSync(path).isDirectory();
-  } catch {
-    return false;
-  }
-});
+export const roots = ["core", "packages", "adapters"].filter(
+  (path) => existsSync(path) && statSync(path).isDirectory(),
+);
 
 export const requiredEffectSpanFiles = new Map<string, readonly RequiredSpanCall[]>([
   [

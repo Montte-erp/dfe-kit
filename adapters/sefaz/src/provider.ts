@@ -13,6 +13,7 @@ import type {
 } from "@dfe-kit/fiscal";
 import { issueFiscalDocumentInputSchema } from "@dfe-kit/fiscal/schemas";
 import { encodeUtf8, XML_MEDIA_TYPE } from "@dfe-kit/xml";
+import { schemaErrorMetadata } from "@dfe-kit/fiscal/effect-error-metadata";
 import { Effect, Schema } from "effect";
 import {
   SefazEventNameValue,
@@ -21,7 +22,6 @@ import {
   SefazProviderError,
   SefazProviderErrorCodeValue,
   SefazSchemaNameValue,
-  schemaErrorMetadata,
 } from "./config";
 import type {
   SefazDocumentKind,

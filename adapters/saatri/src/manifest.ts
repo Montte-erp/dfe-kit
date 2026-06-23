@@ -1,10 +1,11 @@
 import type { FiscalProviderCapabilityMetadata, FiscalProviderManifest } from "@dfe-kit/fiscal";
 import { FiscalDocumentKindValue, FiscalEnvironmentValue } from "@dfe-kit/fiscal/schemas";
-import type { SaatriProviderPackageConfig } from "./config";
 import {
   SAATRI_ABRASF_203_CAPABILITIES,
   SAATRI_ABRASF_203_CAPABILITY_METADATA,
   SAATRI_ABRASF_VERSION,
+  saatriProviderPackageConfigSchema,
+  type SaatriProviderPackageConfig,
 } from "./config";
 
 type ConfigureSaatriManifestInput = {
@@ -27,5 +28,5 @@ export const configureSaatriManifest = (
   ],
 });
 
-export { SAATRI_ABRASF_VERSION };
+export { SAATRI_ABRASF_VERSION, saatriProviderPackageConfigSchema };
 export type { SaatriProviderPackageConfig };

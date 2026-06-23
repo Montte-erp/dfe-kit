@@ -1,5 +1,4 @@
 import type { FiscalProviderError, IssueFiscalDocumentInput } from "@dfe-kit/fiscal";
-export { safeCauseMetadata, schemaErrorMetadata } from "@dfe-kit/fiscal/effect-error-metadata";
 import { fiscalEnvironmentSchema } from "@dfe-kit/fiscal/schemas";
 import { Effect, Schema } from "effect";
 
@@ -15,7 +14,6 @@ export type NfseNacionalProviderErrorCode =
   | "nfse_nacional.DPS_BUILD_ERROR"
   | "nfse_nacional.CONFIG_ERROR"
   | "nfse_nacional.INVALID_INPUT";
-
 export const nfseNacionalProviderErrorCodeSchema: Schema.Decoder<NfseNacionalProviderErrorCode> =
   Schema.Literals([
     "nfse_nacional.NETWORK_ERROR",
@@ -118,7 +116,7 @@ export const NfseNacionalUpstreamTagValue = {
   timeoutError: "TimeoutError",
 } satisfies Record<string, NfseNacionalUpstreamTag>;
 
-export type NfseNacionalProviderErrorFields = {
+type NfseNacionalProviderErrorFields = {
   readonly _tag: "NfseNacionalProviderError";
   readonly code: NfseNacionalProviderErrorCode;
   readonly retryable: boolean;
@@ -205,7 +203,6 @@ export type NfseNacionalEventName =
   | "nfse_nacional.fiscal_rejected"
   | "nfse_nacional.issue_completed"
   | "nfse_nacional.issue_failed";
-
 export const nfseNacionalEventNameSchema: Schema.Decoder<NfseNacionalEventName> = Schema.Literals([
   "nfse_nacional.issue_started",
   "nfse_nacional.dps_build_started",
@@ -243,7 +240,6 @@ export type NfseNacionalEvent = {
   readonly number: string;
   readonly correlationId?: string | undefined;
 };
-
 export const nfseNacionalEventSchema: Schema.Decoder<NfseNacionalEvent> = defineNfseNacionalSchema(
   Schema.Struct({
     name: nfseNacionalEventNameSchema,
@@ -259,10 +255,9 @@ export const nfseNacionalEventSchema: Schema.Decoder<NfseNacionalEvent> = define
 export type NfseNacionalEventSink = (event: NfseNacionalEvent) => Effect.Effect<void, never>;
 
 export type NfseNacionalEnvironmentConfig = {
-  readonly environment: "homologation" | "production";
+  readonly environment: (typeof fiscalEnvironmentSchema)["Type"];
   readonly endpoint: string;
 };
-
 export const nfseNacionalEnvironmentConfigSchema: Schema.Decoder<NfseNacionalEnvironmentConfig> =
   defineNfseNacionalSchema(
     Schema.Struct({
@@ -272,12 +267,11 @@ export const nfseNacionalEnvironmentConfigSchema: Schema.Decoder<NfseNacionalEnv
   );
 
 export type CreateNfseNacionalProviderOptionsInput = {
-  readonly environment: "homologation" | "production";
-  readonly buildDpsXml?: unknown;
-  readonly eventSink?: unknown;
+  readonly environment: (typeof fiscalEnvironmentSchema)["Type"];
+  readonly buildDpsXml?: unknown | undefined;
+  readonly eventSink?: unknown | undefined;
   readonly correlationId?: string | undefined;
 };
-
 export const createNfseNacionalProviderOptionsSchema: Schema.Decoder<CreateNfseNacionalProviderOptionsInput> =
   Schema.Struct({
     environment: fiscalEnvironmentSchema,

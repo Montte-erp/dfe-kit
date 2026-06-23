@@ -1,7 +1,11 @@
 import { describe, expect, it } from "@effect/vitest";
 import type { IssueFiscalDocumentInput } from "@dfe-kit/fiscal";
 import { Effect } from "effect";
-import { createNfseNacionalProvider } from "../src/index";
+import {
+  createNfseNacionalHttpClientLayerFromClient,
+  createNfseNacionalProvider,
+  createNfseNacionalProviderWithHttpService,
+} from "../src/index";
 import { NfseNacionalProviderErrorCodeValue } from "../src/config";
 import type { NfseNacionalHttpClient } from "../src/http";
 
@@ -143,6 +147,29 @@ describe("createNfseNacionalProvider", () => {
       const error = yield* Effect.flip(provider.issue(input));
 
       expect(error.code).toBe(NfseNacionalProviderErrorCodeValue.invalidInput);
+    }),
+  );
+
+  it.effect("expõe provider por Layer para runtimes Effect e Alchemy", () =>
+    Effect.gen(function* () {
+      const http: NfseNacionalHttpClient = {
+        postDpsXml: () =>
+          Effect.succeed({
+            status: 200,
+            body: "<NFSe><infNFSe><ChaveAcesso>layered</ChaveAcesso></infNFSe></NFSe>",
+          }),
+      };
+      const provider = createNfseNacionalProviderWithHttpService({
+        environment: "homologation",
+        buildDpsXml: () => Effect.succeed("<DPS />"),
+      });
+
+      const issued = yield* provider
+        .issue(input)
+        .pipe(Effect.provide(createNfseNacionalHttpClientLayerFromClient(http)));
+
+      expect(issued.providerResponse.status).toBe("authorized");
+      expect(issued.providerResponse.providerDocumentId).toBe("layered");
     }),
   );
 });

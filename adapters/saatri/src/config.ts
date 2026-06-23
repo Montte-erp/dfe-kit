@@ -4,7 +4,6 @@ import type {
   FiscalProviderError,
   FiscalRejection,
 } from "@dfe-kit/fiscal";
-export { safeCauseMetadata, schemaErrorMetadata } from "@dfe-kit/fiscal/effect-error-metadata";
 import {
   FiscalEnvironmentValue,
   FiscalProviderCapabilityStatusValue,

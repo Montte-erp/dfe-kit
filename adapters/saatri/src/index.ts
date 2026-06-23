@@ -4,6 +4,7 @@ import type {
   IssueFiscalDocumentInput,
   IssueFiscalDocumentResponse,
 } from "@dfe-kit/fiscal";
+import { schemaErrorMetadata } from "@dfe-kit/fiscal/effect-error-metadata";
 import { Effect, Schema } from "effect";
 import {
   createSaatriPackageProviderOptionsSchema,
@@ -13,7 +14,6 @@ import {
   SaatriProviderError,
   SaatriProviderErrorCodeValue,
   SaatriSchemaNameValue,
-  schemaErrorMetadata,
   saatriCredentialsSchema,
   saatriEnvironmentConfigSchema,
   saatriProviderPackageConfigSchema,

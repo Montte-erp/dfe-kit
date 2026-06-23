@@ -14,6 +14,9 @@ import {
   getSaatriMunicipalityByProviderId,
   saatriMunicipalityCatalog,
   saatriMunicipalityStates,
+  saatriMunicipalityDescriptorSchema,
+  saatriMunicipalityIdSchema,
+  saatriMunicipalityStateSchema,
 } from "./catalog";
 
 export {
@@ -24,6 +27,9 @@ export {
   SAATRI_ABRASF_VERSION,
   saatriMunicipalityCatalog,
   saatriMunicipalityStates,
+  saatriMunicipalityDescriptorSchema,
+  saatriMunicipalityIdSchema,
+  saatriMunicipalityStateSchema,
 };
 export {
   createSaatriFetchHttpClientLayer,

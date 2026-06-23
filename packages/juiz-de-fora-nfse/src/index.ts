@@ -8,12 +8,9 @@ import type {
   NfseMunicipalPortalId,
 } from "@dfe-kit/adapter-nfse/municipal-catalog";
 
-export type JuizDeForaNfsePortal = NfseMunicipalPortalDescriptor;
-
 export const JUIZ_DE_FORA_NFSE_PROVIDER_ID: NfseMunicipalPortalId = "juiz-de-fora-mg-nfse";
-export const JUIZ_DE_FORA_NFSE_PORTAL: JuizDeForaNfsePortal = getNfseMunicipalPortalByProviderId(
-  JUIZ_DE_FORA_NFSE_PROVIDER_ID,
-);
+export const JUIZ_DE_FORA_NFSE_PORTAL: NfseMunicipalPortalDescriptor =
+  getNfseMunicipalPortalByProviderId(JUIZ_DE_FORA_NFSE_PROVIDER_ID);
 
 export const JUIZ_DE_FORA_CITY_CODE: string = JUIZ_DE_FORA_NFSE_PORTAL.cityCode;
 export const JUIZ_DE_FORA_NFSE_HOMOLOGATION_ENDPOINT: string =

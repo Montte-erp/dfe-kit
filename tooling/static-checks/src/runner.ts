@@ -12,16 +12,27 @@ const isImportLine = (line: string): boolean => /^\s*import\b/.test(line);
 const stripComments = (source: string): string =>
   source.replace(/\/\*[\s\S]*?\*\//g, "").replace(/(^|\s)\/\/.*$/gm, "$1");
 
-const reexportStatementPattern =
-  /export\s+(?:type\s+)?\{[\s\S]*?\}\s+from\s+["'][^"']+["'];?|export\s+\*\s+from\s+["'][^"']+["'];?/g;
+const importStatementPattern =
+  /import\s+(?:type\s+)?[\s\S]*?\s+from\s+["'][^"']+["'];?|import\s+["'][^"']+["'];?/g;
 
-const isBarrelOnlySource = (source: string): boolean => {
+const reexportStatementPattern =
+  /export\s+(?:type\s+)?(?:\{[\s\S]*?\}\s+from\s+["'][^"']+["']|\*\s+from\s+["'][^"']+["']);?/g;
+
+const localExportListPattern = /export\s+(?:type\s+)?\{[\s\S]*?\};?/g;
+
+export const isBarrelOnlySource = (source: string): boolean => {
   const withoutComments = stripComments(source).trim();
   if (withoutComments.length === 0) {
     return false;
   }
 
-  return withoutComments.replace(reexportStatementPattern, "").trim().length === 0;
+  return (
+    withoutComments
+      .replace(importStatementPattern, "")
+      .replace(reexportStatementPattern, "")
+      .replace(localExportListPattern, "")
+      .trim().length === 0
+  );
 };
 
 export const runDeclarativeChecks = (): boolean => {
