@@ -1,4 +1,3 @@
-import { safeCauseMetadata } from "@dfe-kit/fiscal/effect-error-metadata";
 import { Context, Duration, Effect, Layer, Match, Schema, Schedule } from "effect";
 import { FetchHttpClient, HttpBody, HttpClient, HttpClientResponse } from "effect/unstable/http";
 import {
@@ -12,23 +11,20 @@ import {
 const DPS_XML_CONTENT_TYPE = "application/xml; charset=utf-8";
 const ACCEPT_XML_OR_JSON = "application/xml, text/xml, application/json";
 
-const defineHttpSchema = <T>(schema: Schema.Decoder<T>): Schema.Decoder<T> => schema;
-
-const httpStatusSchema = defineHttpSchema<number>(
-  Schema.Number.check(Schema.isInt(), Schema.isGreaterThan(0)),
+const httpStatusSchema: Schema.Codec<number, unknown> = Schema.Number.check(
+  Schema.isInt(),
+  Schema.isGreaterThan(0),
 );
 
 export type NfseNacionalHttpResponse = {
   readonly status: number;
   readonly body: string;
 };
-export const nfseNacionalHttpResponseSchema: Schema.Decoder<NfseNacionalHttpResponse> =
-  defineHttpSchema(
-    Schema.Struct({
-      status: httpStatusSchema,
-      body: Schema.String,
-    }),
-  );
+export const nfseNacionalHttpResponseSchema: Schema.Codec<NfseNacionalHttpResponse, unknown> =
+  Schema.Struct({
+    status: httpStatusSchema,
+    body: Schema.String,
+  });
 
 export type NfseNacionalHttpClient = {
   postDpsXml(args: {
@@ -48,13 +44,15 @@ export type CreateNfseNacionalHttpOptions = {
   readonly retryBaseMillis?: number | undefined;
   readonly retryableStatus?: ReadonlySet<number> | undefined;
 };
-export const createNfseNacionalHttpOptionsSchema: Schema.Decoder<CreateNfseNacionalHttpOptions> =
-  Schema.Struct({
-    timeoutMs: Schema.optional(Schema.Number.check(Schema.isInt(), Schema.isGreaterThan(0))),
-    maxRetries: Schema.optional(Schema.Number.check(Schema.isInt(), Schema.isGreaterThan(-1))),
-    retryBaseMillis: Schema.optional(Schema.Number.check(Schema.isInt(), Schema.isGreaterThan(0))),
-    retryableStatus: Schema.optional(Schema.ReadonlySet(httpStatusSchema)),
-  });
+export const createNfseNacionalHttpOptionsSchema: Schema.Codec<
+  CreateNfseNacionalHttpOptions,
+  unknown
+> = Schema.Struct({
+  timeoutMs: Schema.optional(Schema.Number.check(Schema.isInt(), Schema.isGreaterThan(0))),
+  maxRetries: Schema.optional(Schema.Number.check(Schema.isInt(), Schema.isGreaterThan(-1))),
+  retryBaseMillis: Schema.optional(Schema.Number.check(Schema.isInt(), Schema.isGreaterThan(0))),
+  retryableStatus: Schema.optional(Schema.ReadonlySet(httpStatusSchema)),
+});
 
 type NfseNacionalHttpConfig = {
   readonly timeout: Duration.Duration;
@@ -119,21 +117,20 @@ const postDpsXmlWithClient = (
                   reason: `Sefin Nacional respondeu com status HTTP ${reason.response.status}.`,
                   operation: NfseNacionalOperationValue.httpPost,
                   phase: NfseNacionalPhaseValue.httpStatus,
-                  ...safeCauseMetadata(reason),
+                  upstreamTag: NfseNacionalUpstreamTagValue.statusCodeError,
                 }),
             ),
-            Match.orElse((reason) => {
-              const metadata = safeCauseMetadata(reason);
-              return new NfseNacionalProviderError({
-                code: NfseNacionalProviderErrorCodeValue.networkError,
-                retryable: true,
-                reason: "Falha de rede ao comunicar com a Sefin Nacional.",
-                operation: NfseNacionalOperationValue.httpPost,
-                phase: NfseNacionalPhaseValue.httpTransport,
-                upstreamTag: metadata.upstreamTag ?? NfseNacionalUpstreamTagValue.httpClientError,
-                upstreamCode: metadata.upstreamCode,
-              });
-            }),
+            Match.orElse(
+              () =>
+                new NfseNacionalProviderError({
+                  code: NfseNacionalProviderErrorCodeValue.networkError,
+                  retryable: true,
+                  reason: "Falha de rede ao comunicar com a Sefin Nacional.",
+                  operation: NfseNacionalOperationValue.httpPost,
+                  phase: NfseNacionalPhaseValue.httpTransport,
+                  upstreamTag: NfseNacionalUpstreamTagValue.httpClientError,
+                }),
+            ),
           ),
         ),
         Effect.timeout(config.timeout),
@@ -157,18 +154,17 @@ const postDpsXmlWithClient = (
       );
 
     const body = yield* response.text.pipe(
-      Effect.mapError((cause) => {
-        const metadata = safeCauseMetadata(cause);
-        return new NfseNacionalProviderError({
-          code: NfseNacionalProviderErrorCodeValue.responseReadError,
-          retryable: false,
-          reason: "Não foi possível ler o corpo da resposta da Sefin Nacional.",
-          operation: NfseNacionalOperationValue.httpResponseText,
-          phase: NfseNacionalPhaseValue.httpResponseBody,
-          upstreamTag: metadata.upstreamTag ?? NfseNacionalUpstreamTagValue.responseBodyError,
-          upstreamCode: metadata.upstreamCode,
-        });
-      }),
+      Effect.mapError(
+        () =>
+          new NfseNacionalProviderError({
+            code: NfseNacionalProviderErrorCodeValue.responseReadError,
+            retryable: false,
+            reason: "Não foi possível ler o corpo da resposta da Sefin Nacional.",
+            operation: NfseNacionalOperationValue.httpResponseText,
+            phase: NfseNacionalPhaseValue.httpResponseBody,
+            upstreamTag: NfseNacionalUpstreamTagValue.responseBodyError,
+          }),
+      ),
     );
 
     return { status: response.status, body };

@@ -2,12 +2,12 @@ import type { FiscalProviderError, IssueFiscalDocumentInput } from "@dfe-kit/fis
 import { fiscalEnvironmentSchema } from "@dfe-kit/fiscal/schemas";
 import { Effect, Schema } from "effect";
 
-const defineSefazSchema = <T>(schema: Schema.Decoder<T>): Schema.Decoder<T> => schema;
-
-const endpointUrl: Schema.Decoder<string> = Schema.String.check(Schema.isPattern(/^https:\/\/.+/));
+const endpointUrl: Schema.Codec<string, unknown> = Schema.String.check(
+  Schema.isPattern(/^https:\/\/.+/),
+);
 
 export type SefazDocumentKind = "nfe" | "nfce";
-export const sefazDocumentKindSchema: Schema.Decoder<SefazDocumentKind> = Schema.Literals([
+export const sefazDocumentKindSchema: Schema.Codec<SefazDocumentKind, unknown> = Schema.Literals([
   "nfe",
   "nfce",
 ]);
@@ -20,8 +20,8 @@ export type SefazProviderErrorCode =
   | "sefaz.REQUEST_BUILD_ERROR"
   | "sefaz.CONFIG_ERROR"
   | "sefaz.INVALID_INPUT";
-export const sefazProviderErrorCodeSchema: Schema.Decoder<SefazProviderErrorCode> = Schema.Literals(
-  [
+export const sefazProviderErrorCodeSchema: Schema.Codec<SefazProviderErrorCode, unknown> =
+  Schema.Literals([
     "sefaz.NETWORK_ERROR",
     "sefaz.RESPONSE_READ_ERROR",
     "sefaz.HTTP_STATUS_ERROR",
@@ -29,8 +29,7 @@ export const sefazProviderErrorCodeSchema: Schema.Decoder<SefazProviderErrorCode
     "sefaz.REQUEST_BUILD_ERROR",
     "sefaz.CONFIG_ERROR",
     "sefaz.INVALID_INPUT",
-  ],
-);
+  ]);
 export const SefazProviderErrorCodeValue = {
   networkError: "sefaz.NETWORK_ERROR",
   responseReadError: "sefaz.RESPONSE_READ_ERROR",
@@ -47,7 +46,7 @@ export type SefazOperation =
   | "http_post"
   | "http_response_text"
   | "response_parse";
-export const sefazOperationSchema: Schema.Decoder<SefazOperation> = Schema.Literals([
+export const sefazOperationSchema: Schema.Codec<SefazOperation, unknown> = Schema.Literals([
   "schema_decode",
   "request_build",
   "http_post",
@@ -73,7 +72,7 @@ export type SefazPhase =
   | "http_timeout"
   | "http_response_body"
   | "response_body";
-export const sefazPhaseSchema: Schema.Decoder<SefazPhase> = Schema.Literals([
+export const sefazPhaseSchema: Schema.Codec<SefazPhase, unknown> = Schema.Literals([
   "provider_options_decode",
   "environment_config_decode",
   "issue_input_decode",
@@ -99,7 +98,7 @@ export const SefazPhaseValue = {
 } satisfies Record<string, SefazPhase>;
 
 export type SefazSchemaName = "provider_options" | "environment_config" | "issue_input";
-export const sefazSchemaNameSchema: Schema.Decoder<SefazSchemaName> = Schema.Literals([
+export const sefazSchemaNameSchema: Schema.Codec<SefazSchemaName, unknown> = Schema.Literals([
   "provider_options",
   "environment_config",
   "issue_input",
@@ -115,7 +114,7 @@ export type SefazUpstreamTag =
   | "HttpClientError"
   | "TimeoutError"
   | "ResponseBodyError";
-export const sefazUpstreamTagSchema: Schema.Decoder<SefazUpstreamTag> = Schema.Literals([
+export const sefazUpstreamTagSchema: Schema.Codec<SefazUpstreamTag, unknown> = Schema.Literals([
   "StatusCodeError",
   "HttpClientError",
   "TimeoutError",
@@ -140,7 +139,6 @@ export type SefazProviderErrorFields = {
   readonly issuePath?: string | undefined;
   readonly issueMessage?: string | undefined;
   readonly upstreamTag?: string | undefined;
-  readonly upstreamCode?: string | undefined;
 };
 
 type SefazProviderErrorInput = {
@@ -154,7 +152,6 @@ type SefazProviderErrorInput = {
   readonly issuePath?: string | undefined;
   readonly issueMessage?: string | undefined;
   readonly upstreamTag?: string | undefined;
-  readonly upstreamCode?: string | undefined;
 };
 
 type SefazProviderErrorConstructor = new (
@@ -173,7 +170,6 @@ const ProviderErrorBase: SefazProviderErrorConstructor =
     issuePath: Schema.optional(Schema.String),
     issueMessage: Schema.optional(Schema.String),
     upstreamTag: Schema.optional(Schema.String),
-    upstreamCode: Schema.optional(Schema.String),
   });
 
 export class SefazProviderError extends ProviderErrorBase implements FiscalProviderError {
@@ -201,25 +197,21 @@ export type SefazAuthorizationEndpoints = {
   readonly nfe?: string | undefined;
   readonly nfce?: string | undefined;
 };
-export const sefazAuthorizationEndpointsSchema: Schema.Decoder<SefazAuthorizationEndpoints> =
-  defineSefazSchema(
-    Schema.Struct({
-      nfe: Schema.optional(endpointUrl),
-      nfce: Schema.optional(endpointUrl),
-    }),
-  );
+export const sefazAuthorizationEndpointsSchema: Schema.Codec<SefazAuthorizationEndpoints, unknown> =
+  Schema.Struct({
+    nfe: Schema.optional(endpointUrl),
+    nfce: Schema.optional(endpointUrl),
+  });
 
 export type SefazEnvironmentConfig = {
   readonly environment: "homologation" | "production";
   readonly authorizationEndpoints: SefazAuthorizationEndpoints;
 };
-export const sefazEnvironmentConfigSchema: Schema.Decoder<SefazEnvironmentConfig> =
-  defineSefazSchema(
-    Schema.Struct({
-      environment: fiscalEnvironmentSchema,
-      authorizationEndpoints: sefazAuthorizationEndpointsSchema,
-    }),
-  );
+export const sefazEnvironmentConfigSchema: Schema.Codec<SefazEnvironmentConfig, unknown> =
+  Schema.Struct({
+    environment: fiscalEnvironmentSchema,
+    authorizationEndpoints: sefazAuthorizationEndpointsSchema,
+  });
 
 export type SefazSignedRequestXmlBuilder = (
   input: IssueFiscalDocumentInput,
@@ -237,7 +229,7 @@ export type SefazEventName =
   | "sefaz.fiscal_rejected"
   | "sefaz.issue_completed"
   | "sefaz.issue_failed";
-export const sefazEventNameSchema: Schema.Decoder<SefazEventName> = Schema.Literals([
+export const sefazEventNameSchema: Schema.Codec<SefazEventName, unknown> = Schema.Literals([
   "sefaz.issue_started",
   "sefaz.request_build_started",
   "sefaz.request_build_succeeded",
@@ -273,17 +265,15 @@ export type SefazEvent = {
   readonly number: string;
   readonly correlationId?: string | undefined;
 };
-export const sefazEventSchema: Schema.Decoder<SefazEvent> = defineSefazSchema(
-  Schema.Struct({
-    name: sefazEventNameSchema,
-    providerId: Schema.String,
-    documentKind: Schema.String,
-    environment: Schema.String,
-    series: Schema.String,
-    number: Schema.String,
-    correlationId: Schema.optional(Schema.String),
-  }),
-);
+export const sefazEventSchema: Schema.Codec<SefazEvent, unknown> = Schema.Struct({
+  name: sefazEventNameSchema,
+  providerId: Schema.String,
+  documentKind: Schema.String,
+  environment: Schema.String,
+  series: Schema.String,
+  number: Schema.String,
+  correlationId: Schema.optional(Schema.String),
+});
 
 export type SefazEventSink = (event: SefazEvent) => Effect.Effect<void, never>;
 
@@ -294,14 +284,16 @@ export type CreateSefazProviderOptionsInput = {
   readonly eventSink?: unknown;
   readonly correlationId?: string | undefined;
 };
-export const createSefazProviderOptionsSchema: Schema.Decoder<CreateSefazProviderOptionsInput> =
-  Schema.Struct({
-    environment: fiscalEnvironmentSchema,
-    authorizationEndpoints: sefazAuthorizationEndpointsSchema,
-    buildSignedRequestXml: Schema.optional(Schema.Unknown),
-    eventSink: Schema.optional(Schema.Unknown),
-    correlationId: Schema.optional(Schema.String),
-  });
+export const createSefazProviderOptionsSchema: Schema.Codec<
+  CreateSefazProviderOptionsInput,
+  unknown
+> = Schema.Struct({
+  environment: fiscalEnvironmentSchema,
+  authorizationEndpoints: sefazAuthorizationEndpointsSchema,
+  buildSignedRequestXml: Schema.optional(Schema.Unknown),
+  eventSink: Schema.optional(Schema.Unknown),
+  correlationId: Schema.optional(Schema.String),
+});
 
 export type CreateSefazProviderOptions = CreateSefazProviderOptionsInput & {
   readonly buildSignedRequestXml: SefazSignedRequestXmlBuilder;

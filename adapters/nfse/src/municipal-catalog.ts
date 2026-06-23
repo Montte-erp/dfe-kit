@@ -15,25 +15,27 @@ import { Schema } from "effect";
 const endpointUrl = Schema.String.check(Schema.isPattern(/^https:\/\/.+/));
 
 export type NfseMunicipalPortalState = "MG";
-export const nfseMunicipalPortalStateSchema: Schema.Decoder<NfseMunicipalPortalState> =
+export const nfseMunicipalPortalStateSchema: Schema.Codec<NfseMunicipalPortalState, unknown> =
   Schema.Literal("MG");
 
 export type NfseMunicipalPortalFamily = "pjf-abrasf-2.02";
-export const nfseMunicipalPortalFamilySchema: Schema.Decoder<NfseMunicipalPortalFamily> =
+export const nfseMunicipalPortalFamilySchema: Schema.Codec<NfseMunicipalPortalFamily, unknown> =
   Schema.Literal("pjf-abrasf-2.02");
 
 export type NfseMunicipalPortalEndpoints = {
   readonly homologation: string;
   readonly production: string;
 };
-export const nfseMunicipalPortalEndpointsSchema: Schema.Decoder<NfseMunicipalPortalEndpoints> =
-  Schema.Struct({
-    homologation: endpointUrl,
-    production: endpointUrl,
-  });
+export const nfseMunicipalPortalEndpointsSchema: Schema.Codec<
+  NfseMunicipalPortalEndpoints,
+  unknown
+> = Schema.Struct({
+  homologation: endpointUrl,
+  production: endpointUrl,
+});
 
 export type NfseMunicipalPortalId = "juiz-de-fora-mg-nfse";
-export const nfseMunicipalPortalIdSchema: Schema.Decoder<NfseMunicipalPortalId> =
+export const nfseMunicipalPortalIdSchema: Schema.Codec<NfseMunicipalPortalId, unknown> =
   Schema.Literal("juiz-de-fora-mg-nfse");
 
 export type NfseMunicipalPortalDescriptor = {
@@ -54,25 +56,27 @@ export type NfseMunicipalPortalDescriptor = {
   readonly sourceUrls: ReadonlyArray<string>;
   readonly capabilityMetadata?: ReadonlyArray<FiscalProviderCapabilityMetadata> | undefined;
 };
-export const nfseMunicipalPortalDescriptorSchema: Schema.Decoder<NfseMunicipalPortalDescriptor> =
-  Schema.Struct({
-    providerId: nfseMunicipalPortalIdSchema,
-    providerName: Schema.NonEmptyString,
-    cityCode: Schema.String.check(Schema.isPattern(/^\d{7}$/)),
-    cityName: Schema.NonEmptyString,
-    state: nfseMunicipalPortalStateSchema,
-    family: nfseMunicipalPortalFamilySchema,
-    layoutVersion: Schema.NonEmptyString,
-    portalUrl: endpointUrl,
-    endpoints: nfseMunicipalPortalEndpointsSchema,
-    wsdl: nfseMunicipalPortalEndpointsSchema,
-    maxXmlBytes: Schema.Number.check(Schema.isInt(), Schema.isGreaterThan(0)),
-    maxRpsPerBatch: Schema.Number.check(Schema.isInt(), Schema.isGreaterThan(0)),
-    requiresCertificateOutsideDFeKit: Schema.Literal(true),
-    requiresSigner: Schema.Literal(true),
-    sourceUrls: Schema.Array(endpointUrl),
-    capabilityMetadata: Schema.optional(Schema.Array(fiscalProviderCapabilityMetadataSchema)),
-  });
+export const nfseMunicipalPortalDescriptorSchema: Schema.Codec<
+  NfseMunicipalPortalDescriptor,
+  unknown
+> = Schema.Struct({
+  providerId: nfseMunicipalPortalIdSchema,
+  providerName: Schema.NonEmptyString,
+  cityCode: Schema.String.check(Schema.isPattern(/^\d{7}$/)),
+  cityName: Schema.NonEmptyString,
+  state: nfseMunicipalPortalStateSchema,
+  family: nfseMunicipalPortalFamilySchema,
+  layoutVersion: Schema.NonEmptyString,
+  portalUrl: endpointUrl,
+  endpoints: nfseMunicipalPortalEndpointsSchema,
+  wsdl: nfseMunicipalPortalEndpointsSchema,
+  maxXmlBytes: Schema.Number.check(Schema.isInt(), Schema.isGreaterThan(0)),
+  maxRpsPerBatch: Schema.Number.check(Schema.isInt(), Schema.isGreaterThan(0)),
+  requiresCertificateOutsideDFeKit: Schema.Literal(true),
+  requiresSigner: Schema.Literal(true),
+  sourceUrls: Schema.Array(endpointUrl),
+  capabilityMetadata: Schema.optional(Schema.Array(fiscalProviderCapabilityMetadataSchema)),
+});
 
 const commonMunicipalCapabilityMetadata: readonly FiscalProviderCapabilityMetadata[] = [
   {

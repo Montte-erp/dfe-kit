@@ -1,70 +1,67 @@
 import { Effect, Schema, type Brand } from "effect";
 import { isValidBrazilianTaxId, isValidCnpj, isValidCpf } from "./brazilian-tax-id";
 
-const defineFiscalSchema = <T>(schema: Schema.Decoder<T>): Schema.Decoder<T> => schema;
-
-const nonEmptyString: Schema.Decoder<string> = Schema.NonEmptyString;
-const cityCode: Schema.Decoder<string> = Schema.String.check(Schema.isPattern(/^\d{7}$/));
-const postalCode: Schema.Decoder<string> = Schema.String.check(Schema.isPattern(/^\d{8}$/));
-const money: Schema.Decoder<string> = Schema.String.check(Schema.isPattern(/^\d+(\.\d{2})$/));
-const taxRate: Schema.Decoder<string> = Schema.String.check(Schema.isPattern(/^\d+(\.\d{2,4})$/));
-const isoDateTime: Schema.Decoder<string> = Schema.String.check(
+const nonEmptyString: Schema.Codec<string, unknown> = Schema.NonEmptyString;
+const cityCode: Schema.Codec<string, unknown> = Schema.String.check(Schema.isPattern(/^\d{7}$/));
+const postalCode: Schema.Codec<string, unknown> = Schema.String.check(Schema.isPattern(/^\d{8}$/));
+const money: Schema.Codec<string, unknown> = Schema.String.check(
+  Schema.isPattern(/^\d+(\.\d{2})$/),
+);
+const taxRate: Schema.Codec<string, unknown> = Schema.String.check(
+  Schema.isPattern(/^\d+(\.\d{2,4})$/),
+);
+const isoDateTime: Schema.Codec<string, unknown> = Schema.String.check(
   Schema.isPattern(/^\d{4}-\d{2}-\d{2}T.+/),
 );
-const urlString: Schema.Decoder<string> = Schema.String.check(Schema.isPattern(/^https?:\/\/.+/));
-const emailString: Schema.Decoder<string> = Schema.String.check(
+const urlString: Schema.Codec<string, unknown> = Schema.String.check(
+  Schema.isPattern(/^https?:\/\/.+/),
+);
+const emailString: Schema.Codec<string, unknown> = Schema.String.check(
   Schema.isPattern(/^[^\s@]+@[^\s@]+\.[^\s@]+$/),
 );
 
 export type IbgeCityCode = Brand.Branded<string, "IbgeCityCode">;
-export const ibgeCityCodeSchema: Schema.Decoder<IbgeCityCode> = defineFiscalSchema<IbgeCityCode>(
-  Schema.String.check(Schema.isPattern(/^\d{7}$/)).pipe(Schema.brand("IbgeCityCode")),
-);
+export const ibgeCityCodeSchema: Schema.Codec<IbgeCityCode, unknown> = Schema.String.check(
+  Schema.isPattern(/^\d{7}$/),
+).pipe(Schema.brand("IbgeCityCode"));
 
 export type PostalCode = Brand.Branded<string, "PostalCode">;
-export const postalCodeSchema: Schema.Decoder<PostalCode> = defineFiscalSchema<PostalCode>(
-  Schema.String.check(Schema.isPattern(/^\d{8}$/)).pipe(Schema.brand("PostalCode")),
-);
+export const postalCodeSchema: Schema.Codec<PostalCode, unknown> = Schema.String.check(
+  Schema.isPattern(/^\d{8}$/),
+).pipe(Schema.brand("PostalCode"));
 
 export type FiscalMoney = Brand.Branded<string, "FiscalMoney">;
-export const fiscalMoneySchema: Schema.Decoder<FiscalMoney> = defineFiscalSchema<FiscalMoney>(
-  Schema.String.check(Schema.isPattern(/^\d+(\.\d{2})$/)).pipe(Schema.brand("FiscalMoney")),
-);
+export const fiscalMoneySchema: Schema.Codec<FiscalMoney, unknown> = Schema.String.check(
+  Schema.isPattern(/^\d+(\.\d{2})$/),
+).pipe(Schema.brand("FiscalMoney"));
 
 export type FiscalTaxRate = Brand.Branded<string, "FiscalTaxRate">;
-export const fiscalTaxRateSchema: Schema.Decoder<FiscalTaxRate> = defineFiscalSchema<FiscalTaxRate>(
-  Schema.String.check(Schema.isPattern(/^\d+(\.\d{2,4})$/)).pipe(Schema.brand("FiscalTaxRate")),
-);
+export const fiscalTaxRateSchema: Schema.Codec<FiscalTaxRate, unknown> = Schema.String.check(
+  Schema.isPattern(/^\d+(\.\d{2,4})$/),
+).pipe(Schema.brand("FiscalTaxRate"));
 
 export type Cpf = Brand.Branded<string, "Cpf">;
-export const cpfSchema: Schema.Decoder<Cpf> = defineFiscalSchema<Cpf>(
-  Schema.String.check(Schema.makeFilter(isValidCpf, { expected: "a valid CPF" })).pipe(
-    Schema.brand("Cpf"),
-  ),
-);
+export const cpfSchema: Schema.Codec<Cpf, unknown> = Schema.String.check(
+  Schema.makeFilter(isValidCpf, { expected: "a valid CPF" }),
+).pipe(Schema.brand("Cpf"));
 
 export type Cnpj = Brand.Branded<string, "Cnpj">;
-export const cnpjSchema: Schema.Decoder<Cnpj> = defineFiscalSchema<Cnpj>(
-  Schema.String.check(Schema.makeFilter(isValidCnpj, { expected: "a valid CNPJ" })).pipe(
-    Schema.brand("Cnpj"),
-  ),
-);
+export const cnpjSchema: Schema.Codec<Cnpj, unknown> = Schema.String.check(
+  Schema.makeFilter(isValidCnpj, { expected: "a valid CNPJ" }),
+).pipe(Schema.brand("Cnpj"));
 
 export type BrazilianTaxId = Brand.Branded<string, "BrazilianTaxId">;
-export const brazilianTaxIdSchema: Schema.Decoder<BrazilianTaxId> =
-  defineFiscalSchema<BrazilianTaxId>(
-    Schema.String.check(
-      Schema.makeFilter(isValidBrazilianTaxId, { expected: "a valid CPF or CNPJ" }),
-    ).pipe(Schema.brand("BrazilianTaxId")),
-  );
+export const brazilianTaxIdSchema: Schema.Codec<BrazilianTaxId, unknown> = Schema.String.check(
+  Schema.makeFilter(isValidBrazilianTaxId, { expected: "a valid CPF or CNPJ" }),
+).pipe(Schema.brand("BrazilianTaxId"));
 
-const validCpf: Schema.Decoder<string> = Schema.String.check(
+const validCpf: Schema.Codec<string, unknown> = Schema.String.check(
   Schema.makeFilter(isValidCpf, { expected: "a valid CPF" }),
 );
-const validCnpj: Schema.Decoder<string> = Schema.String.check(
+const validCnpj: Schema.Codec<string, unknown> = Schema.String.check(
   Schema.makeFilter(isValidCnpj, { expected: "a valid CNPJ" }),
 );
-const validBrazilianTaxId: Schema.Decoder<string> = Schema.String.check(
+const validBrazilianTaxId: Schema.Codec<string, unknown> = Schema.String.check(
   Schema.makeFilter(isValidBrazilianTaxId, { expected: "a valid CPF or CNPJ" }),
 );
 
@@ -96,7 +93,7 @@ export type BrazilianStateCode =
   | "SP"
   | "SE"
   | "TO";
-export const brazilianStateCodeSchema: Schema.Decoder<BrazilianStateCode> = Schema.Literals([
+export const brazilianStateCodeSchema: Schema.Codec<BrazilianStateCode, unknown> = Schema.Literals([
   "AC",
   "AL",
   "AP",
@@ -127,11 +124,8 @@ export const brazilianStateCodeSchema: Schema.Decoder<BrazilianStateCode> = Sche
 ]);
 
 export type FiscalDocumentKindValue = "nfe" | "nfce" | "nfse";
-export const fiscalDocumentKindSchema: Schema.Decoder<FiscalDocumentKindValue> = Schema.Literals([
-  "nfe",
-  "nfce",
-  "nfse",
-]);
+export const fiscalDocumentKindSchema: Schema.Codec<FiscalDocumentKindValue, unknown> =
+  Schema.Literals(["nfe", "nfce", "nfse"]);
 export const FiscalDocumentKindValue = {
   nfe: "nfe",
   nfce: "nfce",
@@ -139,10 +133,8 @@ export const FiscalDocumentKindValue = {
 } satisfies Record<string, FiscalDocumentKindValue>;
 
 export type FiscalEnvironmentValue = "homologation" | "production";
-export const fiscalEnvironmentSchema: Schema.Decoder<FiscalEnvironmentValue> = Schema.Literals([
-  "homologation",
-  "production",
-]);
+export const fiscalEnvironmentSchema: Schema.Codec<FiscalEnvironmentValue, unknown> =
+  Schema.Literals(["homologation", "production"]);
 export const FiscalEnvironmentValue = {
   homologation: "homologation",
   production: "production",
@@ -159,7 +151,7 @@ export type FiscalDocumentStatusValue =
   | "cancelled"
   | "technical_error_retryable"
   | "technical_error_terminal";
-export const fiscalDocumentStatusSchema: Schema.Decoder<FiscalDocumentStatusValue> =
+export const fiscalDocumentStatusSchema: Schema.Codec<FiscalDocumentStatusValue, unknown> =
   Schema.Literals([
     "draft",
     "queued",
@@ -199,7 +191,7 @@ export type FiscalProviderCapabilityValue =
   | "replace_nfse"
   | "issue_nfe"
   | "issue_nfce";
-export const fiscalProviderCapabilitySchema: Schema.Decoder<FiscalProviderCapabilityValue> =
+export const fiscalProviderCapabilitySchema: Schema.Codec<FiscalProviderCapabilityValue, unknown> =
   Schema.Literals([
     "issue_nfse",
     "submit_rps_batch",
@@ -235,8 +227,10 @@ export type FiscalProviderCapabilityStatusValue =
   | "supported"
   | "unsupported"
   | "unverified_in_homologation";
-export const fiscalProviderCapabilityStatusSchema: Schema.Decoder<FiscalProviderCapabilityStatusValue> =
-  Schema.Literals(["supported", "unsupported", "unverified_in_homologation"]);
+export const fiscalProviderCapabilityStatusSchema: Schema.Codec<
+  FiscalProviderCapabilityStatusValue,
+  unknown
+> = Schema.Literals(["supported", "unsupported", "unverified_in_homologation"]);
 export const FiscalProviderCapabilityStatusValue = {
   supported: "supported",
   unsupported: "unsupported",
@@ -251,15 +245,17 @@ export type FiscalProviderCapabilityMetadata = {
   readonly requiresSigner?: boolean | undefined;
   readonly requiresCertificateOutsideDFeKit?: boolean | undefined;
 };
-export const fiscalProviderCapabilityMetadataSchema: Schema.Decoder<FiscalProviderCapabilityMetadata> =
-  Schema.Struct({
-    capability: fiscalProviderCapabilitySchema,
-    status: fiscalProviderCapabilityStatusSchema,
-    environments: Schema.optional(Schema.Array(fiscalEnvironmentSchema)),
-    reason: Schema.optional(Schema.String),
-    requiresSigner: Schema.optional(Schema.Boolean),
-    requiresCertificateOutsideDFeKit: Schema.optional(Schema.Boolean),
-  });
+export const fiscalProviderCapabilityMetadataSchema: Schema.Codec<
+  FiscalProviderCapabilityMetadata,
+  unknown
+> = Schema.Struct({
+  capability: fiscalProviderCapabilitySchema,
+  status: fiscalProviderCapabilityStatusSchema,
+  environments: Schema.optional(Schema.Array(fiscalEnvironmentSchema)),
+  reason: Schema.optional(Schema.String),
+  requiresSigner: Schema.optional(Schema.Boolean),
+  requiresCertificateOutsideDFeKit: Schema.optional(Schema.Boolean),
+});
 
 export type FiscalProviderManifest = {
   readonly id: string;
@@ -269,14 +265,15 @@ export type FiscalProviderManifest = {
   readonly capabilities: readonly FiscalProviderCapabilityValue[];
   readonly capabilityMetadata?: readonly FiscalProviderCapabilityMetadata[] | undefined;
 };
-export const fiscalProviderManifestSchema: Schema.Decoder<FiscalProviderManifest> = Schema.Struct({
-  id: nonEmptyString,
-  name: nonEmptyString,
-  documentKinds: Schema.Array(fiscalDocumentKindSchema).check(Schema.isMinLength(1)),
-  environments: Schema.Array(fiscalEnvironmentSchema).check(Schema.isMinLength(1)),
-  capabilities: Schema.Array(fiscalProviderCapabilitySchema),
-  capabilityMetadata: Schema.optional(Schema.Array(fiscalProviderCapabilityMetadataSchema)),
-});
+export const fiscalProviderManifestSchema: Schema.Codec<FiscalProviderManifest, unknown> =
+  Schema.Struct({
+    id: nonEmptyString,
+    name: nonEmptyString,
+    documentKinds: Schema.Array(fiscalDocumentKindSchema).check(Schema.isMinLength(1)),
+    environments: Schema.Array(fiscalEnvironmentSchema).check(Schema.isMinLength(1)),
+    capabilities: Schema.Array(fiscalProviderCapabilitySchema),
+    capabilityMetadata: Schema.optional(Schema.Array(fiscalProviderCapabilityMetadataSchema)),
+  });
 
 export type FiscalAddress = {
   readonly street: string;
@@ -289,7 +286,7 @@ export type FiscalAddress = {
   readonly postalCode: string;
   readonly countryCode: string;
 };
-export const fiscalAddressSchema: Schema.Decoder<FiscalAddress> = Schema.Struct({
+export const fiscalAddressSchema: Schema.Codec<FiscalAddress, unknown> = Schema.Struct({
   street: nonEmptyString,
   number: nonEmptyString,
   complement: Schema.optional(Schema.String),
@@ -312,7 +309,7 @@ export type TaxParty = {
   readonly phone?: string | undefined;
   readonly address: FiscalAddress;
 };
-export const taxPartySchema: Schema.Decoder<TaxParty> = Schema.Struct({
+export const taxPartySchema: Schema.Codec<TaxParty, unknown> = Schema.Struct({
   legalName: nonEmptyString,
   tradeName: Schema.optional(Schema.String),
   cnpj: Schema.optional(validCnpj),
@@ -337,7 +334,7 @@ export type ServiceItem = {
   readonly taxRate?: string | undefined;
   readonly taxable: boolean;
 };
-export const serviceItemSchema: Schema.Decoder<ServiceItem> = Schema.Struct({
+export const serviceItemSchema: Schema.Codec<ServiceItem, unknown> = Schema.Struct({
   description: nonEmptyString,
   serviceListCode: nonEmptyString,
   municipalTaxCode: Schema.optional(Schema.String),
@@ -357,7 +354,7 @@ export type ProductItem = {
   readonly totalAmount: string;
   readonly taxable: boolean;
 };
-export const productItemSchema: Schema.Decoder<ProductItem> = Schema.Struct({
+export const productItemSchema: Schema.Codec<ProductItem, unknown> = Schema.Struct({
   description: nonEmptyString,
   cfop: Schema.String.check(Schema.isPattern(/^\d{4}$/)),
   ncm: Schema.String.check(Schema.isPattern(/^\d{8}$/)),
@@ -376,7 +373,7 @@ export type FiscalDocumentRef = {
   readonly series: string;
   readonly number: string;
 };
-export const fiscalDocumentRefSchema: Schema.Decoder<FiscalDocumentRef> = Schema.Struct({
+export const fiscalDocumentRefSchema: Schema.Codec<FiscalDocumentRef, unknown> = Schema.Struct({
   documentKind: fiscalDocumentKindSchema,
   providerId: nonEmptyString,
   environment: fiscalEnvironmentSchema,
@@ -385,20 +382,15 @@ export const fiscalDocumentRefSchema: Schema.Decoder<FiscalDocumentRef> = Schema
   number: nonEmptyString,
 });
 
-const uint8ArraySchema: Schema.Decoder<Uint8Array> = Schema.Uint8Array;
+const uint8ArraySchema: Schema.Codec<Uint8Array, unknown> = Schema.Uint8Array;
 export type FiscalArtifactKindValue =
   | "request_xml"
   | "response_xml"
   | "authorized_xml"
   | "pdf"
   | "protocol";
-export const fiscalArtifactKindSchema: Schema.Decoder<FiscalArtifactKindValue> = Schema.Literals([
-  "request_xml",
-  "response_xml",
-  "authorized_xml",
-  "pdf",
-  "protocol",
-]);
+export const fiscalArtifactKindSchema: Schema.Codec<FiscalArtifactKindValue, unknown> =
+  Schema.Literals(["request_xml", "response_xml", "authorized_xml", "pdf", "protocol"]);
 export const FiscalArtifactKindValue = {
   requestXml: "request_xml",
   responseXml: "response_xml",
@@ -412,7 +404,7 @@ export type FiscalArtifact = {
   readonly mediaType: string;
   readonly bytes: Uint8Array;
 };
-export const fiscalArtifactSchema: Schema.Decoder<FiscalArtifact> = Schema.Struct({
+export const fiscalArtifactSchema: Schema.Codec<FiscalArtifact, unknown> = Schema.Struct({
   kind: fiscalArtifactKindSchema,
   mediaType: nonEmptyString,
   bytes: uint8ArraySchema,
@@ -423,7 +415,7 @@ export type FiscalRejection = {
   readonly message: string;
   readonly correctionHint?: string | undefined;
 };
-export const fiscalRejectionSchema: Schema.Decoder<FiscalRejection> = Schema.Struct({
+export const fiscalRejectionSchema: Schema.Codec<FiscalRejection, unknown> = Schema.Struct({
   code: nonEmptyString,
   message: nonEmptyString,
   correctionHint: Schema.optional(Schema.String),
@@ -437,7 +429,7 @@ export type ProviderResponse = {
   readonly rejections: readonly FiscalRejection[];
   readonly artifacts: readonly FiscalArtifact[];
 };
-export const providerResponseSchema: Schema.Decoder<ProviderResponse> = Schema.Struct({
+export const providerResponseSchema: Schema.Codec<ProviderResponse, unknown> = Schema.Struct({
   status: fiscalDocumentStatusSchema,
   providerDocumentId: Schema.optional(Schema.String),
   protocol: Schema.optional(Schema.String),
@@ -450,7 +442,7 @@ export type IssueFiscalDocumentResponse = {
   readonly documentRef: FiscalDocumentRef;
   readonly providerResponse: ProviderResponse;
 };
-export const issueFiscalDocumentResponseSchema: Schema.Decoder<IssueFiscalDocumentResponse> =
+export const issueFiscalDocumentResponseSchema: Schema.Codec<IssueFiscalDocumentResponse, unknown> =
   Schema.Struct({
     documentRef: fiscalDocumentRefSchema,
     providerResponse: providerResponseSchema,
@@ -461,7 +453,7 @@ export type FiscalProviderError = {
   readonly retryable: boolean;
   readonly message: string;
 };
-export const fiscalProviderErrorSchema: Schema.Decoder<FiscalProviderError> = Schema.Struct({
+export const fiscalProviderErrorSchema: Schema.Codec<FiscalProviderError, unknown> = Schema.Struct({
   code: Schema.String,
   retryable: Schema.Boolean,
   message: Schema.String,
@@ -478,7 +470,7 @@ export type IssueFiscalDocumentInput = {
   readonly number: string;
   readonly issuedAt: string;
 };
-export const issueFiscalDocumentInputSchema: Schema.Decoder<IssueFiscalDocumentInput> =
+export const issueFiscalDocumentInputSchema: Schema.Codec<IssueFiscalDocumentInput, unknown> =
   Schema.Struct({
     environment: fiscalEnvironmentSchema,
     documentKind: fiscalDocumentKindSchema,

@@ -29,7 +29,7 @@
   "dependencies": {
     "@dfe-kit/fiscal": "workspace:*",
     "@dfe-kit/xml": "workspace:*",
-    "effect": "4.0.0-beta.81"
+    "effect": "4.0.0-beta.86"
   },
   "nx": {
     "tags": [

@@ -12,6 +12,10 @@ const hasManualSchemaContract = (line: string, path: string, source: string): bo
     return false;
   }
 
+  if (/\b(?:AlchemyResource|Resource)\s*</.test(line)) {
+    return false;
+  }
+
   const name = match[1] ?? "";
   const escapedName = escapeRegex(name);
   const schemaName = name + "Schema";
@@ -32,7 +36,7 @@ const hasManualSchemaContract = (line: string, path: string, source: string): bo
   }
   const schemaAlternatives = [...schemaCandidates].map(escapeRegex).join("|");
   const namedSchemaPattern = "\\b(?:const|export\\s+const)\\s+(?:" + schemaAlternatives + ")\\b";
-  const schemaAnnotationPattern = "\\bSchema\\.(?:Decoder|Schema)\\s*<\\s*" + escapedName + "\\b";
+  const schemaAnnotationPattern = "\\bSchema\\.Codec\\s*<\\s*" + escapedName + "\\b";
   const contextPattern = "\\bContext\\.Reference\\s*<\\s*" + escapedName + "\\s*>";
   const derivedTypePattern =
     "\\b(?:export\\s+)?type\\s+" +
@@ -103,6 +107,9 @@ const hasLiteralCodeArray = (line: string): boolean => {
   return true;
 };
 
+export const hasLegacySchemaAnnotation = (line: string): boolean =>
+  /\bSchema\.(?:Decoder|Schema)\s*</.test(line);
+
 export const schemaContractChecks: readonly Check[] = [
   {
     message:
@@ -114,6 +121,12 @@ export const schemaContractChecks: readonly Check[] = [
     message:
       "Liste códigos/status/eventos com `Schema.Literals(...)`; não deixe arrays literais de domínio persistindo com string/número literal.",
     test: ({ line }) => hasLiteralCodeArray(line),
+    ignoreImportLine: false,
+  },
+  {
+    message:
+      "Effect v4 usa `Schema.Codec<T, unknown>` nas anotações públicas; não use nomes antigos de schema.",
+    test: ({ line }) => hasLegacySchemaAnnotation(line),
     ignoreImportLine: false,
   },
 ];

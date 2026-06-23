@@ -2,9 +2,9 @@ import type { FiscalProviderError, IssueFiscalDocumentInput } from "@dfe-kit/fis
 import { fiscalEnvironmentSchema } from "@dfe-kit/fiscal/schemas";
 import { Effect, Schema } from "effect";
 
-const defineNfseNacionalSchema = <T>(schema: Schema.Decoder<T>): Schema.Decoder<T> => schema;
-
-const endpointUrl: Schema.Decoder<string> = Schema.String.check(Schema.isPattern(/^https:\/\/.+/));
+const endpointUrl: Schema.Codec<string, unknown> = Schema.String.check(
+  Schema.isPattern(/^https:\/\/.+/),
+);
 
 export type NfseNacionalProviderErrorCode =
   | "nfse_nacional.NETWORK_ERROR"
@@ -14,16 +14,18 @@ export type NfseNacionalProviderErrorCode =
   | "nfse_nacional.DPS_BUILD_ERROR"
   | "nfse_nacional.CONFIG_ERROR"
   | "nfse_nacional.INVALID_INPUT";
-export const nfseNacionalProviderErrorCodeSchema: Schema.Decoder<NfseNacionalProviderErrorCode> =
-  Schema.Literals([
-    "nfse_nacional.NETWORK_ERROR",
-    "nfse_nacional.RESPONSE_READ_ERROR",
-    "nfse_nacional.HTTP_STATUS_ERROR",
-    "nfse_nacional.RESPONSE_SHAPE_ERROR",
-    "nfse_nacional.DPS_BUILD_ERROR",
-    "nfse_nacional.CONFIG_ERROR",
-    "nfse_nacional.INVALID_INPUT",
-  ]);
+export const nfseNacionalProviderErrorCodeSchema: Schema.Codec<
+  NfseNacionalProviderErrorCode,
+  unknown
+> = Schema.Literals([
+  "nfse_nacional.NETWORK_ERROR",
+  "nfse_nacional.RESPONSE_READ_ERROR",
+  "nfse_nacional.HTTP_STATUS_ERROR",
+  "nfse_nacional.RESPONSE_SHAPE_ERROR",
+  "nfse_nacional.DPS_BUILD_ERROR",
+  "nfse_nacional.CONFIG_ERROR",
+  "nfse_nacional.INVALID_INPUT",
+]);
 
 export const NfseNacionalProviderErrorCodeValue = {
   networkError: "nfse_nacional.NETWORK_ERROR",
@@ -41,13 +43,14 @@ export type NfseNacionalOperation =
   | "http_post"
   | "http_response_text"
   | "response_parse";
-export const nfseNacionalOperationSchema: Schema.Decoder<NfseNacionalOperation> = Schema.Literals([
-  "schema_decode",
-  "dps_build",
-  "http_post",
-  "http_response_text",
-  "response_parse",
-]);
+export const nfseNacionalOperationSchema: Schema.Codec<NfseNacionalOperation, unknown> =
+  Schema.Literals([
+    "schema_decode",
+    "dps_build",
+    "http_post",
+    "http_response_text",
+    "response_parse",
+  ]);
 export const NfseNacionalOperationValue = {
   schemaDecode: "schema_decode",
   dpsBuild: "dps_build",
@@ -67,7 +70,7 @@ export type NfseNacionalPhase =
   | "http_timeout"
   | "http_response_body"
   | "response_body";
-export const nfseNacionalPhaseSchema: Schema.Decoder<NfseNacionalPhase> = Schema.Literals([
+export const nfseNacionalPhaseSchema: Schema.Codec<NfseNacionalPhase, unknown> = Schema.Literals([
   "provider_options_decode",
   "environment_config_decode",
   "issue_input_decode",
@@ -93,9 +96,8 @@ export const NfseNacionalPhaseValue = {
 } satisfies Record<string, NfseNacionalPhase>;
 
 export type NfseNacionalSchemaName = "provider_options" | "environment_config" | "issue_input";
-export const nfseNacionalSchemaNameSchema: Schema.Decoder<NfseNacionalSchemaName> = Schema.Literals(
-  ["provider_options", "environment_config", "issue_input"],
-);
+export const nfseNacionalSchemaNameSchema: Schema.Codec<NfseNacionalSchemaName, unknown> =
+  Schema.Literals(["provider_options", "environment_config", "issue_input"]);
 export const NfseNacionalSchemaNameValue = {
   providerOptions: "provider_options",
   environmentConfig: "environment_config",
@@ -107,7 +109,7 @@ export type NfseNacionalUpstreamTag =
   | "HttpClientError"
   | "TimeoutError"
   | "ResponseBodyError";
-export const nfseNacionalUpstreamTagSchema: Schema.Decoder<NfseNacionalUpstreamTag> =
+export const nfseNacionalUpstreamTagSchema: Schema.Codec<NfseNacionalUpstreamTag, unknown> =
   Schema.Literals(["StatusCodeError", "HttpClientError", "TimeoutError", "ResponseBodyError"]);
 export const NfseNacionalUpstreamTagValue = {
   statusCodeError: "StatusCodeError",
@@ -128,7 +130,6 @@ type NfseNacionalProviderErrorFields = {
   readonly issuePath?: string | undefined;
   readonly issueMessage?: string | undefined;
   readonly upstreamTag?: string | undefined;
-  readonly upstreamCode?: string | undefined;
 };
 
 type NfseNacionalProviderErrorInput = {
@@ -142,7 +143,6 @@ type NfseNacionalProviderErrorInput = {
   readonly issuePath?: string | undefined;
   readonly issueMessage?: string | undefined;
   readonly upstreamTag?: string | undefined;
-  readonly upstreamCode?: string | undefined;
 };
 
 type NfseNacionalProviderErrorConstructor = new (
@@ -161,7 +161,6 @@ const ProviderErrorBase: NfseNacionalProviderErrorConstructor =
     issuePath: Schema.optional(Schema.String),
     issueMessage: Schema.optional(Schema.String),
     upstreamTag: Schema.optional(Schema.String),
-    upstreamCode: Schema.optional(Schema.String),
   });
 
 export class NfseNacionalProviderError extends ProviderErrorBase implements FiscalProviderError {
@@ -203,19 +202,20 @@ export type NfseNacionalEventName =
   | "nfse_nacional.fiscal_rejected"
   | "nfse_nacional.issue_completed"
   | "nfse_nacional.issue_failed";
-export const nfseNacionalEventNameSchema: Schema.Decoder<NfseNacionalEventName> = Schema.Literals([
-  "nfse_nacional.issue_started",
-  "nfse_nacional.dps_build_started",
-  "nfse_nacional.dps_build_succeeded",
-  "nfse_nacional.dps_build_failed",
-  "nfse_nacional.http_post_started",
-  "nfse_nacional.http_post_succeeded",
-  "nfse_nacional.http_post_failed",
-  "nfse_nacional.fiscal_authorized",
-  "nfse_nacional.fiscal_rejected",
-  "nfse_nacional.issue_completed",
-  "nfse_nacional.issue_failed",
-]);
+export const nfseNacionalEventNameSchema: Schema.Codec<NfseNacionalEventName, unknown> =
+  Schema.Literals([
+    "nfse_nacional.issue_started",
+    "nfse_nacional.dps_build_started",
+    "nfse_nacional.dps_build_succeeded",
+    "nfse_nacional.dps_build_failed",
+    "nfse_nacional.http_post_started",
+    "nfse_nacional.http_post_succeeded",
+    "nfse_nacional.http_post_failed",
+    "nfse_nacional.fiscal_authorized",
+    "nfse_nacional.fiscal_rejected",
+    "nfse_nacional.issue_completed",
+    "nfse_nacional.issue_failed",
+  ]);
 
 export const NfseNacionalEventNameValue = {
   issueStarted: "nfse_nacional.issue_started",
@@ -240,17 +240,15 @@ export type NfseNacionalEvent = {
   readonly number: string;
   readonly correlationId?: string | undefined;
 };
-export const nfseNacionalEventSchema: Schema.Decoder<NfseNacionalEvent> = defineNfseNacionalSchema(
-  Schema.Struct({
-    name: nfseNacionalEventNameSchema,
-    providerId: Schema.String,
-    documentKind: Schema.String,
-    environment: Schema.String,
-    series: Schema.String,
-    number: Schema.String,
-    correlationId: Schema.optional(Schema.String),
-  }),
-);
+export const nfseNacionalEventSchema: Schema.Codec<NfseNacionalEvent, unknown> = Schema.Struct({
+  name: nfseNacionalEventNameSchema,
+  providerId: Schema.String,
+  documentKind: Schema.String,
+  environment: Schema.String,
+  series: Schema.String,
+  number: Schema.String,
+  correlationId: Schema.optional(Schema.String),
+});
 
 export type NfseNacionalEventSink = (event: NfseNacionalEvent) => Effect.Effect<void, never>;
 
@@ -258,13 +256,13 @@ export type NfseNacionalEnvironmentConfig = {
   readonly environment: (typeof fiscalEnvironmentSchema)["Type"];
   readonly endpoint: string;
 };
-export const nfseNacionalEnvironmentConfigSchema: Schema.Decoder<NfseNacionalEnvironmentConfig> =
-  defineNfseNacionalSchema(
-    Schema.Struct({
-      environment: fiscalEnvironmentSchema,
-      endpoint: endpointUrl,
-    }),
-  );
+export const nfseNacionalEnvironmentConfigSchema: Schema.Codec<
+  NfseNacionalEnvironmentConfig,
+  unknown
+> = Schema.Struct({
+  environment: fiscalEnvironmentSchema,
+  endpoint: endpointUrl,
+});
 
 export type CreateNfseNacionalProviderOptionsInput = {
   readonly environment: (typeof fiscalEnvironmentSchema)["Type"];
@@ -272,13 +270,15 @@ export type CreateNfseNacionalProviderOptionsInput = {
   readonly eventSink?: unknown | undefined;
   readonly correlationId?: string | undefined;
 };
-export const createNfseNacionalProviderOptionsSchema: Schema.Decoder<CreateNfseNacionalProviderOptionsInput> =
-  Schema.Struct({
-    environment: fiscalEnvironmentSchema,
-    buildDpsXml: Schema.optional(Schema.Unknown),
-    eventSink: Schema.optional(Schema.Unknown),
-    correlationId: Schema.optional(Schema.String),
-  });
+export const createNfseNacionalProviderOptionsSchema: Schema.Codec<
+  CreateNfseNacionalProviderOptionsInput,
+  unknown
+> = Schema.Struct({
+  environment: fiscalEnvironmentSchema,
+  buildDpsXml: Schema.optional(Schema.Unknown),
+  eventSink: Schema.optional(Schema.Unknown),
+  correlationId: Schema.optional(Schema.String),
+});
 
 export type CreateNfseNacionalProviderOptions = CreateNfseNacionalProviderOptionsInput & {
   readonly buildDpsXml: NfseNacionalDpsXmlBuilder;

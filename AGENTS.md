@@ -32,6 +32,15 @@ Essas skills locais complementam este AGENTS.md. Se uma skill local e este arqui
 - Do not create ad-hoc error/failure helper functions such as `parseFailure()`, `responseShapeFailure()`, or `makeProviderError()`.
 - Do not use `instanceof Error`, `throw new Error`, provider-level `try/catch`, or runtime error wrapper classes.
 - Promise/IO adaptation may use `Effect.tryPromise` with inline `catch: () => new TaggedError(...)` data. Keep catch handlers declarative and never branch on caught error shapes unless a real provider contract requires it.
+
+## Alchemy taste
+
+- Alchemy v2 is core infrastructure for deploy-time resources, not an external adapter afterthought.
+- Resource constructors are tags: declare them with `Resource<ResourceType>("DFeKit.Name")` and register lifecycle with `Provider.effect(ResourceTag, ...)`.
+- Bundle resource providers with `Provider.ProviderCollection` + `Provider.collection([...])`; expose composition as Effect `Layer`s so provider packages can supply `FiscalProviderService`.
+- Fiscal document resources are immutable deploy artifacts: default to retain, make reconcile idempotent from Alchemy state, and never pretend deletion cancels a fiscal document.
+- Alchemy state remains pluggable. Do not create a DFeKit state store unless a real backend requirement appears; compose with Alchemy's state layer contract instead.
+
 ## Architecture taste
 
 - No barrel files that only re-export. Entry points must provide real package configuration or meaningful public API.
@@ -46,7 +55,7 @@ Essas skills locais complementam este AGENTS.md. Se uma skill local e este arqui
   - no `runSync`/`runPromise`/`runFork` in library internals
   - no legacy result/error wrappers
   - no `as` casts, including `as const`; literal catalogs must come from `Schema.Literals([...])`
-  - no manual interfaces for config/data contracts when `Schema` can derive the exported type; if isolated DTS needs an explicit annotation, keep it next to the schema boundary and still validate through `Schema`
+  - no manual interfaces for config/data contracts when `Schema` can derive the exported type; Effect v4 public schema annotations use `Schema.Codec<T, unknown>` when DTS needs an explicit boundary type
   - no `instanceof`/`throw new Error` patterns
 - XML primitives live in `core/xml`.
 - Date handling uses `dayjs`.
@@ -72,7 +81,7 @@ Essas skills locais complementam este AGENTS.md. Se uma skill local e este arqui
 ## Packages
 
 ```text
-core/fiscal                 @dfe-kit/fiscal             fiscal adapter contract + Effect schemas
+core/fiscal                 @dfe-kit/fiscal             fiscal adapter contract + Effect schemas + Alchemy resource tags
 core/xml                    @dfe-kit/xml                generic XML escaping/encoding primitives
 adapters/saatri             @dfe-kit/adapter-saatri     reusable SAATRI/ABRASF 2.03 adapter engine
 adapters/nfse               @dfe-kit/adapter-nfse       reusable NFS-e Nacional + municipal catalog adapter engine

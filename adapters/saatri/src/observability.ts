@@ -1,7 +1,5 @@
 import { Metric, Schema } from "effect";
 
-const defineObservabilitySchema = <T>(schema: Schema.Schema<T>): Schema.Schema<T> => schema;
-
 export type SaatriSpanName =
   | "dfe.saatri.issue"
   | "dfe.saatri.envelope.build"
@@ -10,17 +8,14 @@ export type SaatriSpanName =
   | "dfe.saatri.response.parse"
   | "dfe.saatri.xml.parse";
 
-export const saatriSpanNameSchema: Schema.Schema<SaatriSpanName> =
-  defineObservabilitySchema<SaatriSpanName>(
-    Schema.Literals([
-      "dfe.saatri.issue",
-      "dfe.saatri.envelope.build",
-      "dfe.saatri.sign",
-      "dfe.saatri.http.post",
-      "dfe.saatri.response.parse",
-      "dfe.saatri.xml.parse",
-    ]),
-  );
+export const saatriSpanNameSchema: Schema.Codec<SaatriSpanName, unknown> = Schema.Literals([
+  "dfe.saatri.issue",
+  "dfe.saatri.envelope.build",
+  "dfe.saatri.sign",
+  "dfe.saatri.http.post",
+  "dfe.saatri.response.parse",
+  "dfe.saatri.xml.parse",
+]);
 export const SaatriSpanNameValue = {
   issue: "dfe.saatri.issue",
   envelopeBuild: "dfe.saatri.envelope.build",
@@ -48,27 +43,25 @@ export type SaatriAttributeName =
   | "http.request.method"
   | "http.response.status_code";
 
-export const saatriAttributeNameSchema: Schema.Schema<SaatriAttributeName> =
-  defineObservabilitySchema<SaatriAttributeName>(
-    Schema.Literals([
-      "dfe.provider.id",
-      "dfe.document.kind",
-      "dfe.environment",
-      "dfe.city.code",
-      "dfe.document.series",
-      "dfe.document.number",
-      "dfe.document.status",
-      "dfe.correlation.id",
-      "dfe.error.code",
-      "dfe.error.phase",
-      "dfe.phase",
-      "dfe.xml.bytes",
-      "dfe.saatri.timeout_ms",
-      "dfe.saatri.max_retries",
-      "http.request.method",
-      "http.response.status_code",
-    ]),
-  );
+export const saatriAttributeNameSchema: Schema.Codec<SaatriAttributeName, unknown> =
+  Schema.Literals([
+    "dfe.provider.id",
+    "dfe.document.kind",
+    "dfe.environment",
+    "dfe.city.code",
+    "dfe.document.series",
+    "dfe.document.number",
+    "dfe.document.status",
+    "dfe.correlation.id",
+    "dfe.error.code",
+    "dfe.error.phase",
+    "dfe.phase",
+    "dfe.xml.bytes",
+    "dfe.saatri.timeout_ms",
+    "dfe.saatri.max_retries",
+    "http.request.method",
+    "http.response.status_code",
+  ]);
 export const SaatriAttributeNameValue = {
   providerId: "dfe.provider.id",
   documentKind: "dfe.document.kind",
@@ -98,19 +91,16 @@ export type SaatriMetricName =
   | "dfe_saatri_parse_error_total"
   | "dfe_saatri_xml_bytes";
 
-export const saatriMetricNameSchema: Schema.Schema<SaatriMetricName> =
-  defineObservabilitySchema<SaatriMetricName>(
-    Schema.Literals([
-      "dfe_saatri_issue_total",
-      "dfe_saatri_issue_error_total",
-      "dfe_saatri_fiscal_status_total",
-      "dfe_saatri_http_attempt_total",
-      "dfe_saatri_http_status_total",
-      "dfe_saatri_http_retry_total",
-      "dfe_saatri_parse_error_total",
-      "dfe_saatri_xml_bytes",
-    ]),
-  );
+export const saatriMetricNameSchema: Schema.Codec<SaatriMetricName, unknown> = Schema.Literals([
+  "dfe_saatri_issue_total",
+  "dfe_saatri_issue_error_total",
+  "dfe_saatri_fiscal_status_total",
+  "dfe_saatri_http_attempt_total",
+  "dfe_saatri_http_status_total",
+  "dfe_saatri_http_retry_total",
+  "dfe_saatri_parse_error_total",
+  "dfe_saatri_xml_bytes",
+]);
 export const SaatriMetricNameValue = {
   issueTotal: "dfe_saatri_issue_total",
   issueErrorTotal: "dfe_saatri_issue_error_total",

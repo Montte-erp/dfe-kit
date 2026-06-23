@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { hasLegacySchemaAnnotation } from "./rules/schema-contracts";
 import { isBarrelOnlySource } from "./runner";
 
 describe("isBarrelOnlySource", () => {
@@ -31,6 +32,23 @@ describe("isBarrelOnlySource", () => {
 
         export const createProviderLayer = () => createProvider();
       `),
+    ).toBe(false);
+  });
+});
+
+describe("hasLegacySchemaAnnotation", () => {
+  it("blocks removed Effect v4 schema annotation names", () => {
+    expect(
+      hasLegacySchemaAnnotation("const schema: Schema." + "Decoder<Foo> = Schema.Struct({});"),
+    ).toBe(true);
+    expect(
+      hasLegacySchemaAnnotation("const schema: Schema." + "Schema<Foo> = Schema.Struct({});"),
+    ).toBe(true);
+  });
+
+  it("allows explicit codec annotations", () => {
+    expect(
+      hasLegacySchemaAnnotation("const schema: Schema.Codec<Foo, unknown> = Schema.Struct({});"),
     ).toBe(false);
   });
 });

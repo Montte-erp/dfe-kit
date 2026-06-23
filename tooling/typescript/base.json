@@ -28,6 +28,7 @@
     "baseUrl": "../..",
     "paths": {
       "@dfe-kit/fiscal": ["core/fiscal/src/index.ts"],
+      "@dfe-kit/fiscal/alchemy": ["core/fiscal/src/alchemy.ts"],
       "@dfe-kit/fiscal/effect-error-metadata": ["core/fiscal/src/effect-error-metadata.ts"],
       "@dfe-kit/fiscal/schemas": ["core/fiscal/src/schemas.ts"],
       "@dfe-kit/xml": ["core/xml/src/index.ts"],

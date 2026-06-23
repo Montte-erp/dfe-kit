@@ -19,6 +19,10 @@
     "./effect-error-metadata": {
       "types": "./dist/effect-error-metadata.d.ts",
       "import": "./dist/effect-error-metadata.js"
+    },
+    "./alchemy": {
+      "types": "./dist/alchemy.d.ts",
+      "import": "./dist/alchemy.js"
     }
   },
   "scripts": {
@@ -27,7 +31,8 @@
     "test": "vitest run ./__tests__"
   },
   "dependencies": {
-    "effect": "4.0.0-beta.81"
+    "alchemy": "2.0.0-beta.57",
+    "effect": "4.0.0-beta.86"
   },
   "nx": {
     "tags": [

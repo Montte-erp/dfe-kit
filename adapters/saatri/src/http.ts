@@ -1,4 +1,3 @@
-import { safeCauseMetadata } from "@dfe-kit/fiscal/effect-error-metadata";
 import { Context, Duration, Effect, Layer, Match, Metric, Schema, Schedule } from "effect";
 import { FetchHttpClient, HttpBody, HttpClient, HttpClientResponse } from "effect/unstable/http";
 import {
@@ -18,10 +17,9 @@ import {
 
 const SOAP_CONTENT_TYPE = "text/xml; charset=utf-8";
 
-const defineHttpSchema = <T>(schema: Schema.Schema<T>): Schema.Schema<T> => schema;
-
-const httpStatusSchema = defineHttpSchema<number>(
-  Schema.Number.check(Schema.isInt(), Schema.isGreaterThan(0)),
+const httpStatusSchema: Schema.Codec<number, unknown> = Schema.Number.check(
+  Schema.isInt(),
+  Schema.isGreaterThan(0),
 );
 
 type SaatriHttpClientRuntimeConfigInput = {
@@ -31,16 +29,17 @@ type SaatriHttpClientRuntimeConfigInput = {
   readonly retryableStatus: ReadonlySet<number>;
 };
 
-const SaatriHttpClientOptionsSchema = defineHttpSchema<SaatriHttpClientRuntimeConfigInput>(
+const SaatriHttpClientOptionsSchema: Schema.Codec<SaatriHttpClientRuntimeConfigInput, unknown> =
   Schema.Struct({
     timeoutMs: Schema.Number.check(Schema.isInt(), Schema.isGreaterThan(0)),
     maxRetries: Schema.Number.check(Schema.isInt(), Schema.isGreaterThan(-1)),
     retryBaseMillis: Schema.Number.check(Schema.isInt(), Schema.isGreaterThan(0)),
     retryableStatus: Schema.ReadonlySet(httpStatusSchema),
-  }),
-);
-export const saatriHttpClientRuntimeConfigSchema: Schema.Schema<SaatriHttpClientRuntimeConfigInput> =
-  SaatriHttpClientOptionsSchema;
+  });
+export const saatriHttpClientRuntimeConfigSchema: Schema.Codec<
+  SaatriHttpClientRuntimeConfigInput,
+  unknown
+> = SaatriHttpClientOptionsSchema;
 type SaatriHttpConfig = {
   readonly timeout: Duration.Duration;
   readonly maxRetries: number;
@@ -48,15 +47,14 @@ type SaatriHttpConfig = {
   readonly retryableStatus: ReadonlySet<number>;
 };
 
-const createSaatriHttpClientOptionsSchema = defineHttpSchema<CreateSaatriHttpOptions>(
+const createSaatriHttpClientOptionsSchema: Schema.Codec<CreateSaatriHttpOptions, unknown> =
   Schema.Struct({
     timeoutMs: Schema.optional(Schema.Number.check(Schema.isInt(), Schema.isGreaterThan(0))),
     maxRetries: Schema.optional(Schema.Number.check(Schema.isInt(), Schema.isGreaterThan(-1))),
     retryBaseMillis: Schema.optional(Schema.Number.check(Schema.isInt(), Schema.isGreaterThan(0))),
     retryableStatus: Schema.optional(Schema.ReadonlySet(httpStatusSchema)),
-  }),
-);
-export const createSaatriHttpOptionsSchema: Schema.Schema<CreateSaatriHttpOptions> =
+  });
+export const createSaatriHttpOptionsSchema: Schema.Codec<CreateSaatriHttpOptions, unknown> =
   createSaatriHttpClientOptionsSchema;
 export type CreateSaatriHttpOptions = {
   readonly timeoutMs?: number | undefined;
@@ -121,21 +119,20 @@ const postSoapWithClient = (
                 reason: `Servidor SAATRI respondeu com status HTTP ${reason.response.status}.`,
                 operation: SaatriOperationValue.httpPost,
                 phase: SaatriPhaseValue.httpStatus,
-                ...safeCauseMetadata(reason),
+                upstreamTag: SaatriUpstreamTagValue.statusCodeError,
               }),
           ),
-          Match.orElse((reason) => {
-            const metadata = safeCauseMetadata(reason);
-            return new SaatriProviderError({
-              code: SaatriProviderErrorCodeValue.networkError,
-              retryable: true,
-              reason: "Falha de rede ao comunicar com o servidor SAATRI.",
-              operation: SaatriOperationValue.httpPost,
-              phase: SaatriPhaseValue.httpTransport,
-              upstreamTag: metadata.upstreamTag ?? SaatriUpstreamTagValue.httpClientError,
-              upstreamCode: metadata.upstreamCode,
-            });
-          }),
+          Match.orElse(
+            () =>
+              new SaatriProviderError({
+                code: SaatriProviderErrorCodeValue.networkError,
+                retryable: true,
+                reason: "Falha de rede ao comunicar com o servidor SAATRI.",
+                operation: SaatriOperationValue.httpPost,
+                phase: SaatriPhaseValue.httpTransport,
+                upstreamTag: SaatriUpstreamTagValue.httpClientError,
+              }),
+          ),
         ),
       ),
       Effect.timeout(config.timeout),
@@ -178,18 +175,17 @@ const postSoapWithClient = (
     );
 
     return yield* response.text.pipe(
-      Effect.mapError((cause) => {
-        const metadata = safeCauseMetadata(cause);
-        return new SaatriProviderError({
-          code: SaatriProviderErrorCodeValue.responseReadError,
-          retryable: false,
-          reason: "Não foi possível ler o corpo da resposta SAATRI.",
-          operation: SaatriOperationValue.httpResponseText,
-          phase: SaatriPhaseValue.httpResponseBody,
-          upstreamTag: metadata.upstreamTag ?? SaatriUpstreamTagValue.responseBodyError,
-          upstreamCode: metadata.upstreamCode,
-        });
-      }),
+      Effect.mapError(
+        () =>
+          new SaatriProviderError({
+            code: SaatriProviderErrorCodeValue.responseReadError,
+            retryable: false,
+            reason: "Não foi possível ler o corpo da resposta SAATRI.",
+            operation: SaatriOperationValue.httpResponseText,
+            phase: SaatriPhaseValue.httpResponseBody,
+            upstreamTag: SaatriUpstreamTagValue.responseBodyError,
+          }),
+      ),
     );
   }).pipe(
     Effect.withSpan(SaatriSpanNameValue.httpPost, {

@@ -33,7 +33,9 @@
     "publish:npm:dry": "bun run check && bun run publint && nx release publish --dry-run"
   },
   "devDependencies": {
-    "@effect/vitest": "4.0.0-beta.81",
+    "@effect/vitest": "4.0.0-beta.86",
+    "@effect/platform-bun": "4.0.0-beta.86",
+    "@effect/platform-node": "4.0.0-beta.86",
     "@types/bun": "latest",
     "bunup": "^0.16.32",
     "nx": "^22.7.5",

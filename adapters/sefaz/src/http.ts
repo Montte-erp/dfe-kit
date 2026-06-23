@@ -1,4 +1,3 @@
-import { safeCauseMetadata } from "@dfe-kit/fiscal/effect-error-metadata";
 import { Context, Duration, Effect, Layer, Match, Schema, Schedule } from "effect";
 import { FetchHttpClient, HttpBody, HttpClient, HttpClientResponse } from "effect/unstable/http";
 import {
@@ -12,22 +11,19 @@ import {
 const SEFAZ_XML_CONTENT_TYPE = "application/soap+xml; charset=utf-8";
 const ACCEPT_XML = "application/soap+xml, text/xml, application/xml";
 
-const defineHttpSchema = <T>(schema: Schema.Decoder<T>): Schema.Decoder<T> => schema;
-
-const httpStatusSchema = defineHttpSchema<number>(
-  Schema.Number.check(Schema.isInt(), Schema.isGreaterThan(0)),
+const httpStatusSchema: Schema.Codec<number, unknown> = Schema.Number.check(
+  Schema.isInt(),
+  Schema.isGreaterThan(0),
 );
 
 export type SefazHttpResponse = {
   readonly status: number;
   readonly body: string;
 };
-export const sefazHttpResponseSchema: Schema.Decoder<SefazHttpResponse> = defineHttpSchema(
-  Schema.Struct({
-    status: httpStatusSchema,
-    body: Schema.String,
-  }),
-);
+export const sefazHttpResponseSchema: Schema.Codec<SefazHttpResponse, unknown> = Schema.Struct({
+  status: httpStatusSchema,
+  body: Schema.String,
+});
 
 export type SefazHttpClient = {
   postAuthorizationXml(args: {
@@ -46,12 +42,13 @@ export type CreateSefazHttpOptions = {
   readonly retryableStatus?: ReadonlySet<number> | undefined;
 };
 
-export const createSefazHttpOptionsSchema: Schema.Decoder<CreateSefazHttpOptions> = Schema.Struct({
-  timeoutMs: Schema.optional(Schema.Number.check(Schema.isInt(), Schema.isGreaterThan(0))),
-  maxRetries: Schema.optional(Schema.Number.check(Schema.isInt(), Schema.isGreaterThan(-1))),
-  retryBaseMillis: Schema.optional(Schema.Number.check(Schema.isInt(), Schema.isGreaterThan(0))),
-  retryableStatus: Schema.optional(Schema.ReadonlySet(httpStatusSchema)),
-});
+export const createSefazHttpOptionsSchema: Schema.Codec<CreateSefazHttpOptions, unknown> =
+  Schema.Struct({
+    timeoutMs: Schema.optional(Schema.Number.check(Schema.isInt(), Schema.isGreaterThan(0))),
+    maxRetries: Schema.optional(Schema.Number.check(Schema.isInt(), Schema.isGreaterThan(-1))),
+    retryBaseMillis: Schema.optional(Schema.Number.check(Schema.isInt(), Schema.isGreaterThan(0))),
+    retryableStatus: Schema.optional(Schema.ReadonlySet(httpStatusSchema)),
+  });
 
 type SefazHttpRuntime = {
   readonly timeout: Duration.Duration;
@@ -108,21 +105,20 @@ const postAuthorizationXmlWithClient = (
                   reason: `SEFAZ respondeu com status HTTP ${reason.response.status}.`,
                   operation: SefazOperationValue.httpPost,
                   phase: SefazPhaseValue.httpStatus,
-                  ...safeCauseMetadata(reason),
+                  upstreamTag: SefazUpstreamTagValue.statusCodeError,
                 }),
             ),
-            Match.orElse((reason) => {
-              const metadata = safeCauseMetadata(reason);
-              return new SefazProviderError({
-                code: SefazProviderErrorCodeValue.networkError,
-                retryable: true,
-                reason: "Falha de rede ao comunicar com a SEFAZ.",
-                operation: SefazOperationValue.httpPost,
-                phase: SefazPhaseValue.httpTransport,
-                upstreamTag: metadata.upstreamTag ?? SefazUpstreamTagValue.httpClientError,
-                upstreamCode: metadata.upstreamCode,
-              });
-            }),
+            Match.orElse(
+              () =>
+                new SefazProviderError({
+                  code: SefazProviderErrorCodeValue.networkError,
+                  retryable: true,
+                  reason: "Falha de rede ao comunicar com a SEFAZ.",
+                  operation: SefazOperationValue.httpPost,
+                  phase: SefazPhaseValue.httpTransport,
+                  upstreamTag: SefazUpstreamTagValue.httpClientError,
+                }),
+            ),
           ),
         ),
         Effect.timeout(config.timeout),
@@ -146,18 +142,17 @@ const postAuthorizationXmlWithClient = (
       );
 
     const body = yield* response.text.pipe(
-      Effect.mapError((cause) => {
-        const metadata = safeCauseMetadata(cause);
-        return new SefazProviderError({
-          code: SefazProviderErrorCodeValue.responseReadError,
-          retryable: false,
-          reason: "Não foi possível ler o corpo da resposta da SEFAZ.",
-          operation: SefazOperationValue.httpResponseText,
-          phase: SefazPhaseValue.httpResponseBody,
-          upstreamTag: metadata.upstreamTag ?? SefazUpstreamTagValue.responseBodyError,
-          upstreamCode: metadata.upstreamCode,
-        });
-      }),
+      Effect.mapError(
+        () =>
+          new SefazProviderError({
+            code: SefazProviderErrorCodeValue.responseReadError,
+            retryable: false,
+            reason: "Não foi possível ler o corpo da resposta da SEFAZ.",
+            operation: SefazOperationValue.httpResponseText,
+            phase: SefazPhaseValue.httpResponseBody,
+            upstreamTag: SefazUpstreamTagValue.responseBodyError,
+          }),
+      ),
     );
 
     return { status: response.status, body };

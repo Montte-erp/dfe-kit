@@ -51,10 +51,12 @@ type BuildGerarNfseEnvelopeOptionsInput = {
   readonly signer?: unknown | undefined;
 };
 
-export const buildGerarNfseEnvelopeOptionsSchema: Schema.Schema<BuildGerarNfseEnvelopeOptionsInput> =
-  Schema.Struct({
-    signer: Schema.optional(Schema.Unknown),
-  });
+export const buildGerarNfseEnvelopeOptionsSchema: Schema.Codec<
+  BuildGerarNfseEnvelopeOptionsInput,
+  unknown
+> = Schema.Struct({
+  signer: Schema.optional(Schema.Unknown),
+});
 export type BuildGerarNfseEnvelopeOptions = BuildGerarNfseEnvelopeOptionsInput & {
   readonly signer?: GerarNfseSigner | undefined;
 };

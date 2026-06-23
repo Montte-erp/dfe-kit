@@ -1,7 +1,7 @@
 import { FiscalArtifactKindValue, FiscalDocumentStatusValue } from "@dfe-kit/fiscal";
 import type { FiscalArtifact, FiscalRejection, ProviderResponse } from "@dfe-kit/fiscal";
 import { encodeUtf8, getUtf8ByteLength, XML_MEDIA_TYPE } from "@dfe-kit/xml";
-import { safeCauseMetadata, schemaErrorMetadata } from "@dfe-kit/fiscal/effect-error-metadata";
+import { schemaErrorMetadata } from "@dfe-kit/fiscal/effect-error-metadata";
 import { Effect, Metric, Schema } from "effect";
 import { XMLParser } from "fast-xml-parser";
 import {
@@ -49,14 +49,13 @@ const isPendingNationalShareMessage = (message: string): boolean =>
 const parseXml = (xml: string, phase: SaatriPhase): Effect.Effect<unknown, SaatriProviderError> =>
   Effect.try({
     try: () => parser.parse(xml),
-    catch: (cause) =>
+    catch: () =>
       new SaatriProviderError({
         code: SaatriProviderErrorCodeValue.parseError,
         retryable: false,
         reason: "Falha ao interpretar XML de resposta SAATRI.",
         operation: SaatriOperationValue.xmlParse,
         phase,
-        ...safeCauseMetadata(cause),
       }),
   }).pipe(
     Effect.tap(() => Metric.update(saatriXmlBytes, getUtf8ByteLength(xml))),

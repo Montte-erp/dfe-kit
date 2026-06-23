@@ -1,35 +1,12 @@
 import { Schema, type SchemaIssue } from "effect";
 
-export type SafeCauseMetadata = {
-  readonly upstreamTag?: string | undefined;
-  readonly upstreamCode?: string | undefined;
-};
-
-export const safeCauseMetadataSchema: Schema.Decoder<SafeCauseMetadata> = Schema.Struct({
-  upstreamTag: Schema.optional(Schema.String),
-  upstreamCode: Schema.optional(Schema.String),
-});
-const firstStringField = (input: unknown, field: string): string | undefined => {
-  if (typeof input !== "object" || input === null) {
-    return undefined;
-  }
-  const entry = Object.entries(input).find(([key]) => key === field);
-  const value = entry?.[1];
-  return typeof value === "string" && value.length > 0 ? value : undefined;
-};
-
-export const safeCauseMetadata = (cause: unknown): SafeCauseMetadata => ({
-  upstreamTag: firstStringField(cause, "_tag") ?? firstStringField(cause, "name"),
-  upstreamCode: firstStringField(cause, "code"),
-});
-
 export type SchemaIssueMetadata = {
   readonly issuePath?: string | undefined;
   readonly issueMessage: string;
   readonly upstreamTag: string;
 };
 
-export const schemaIssueMetadataSchema: Schema.Decoder<SchemaIssueMetadata> = Schema.Struct({
+export const schemaIssueMetadataSchema: Schema.Codec<SchemaIssueMetadata, unknown> = Schema.Struct({
   issuePath: Schema.optional(Schema.String),
   issueMessage: Schema.String,
   upstreamTag: Schema.String,

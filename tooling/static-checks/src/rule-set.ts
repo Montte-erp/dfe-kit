@@ -10,6 +10,7 @@ import { dependencyChecks } from "./rules/dependencies";
 export const checks: readonly Check[] = [
   schemaContractChecks[0],
   schemaContractChecks[1],
+  schemaContractChecks[2],
   errorHandlingChecks[0],
   errorHandlingChecks[1],
   errorHandlingChecks[2],

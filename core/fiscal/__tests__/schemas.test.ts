@@ -7,7 +7,7 @@ import {
   taxPartySchema,
 } from "../src/schemas";
 
-const decodes = <S extends Schema.Decoder<unknown>>(schema: S, input: unknown): boolean =>
+const decodes = <S extends Schema.Codec<unknown, unknown>>(schema: S, input: unknown): boolean =>
   Option.isSome(Schema.decodeUnknownOption(schema)(input));
 
 describe("fiscal schemas", () => {

@@ -9,17 +9,15 @@ import { brazilianStateCodeSchema } from "@dfe-kit/fiscal/schemas";
 import { Schema } from "effect";
 
 export type SefazStateCode = (typeof brazilianStateCodeSchema)["Type"];
-export const sefazStateCodeSchema: Schema.Decoder<SefazStateCode> = brazilianStateCodeSchema;
+export const sefazStateCodeSchema: Schema.Codec<SefazStateCode, unknown> = brazilianStateCodeSchema;
 
 export type SefazStateDocumentKind = "nfe" | "nfce";
-export const sefazStateDocumentKindSchema: Schema.Decoder<SefazStateDocumentKind> = Schema.Literals(
-  ["nfe", "nfce"],
-);
+export const sefazStateDocumentKindSchema: Schema.Codec<SefazStateDocumentKind, unknown> =
+  Schema.Literals(["nfe", "nfce"]);
 
 export type SefazStatePortalStatus = "unverified_in_homologation";
-export const sefazStatePortalStatusSchema: Schema.Decoder<SefazStatePortalStatus> = Schema.Literal(
-  "unverified_in_homologation",
-);
+export const sefazStatePortalStatusSchema: Schema.Codec<SefazStatePortalStatus, unknown> =
+  Schema.Literal("unverified_in_homologation");
 
 export type SefazStatePortalDescriptor = {
   readonly state: SefazStateCode;
@@ -31,7 +29,7 @@ export type SefazStatePortalDescriptor = {
   readonly requiresSigner: true;
   readonly requiresCertificateOutsideDFeKit: true;
 };
-export const sefazStatePortalDescriptorSchema: Schema.Decoder<SefazStatePortalDescriptor> =
+export const sefazStatePortalDescriptorSchema: Schema.Codec<SefazStatePortalDescriptor, unknown> =
   Schema.Struct({
     state: sefazStateCodeSchema,
     stateName: Schema.NonEmptyString,

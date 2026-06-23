@@ -14,19 +14,21 @@ import {
 } from "@dfe-kit/fiscal/schemas";
 import { Schema, type Effect, type Redacted } from "effect";
 
-const nonEmptyString: Schema.Decoder<string> = Schema.NonEmptyString;
-const redactedNonEmptyString: Schema.Decoder<Redacted.Redacted<string>> = Schema.Redacted(
+const nonEmptyString: Schema.Codec<string, unknown> = Schema.NonEmptyString;
+const redactedNonEmptyString: Schema.Codec<Redacted.Redacted<string>, unknown> = Schema.Redacted(
   nonEmptyString,
   { disallowJsonEncode: true },
 );
-const urlString: Schema.Decoder<string> = Schema.String.check(Schema.isPattern(/^https?:\/\/.+/));
-const saatriEndpointUrl: Schema.Decoder<string> = urlString.check(
+const urlString: Schema.Codec<string, unknown> = Schema.String.check(
+  Schema.isPattern(/^https?:\/\/.+/),
+);
+const saatriEndpointUrl: Schema.Codec<string, unknown> = urlString.check(
   Schema.makeFilter((value) => value.includes("saatri"), {
     expected: "SAATRI endpoint URL containing 'saatri'",
   }),
 );
-const cnpjDigits: Schema.Decoder<string> = Schema.String.check(Schema.isPattern(/^\d{14}$/));
-const cityCode: Schema.Decoder<string> = Schema.String.check(Schema.isPattern(/^\d{7}$/));
+const cnpjDigits: Schema.Codec<string, unknown> = Schema.String.check(Schema.isPattern(/^\d{14}$/));
+const cityCode: Schema.Codec<string, unknown> = Schema.String.check(Schema.isPattern(/^\d{7}$/));
 
 const documentKindSchema = fiscalDocumentKindSchema;
 
@@ -40,17 +42,18 @@ export type SaatriProviderErrorCode =
   | "saatri.RESPONSE_SHAPE_ERROR"
   | "saatri.XML_SIZE_LIMIT_EXCEEDED"
   | "saatri.SIGN_ERROR";
-const SaatriProviderErrorCodeSchema: Schema.Decoder<SaatriProviderErrorCode> = Schema.Literals([
-  "saatri.CONFIG_ERROR",
-  "saatri.INVALID_INPUT",
-  "saatri.NETWORK_ERROR",
-  "saatri.RESPONSE_READ_ERROR",
-  "saatri.HTTP_STATUS_ERROR",
-  "saatri.PARSE_ERROR",
-  "saatri.RESPONSE_SHAPE_ERROR",
-  "saatri.XML_SIZE_LIMIT_EXCEEDED",
-  "saatri.SIGN_ERROR",
-]);
+const SaatriProviderErrorCodeSchema: Schema.Codec<SaatriProviderErrorCode, unknown> =
+  Schema.Literals([
+    "saatri.CONFIG_ERROR",
+    "saatri.INVALID_INPUT",
+    "saatri.NETWORK_ERROR",
+    "saatri.RESPONSE_READ_ERROR",
+    "saatri.HTTP_STATUS_ERROR",
+    "saatri.PARSE_ERROR",
+    "saatri.RESPONSE_SHAPE_ERROR",
+    "saatri.XML_SIZE_LIMIT_EXCEEDED",
+    "saatri.SIGN_ERROR",
+  ]);
 export const SaatriProviderErrorCodeValue = {
   configError: "saatri.CONFIG_ERROR",
   invalidInput: "saatri.INVALID_INPUT",
@@ -64,7 +67,7 @@ export const SaatriProviderErrorCodeValue = {
 } satisfies Record<string, SaatriProviderErrorCode>;
 
 export type SaatriOperation = "http.post" | "http.response.text" | "xml.parse" | "schema.decode";
-const SaatriOperationSchema: Schema.Decoder<SaatriOperation> = Schema.Literals([
+const SaatriOperationSchema: Schema.Codec<SaatriOperation, unknown> = Schema.Literals([
   "http.post",
   "http.response.text",
   "xml.parse",
@@ -89,7 +92,7 @@ export type SaatriPhase =
   | "credentials.decode"
   | "provider.options.decode"
   | "environment.config.decode";
-const SaatriPhaseSchema: Schema.Decoder<SaatriPhase> = Schema.Literals([
+const SaatriPhaseSchema: Schema.Codec<SaatriPhase, unknown> = Schema.Literals([
   "http.status",
   "http.transport",
   "http.timeout",
@@ -123,7 +126,7 @@ export type SaatriSchemaName =
   | "SaatriEnvironmentConfig"
   | "GenerateNfseSoapDocument"
   | "GenerateNfseOutputDocument";
-const SaatriSchemaNameSchema: Schema.Decoder<SaatriSchemaName> = Schema.Literals([
+const SaatriSchemaNameSchema: Schema.Codec<SaatriSchemaName, unknown> = Schema.Literals([
   "SaatriProviderPackageConfig",
   "SaatriCredentials",
   "CreateSaatriPackageProviderOptions",
@@ -145,13 +148,14 @@ export type SaatriUpstreamTag =
   | "HttpClientError"
   | "TimeoutError"
   | "ResponseBodyError";
-const SaatriUpstreamTagSchema: Schema.Decoder<SaatriUpstreamTag> = Schema.Literals([
+const SaatriUpstreamTagSchema: Schema.Codec<SaatriUpstreamTag, unknown> = Schema.Literals([
   "StatusCodeError",
   "HttpClientError",
   "TimeoutError",
   "ResponseBodyError",
 ]);
-export const saatriUpstreamTagSchema: Schema.Decoder<SaatriUpstreamTag> = SaatriUpstreamTagSchema;
+export const saatriUpstreamTagSchema: Schema.Codec<SaatriUpstreamTag, unknown> =
+  SaatriUpstreamTagSchema;
 export const SaatriUpstreamTagValue = {
   statusCodeError: "StatusCodeError",
   httpClientError: "HttpClientError",
@@ -171,7 +175,6 @@ type SaatriProviderErrorFields = {
   readonly issuePath?: string | undefined;
   readonly issueMessage?: string | undefined;
   readonly upstreamTag?: string | undefined;
-  readonly upstreamCode?: string | undefined;
 };
 
 type SaatriProviderErrorInput = {
@@ -185,7 +188,6 @@ type SaatriProviderErrorInput = {
   readonly issuePath?: string | undefined;
   readonly issueMessage?: string | undefined;
   readonly upstreamTag?: string | undefined;
-  readonly upstreamCode?: string | undefined;
 };
 
 type SaatriProviderErrorConstructor = new (
@@ -204,7 +206,6 @@ const SaatriProviderErrorBase: SaatriProviderErrorConstructor =
     issuePath: Schema.optional(Schema.String),
     issueMessage: Schema.optional(Schema.String),
     upstreamTag: Schema.optional(Schema.String),
-    upstreamCode: Schema.optional(Schema.String),
   });
 
 export class SaatriProviderError extends SaatriProviderErrorBase implements FiscalProviderError {
@@ -240,25 +241,28 @@ export type SaatriCredentials = {
   readonly issuerCnpj: string;
   readonly municipalRegistration: string;
 };
-const SaatriCredentialsSchema: Schema.Decoder<SaatriCredentials> = Schema.Struct({
+const SaatriCredentialsSchema: Schema.Codec<SaatriCredentials, unknown> = Schema.Struct({
   username: nonEmptyString,
   password: redactedNonEmptyString,
   issuerCnpj: cnpjDigits,
   municipalRegistration: nonEmptyString,
 });
-export const saatriCredentialsSchema: Schema.Decoder<SaatriCredentials> = SaatriCredentialsSchema;
+export const saatriCredentialsSchema: Schema.Codec<SaatriCredentials, unknown> =
+  SaatriCredentialsSchema;
 
 export type SaatriEnvironmentConfig = {
   readonly environment: "homologation" | "production";
   readonly endpoint: string;
   readonly cityCode: string;
 };
-const SaatriEnvironmentConfigSchema: Schema.Decoder<SaatriEnvironmentConfig> = Schema.Struct({
-  environment: fiscalEnvironmentSchema,
-  endpoint: saatriEndpointUrl,
-  cityCode,
-});
-export const saatriEnvironmentConfigSchema: Schema.Decoder<SaatriEnvironmentConfig> =
+const SaatriEnvironmentConfigSchema: Schema.Codec<SaatriEnvironmentConfig, unknown> = Schema.Struct(
+  {
+    environment: fiscalEnvironmentSchema,
+    endpoint: saatriEndpointUrl,
+    cityCode,
+  },
+);
+export const saatriEnvironmentConfigSchema: Schema.Codec<SaatriEnvironmentConfig, unknown> =
   SaatriEnvironmentConfigSchema;
 
 export type CreateSaatriProviderOptionsInput = {
@@ -271,7 +275,7 @@ export type CreateSaatriProviderOptionsInput = {
   readonly eventSink?: unknown;
   readonly correlationId?: string | undefined;
 };
-const CreateSaatriProviderOptionsSchema: Schema.Decoder<CreateSaatriProviderOptionsInput> =
+const CreateSaatriProviderOptionsSchema: Schema.Codec<CreateSaatriProviderOptionsInput, unknown> =
   Schema.Struct({
     environment: fiscalEnvironmentSchema,
     timeoutMs: Schema.optional(Schema.Number.check(Schema.isInt(), Schema.isGreaterThan(0))),
@@ -284,18 +288,24 @@ const CreateSaatriProviderOptionsSchema: Schema.Decoder<CreateSaatriProviderOpti
     eventSink: Schema.optional(Schema.Unknown),
     correlationId: Schema.optional(Schema.String),
   });
-export const createSaatriProviderOptionsSchema: Schema.Decoder<CreateSaatriProviderOptionsInput> =
-  CreateSaatriProviderOptionsSchema;
+export const createSaatriProviderOptionsSchema: Schema.Codec<
+  CreateSaatriProviderOptionsInput,
+  unknown
+> = CreateSaatriProviderOptionsSchema;
 
-const CreateSaatriPackageProviderOptionsSchema: Schema.Decoder<CreateSaatriProviderOptionsInput> =
-  CreateSaatriProviderOptionsSchema;
+const CreateSaatriPackageProviderOptionsSchema: Schema.Codec<
+  CreateSaatriProviderOptionsInput,
+  unknown
+> = CreateSaatriProviderOptionsSchema;
 export type CreateSaatriPackageProviderOptions = CreateSaatriProviderOptionsInput & {
   readonly signer?: GerarNfseSigner | undefined;
   readonly eventSink?: SaatriEventSink | undefined;
   readonly correlationId?: string | undefined;
 };
-export const createSaatriPackageProviderOptionsSchema: Schema.Decoder<CreateSaatriProviderOptionsInput> =
-  CreateSaatriPackageProviderOptionsSchema;
+export const createSaatriPackageProviderOptionsSchema: Schema.Codec<
+  CreateSaatriProviderOptionsInput,
+  unknown
+> = CreateSaatriPackageProviderOptionsSchema;
 
 export type SaatriProviderPackageConfig = {
   readonly providerId: string;
@@ -304,7 +314,7 @@ export type SaatriProviderPackageConfig = {
   readonly endpoints: Readonly<Record<"homologation" | "production", string>>;
   readonly extraCapabilityMetadata?: readonly FiscalProviderCapabilityMetadata[] | undefined;
 };
-const SaatriProviderPackageConfigSchema: Schema.Decoder<SaatriProviderPackageConfig> =
+const SaatriProviderPackageConfigSchema: Schema.Codec<SaatriProviderPackageConfig, unknown> =
   Schema.Struct({
     providerId: nonEmptyString,
     providerName: nonEmptyString,
@@ -312,19 +322,19 @@ const SaatriProviderPackageConfigSchema: Schema.Decoder<SaatriProviderPackageCon
     endpoints: Schema.Record(Schema.Literals(["homologation", "production"]), saatriEndpointUrl),
     extraCapabilityMetadata: Schema.optional(Schema.Array(fiscalProviderCapabilityMetadataSchema)),
   });
-export const saatriProviderPackageConfigSchema: Schema.Decoder<SaatriProviderPackageConfig> =
+export const saatriProviderPackageConfigSchema: Schema.Codec<SaatriProviderPackageConfig, unknown> =
   SaatriProviderPackageConfigSchema;
 
 export type SaatriIssueRuntimeConfigInput = {
   readonly credentials: SaatriCredentials;
   readonly config: SaatriEnvironmentConfig;
 };
-const SaatriIssueRuntimeConfigInputSchema: Schema.Decoder<SaatriIssueRuntimeConfigInput> =
+const SaatriIssueRuntimeConfigInputSchema: Schema.Codec<SaatriIssueRuntimeConfigInput, unknown> =
   Schema.Struct({
     credentials: saatriCredentialsSchema,
     config: saatriEnvironmentConfigSchema,
   });
-export const saatriIssueRuntimeConfigSchema: Schema.Decoder<SaatriIssueRuntimeConfigInput> =
+export const saatriIssueRuntimeConfigSchema: Schema.Codec<SaatriIssueRuntimeConfigInput, unknown> =
   SaatriIssueRuntimeConfigInputSchema;
 
 export const SAATRI_CABECALHO_VERSION = "2.01";
@@ -338,7 +348,7 @@ export type SaatriSoapHeader = {
     readonly password: Redacted.Redacted<string>;
   };
 };
-const SaatriSoapHeaderSchema: Schema.Decoder<SaatriSoapHeader> = Schema.Struct({
+const SaatriSoapHeaderSchema: Schema.Codec<SaatriSoapHeader, unknown> = Schema.Struct({
   cabecalhoVersion: Schema.Literal(SAATRI_CABECALHO_VERSION),
   dataVersion: Schema.Literal(SAATRI_ABRASF_VERSION),
   usernameToken: Schema.Struct({
@@ -346,19 +356,20 @@ const SaatriSoapHeaderSchema: Schema.Decoder<SaatriSoapHeader> = Schema.Struct({
     password: redactedNonEmptyString,
   }),
 });
-export const saatriSoapHeaderSchema: Schema.Decoder<SaatriSoapHeader> = SaatriSoapHeaderSchema;
+export const saatriSoapHeaderSchema: Schema.Codec<SaatriSoapHeader, unknown> =
+  SaatriSoapHeaderSchema;
 
 export type ReturnMessage = {
   readonly Codigo: string;
   readonly Mensagem: string;
   readonly Correcao?: string | undefined;
 };
-const ReturnMessageSchema: Schema.Decoder<ReturnMessage> = Schema.Struct({
+const ReturnMessageSchema: Schema.Codec<ReturnMessage, unknown> = Schema.Struct({
   Codigo: Schema.String,
   Mensagem: Schema.String,
   Correcao: Schema.optional(Schema.String),
 });
-export const returnMessageSchema: Schema.Decoder<ReturnMessage> = ReturnMessageSchema;
+export const returnMessageSchema: Schema.Codec<ReturnMessage, unknown> = ReturnMessageSchema;
 
 export type GenerateNfseSuccessResponse = {
   readonly ListaNfse: {
@@ -373,7 +384,7 @@ export type GenerateNfseSuccessResponse = {
     };
   };
 };
-const GenerateNfseSuccessResponseSchema: Schema.Decoder<GenerateNfseSuccessResponse> =
+const GenerateNfseSuccessResponseSchema: Schema.Codec<GenerateNfseSuccessResponse, unknown> =
   Schema.Struct({
     ListaNfse: Schema.Struct({
       CompNfse: Schema.Struct({
@@ -387,7 +398,7 @@ const GenerateNfseSuccessResponseSchema: Schema.Decoder<GenerateNfseSuccessRespo
       }),
     }),
   });
-export const generateNfseSuccessResponseSchema: Schema.Decoder<GenerateNfseSuccessResponse> =
+export const generateNfseSuccessResponseSchema: Schema.Codec<GenerateNfseSuccessResponse, unknown> =
   GenerateNfseSuccessResponseSchema;
 
 export type GenerateNfseErrorResponse = {
@@ -395,20 +406,21 @@ export type GenerateNfseErrorResponse = {
     readonly MensagemRetorno: readonly ReturnMessage[];
   };
 };
-const GenerateNfseErrorResponseSchema: Schema.Decoder<GenerateNfseErrorResponse> = Schema.Struct({
-  ListaMensagemRetorno: Schema.Struct({
-    MensagemRetorno: Schema.ArrayEnsure(returnMessageSchema),
-  }),
-});
-export const generateNfseErrorResponseSchema: Schema.Decoder<GenerateNfseErrorResponse> =
+const GenerateNfseErrorResponseSchema: Schema.Codec<GenerateNfseErrorResponse, unknown> =
+  Schema.Struct({
+    ListaMensagemRetorno: Schema.Struct({
+      MensagemRetorno: Schema.ArrayEnsure(returnMessageSchema),
+    }),
+  });
+export const generateNfseErrorResponseSchema: Schema.Codec<GenerateNfseErrorResponse, unknown> =
   GenerateNfseErrorResponseSchema;
 
 export type GenerateNfseResponse = GenerateNfseSuccessResponse | GenerateNfseErrorResponse;
-const GenerateNfseResponseSchema: Schema.Decoder<GenerateNfseResponse> = Schema.Union([
+const GenerateNfseResponseSchema: Schema.Codec<GenerateNfseResponse, unknown> = Schema.Union([
   generateNfseSuccessResponseSchema,
   generateNfseErrorResponseSchema,
 ]);
-export const generateNfseResponseSchema: Schema.Decoder<GenerateNfseResponse> =
+export const generateNfseResponseSchema: Schema.Codec<GenerateNfseResponse, unknown> =
   GenerateNfseResponseSchema;
 
 export type GenerateNfseSoapDocument = {
@@ -420,26 +432,28 @@ export type GenerateNfseSoapDocument = {
     };
   };
 };
-const GenerateNfseSoapDocumentSchema: Schema.Decoder<GenerateNfseSoapDocument> = Schema.Struct({
-  Envelope: Schema.Struct({
-    Body: Schema.Struct({
-      GerarNfseResponse: Schema.Struct({
-        outputXML: nonEmptyString,
+const GenerateNfseSoapDocumentSchema: Schema.Codec<GenerateNfseSoapDocument, unknown> =
+  Schema.Struct({
+    Envelope: Schema.Struct({
+      Body: Schema.Struct({
+        GerarNfseResponse: Schema.Struct({
+          outputXML: nonEmptyString,
+        }),
       }),
     }),
-  }),
-});
-export const generateNfseSoapDocumentSchema: Schema.Decoder<GenerateNfseSoapDocument> =
+  });
+export const generateNfseSoapDocumentSchema: Schema.Codec<GenerateNfseSoapDocument, unknown> =
   GenerateNfseSoapDocumentSchema;
 
 export type GenerateNfseOutputDocument =
   | { readonly GerarNfseResposta: GenerateNfseResponse }
   | GenerateNfseResponse;
-const GenerateNfseOutputDocumentSchema: Schema.Decoder<GenerateNfseOutputDocument> = Schema.Union([
-  Schema.Struct({ GerarNfseResposta: generateNfseResponseSchema }),
-  generateNfseResponseSchema,
-]);
-export const generateNfseOutputDocumentSchema: Schema.Decoder<GenerateNfseOutputDocument> =
+const GenerateNfseOutputDocumentSchema: Schema.Codec<GenerateNfseOutputDocument, unknown> =
+  Schema.Union([
+    Schema.Struct({ GerarNfseResposta: generateNfseResponseSchema }),
+    generateNfseResponseSchema,
+  ]);
+export const generateNfseOutputDocumentSchema: Schema.Codec<GenerateNfseOutputDocument, unknown> =
   GenerateNfseOutputDocumentSchema;
 
 export type SaatriEventName =
@@ -463,7 +477,7 @@ export type SaatriEventName =
   | "saatri.fiscal.accepted_pending_authorization"
   | "saatri.artifact.created"
   | "saatri.optional.signer.not_configured";
-const SaatriEventNameSchema: Schema.Decoder<SaatriEventName> = Schema.Literals([
+const SaatriEventNameSchema: Schema.Codec<SaatriEventName, unknown> = Schema.Literals([
   "saatri.issue.started",
   "saatri.issue.completed",
   "saatri.issue.failed",
@@ -485,7 +499,7 @@ const SaatriEventNameSchema: Schema.Decoder<SaatriEventName> = Schema.Literals([
   "saatri.artifact.created",
   "saatri.optional.signer.not_configured",
 ]);
-export const saatriEventNameSchema: Schema.Decoder<SaatriEventName> = SaatriEventNameSchema;
+export const saatriEventNameSchema: Schema.Codec<SaatriEventName, unknown> = SaatriEventNameSchema;
 export const SaatriEventNameValue = {
   issueStarted: "saatri.issue.started",
   issueCompleted: "saatri.issue.completed",
@@ -518,7 +532,7 @@ export type SaatriEvent = {
   readonly number: string;
   readonly correlationId?: string | undefined;
 };
-const SaatriEventSchema: Schema.Decoder<SaatriEvent> = Schema.Struct({
+const SaatriEventSchema: Schema.Codec<SaatriEvent, unknown> = Schema.Struct({
   name: SaatriEventNameSchema,
   providerId: Schema.String,
   documentKind: documentKindSchema,
@@ -528,7 +542,7 @@ const SaatriEventSchema: Schema.Decoder<SaatriEvent> = Schema.Struct({
   number: Schema.String,
   correlationId: Schema.optional(Schema.String),
 });
-export const saatriEventSchema: Schema.Decoder<SaatriEvent> = SaatriEventSchema;
+export const saatriEventSchema: Schema.Codec<SaatriEvent, unknown> = SaatriEventSchema;
 export type SaatriEventSink = (event: SaatriEvent) => Effect.Effect<void, never>;
 
 export const SaatriFiscalRejection = {

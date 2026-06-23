@@ -33,7 +33,8 @@
     "publish:npm:dry": "bun publish --access public --dry-run"
   },
   "dependencies": {
-    "effect": "4.0.0-beta.81"
+    "alchemy": "2.0.0-beta.57",
+    "effect": "4.0.0-beta.86"
   },
   "devDependencies": {
     "@dfe-kit/adapter-saatri": "workspace:*",
